@@ -1,0 +1,181 @@
+.container {
+  position: relative;
+  top: 130px;
+  overflow: hidden;
+  opacity: 0;
+  animation: slideInFromLeft 1s ease-in-out forwards;
+}
+
+.subContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 4vh 8vw;
+  padding: 20px;
+  box-shadow: 3px 5px 10px #0000007d;
+  border-radius: 5px;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.8) 44%, rgba(255, 255, 255, 0.8) 58%),
+    url('../../../../public/assets/images/urquizaSchool.jpg');
+  background-position: top;
+  background-size: cover;
+}
+
+.loginContainer {
+  padding: 10px;
+  border: 2px solid #7a7a7a;
+  border-radius: 5px;
+}
+
+.btnContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.profilePhoto {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.photoContainer {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  box-shadow: 4px 2px 4px rgba(0, 0, 0, 0.5);
+  margin: auto;
+  margin-top: 0;
+  background-color: white;
+}
+
+.profileHover {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0);
+  border-radius: 50%;
+  font-size: 0px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.profileHover:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+  transition: 0.2s ease-in;
+  font-size: 1.7rem;
+}
+
+.password:link,
+.password:visited {
+  margin-top: 20px;
+  color: #000;
+  text-align: center;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.passwordContainer {
+  position: relative;
+  width: 100%;
+}
+
+.showPasswordIcon {
+  position: absolute;
+  right: 15px;
+  top: 38px;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+  animation: showPassword 1.5s forwards;
+}
+
+@media only screen and (min-width: 1024px) {
+  .container {
+    top: 150px;
+  }
+
+  .subContainer {
+    margin: 5vh 48px 0 28%;
+    max-width: 1000px;
+  }
+
+  .loginSubContainer {
+    width: 48%;
+  }
+  .loginSubContainer2 {
+    width: 48%;
+    margin-top: 16px;
+  }
+
+  .title {
+    width: 200px;
+    margin: 0 51vw;
+  }
+
+  .img {
+    width: 50%;
+  }
+
+  .loginContainer {
+    display: flex;
+    justify-content: space-between;
+    width: 97%;
+    min-width: 200px;
+    padding: 10px;
+    border: 2px solid #7a7a7a;
+    border-radius: 5px;
+  }
+
+  .btnContainer {
+    margin-top: 15px;
+  }
+
+  .photoContainer {
+    width: 100px;
+    height: 100px;
+  }
+
+  .showPasswordIcon {
+    top: 45px;
+    font-size: 24px;
+  }
+}
+
+@keyframes showPassword {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

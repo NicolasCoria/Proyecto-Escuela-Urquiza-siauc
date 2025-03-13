@@ -1,0 +1,102 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin: 15vh 15%;
+  width: 70%;
+  top: 100px;
+}
+
+.subContainer {
+  display: grid;
+  gap: 10px 20px;
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.profilePhoto {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profileHover {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0);
+  border-radius: 50%;
+  font-size: 0px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.profileHover:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+  transition: 0.2s ease-in;
+  font-size: 1.7rem;
+}
+
+.photoContainer {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  box-shadow: 4px 2px 4px rgba(0, 0, 0, 0.5);
+  margin: 3vh auto;
+  margin-top: 0;
+  background-color: white;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 500px;
+  background-color: #ffffffec;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.contButton {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.inputContainer {
+  width: 100%;
+  border-bottom: 1px solid #000;
+  padding-bottom: 10px;
+}
+
+.label {
+  font-size: 18px;
+  color: #000;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.p {
+  font-size: 16px;
+  color: #000;
+  margin-top: 5px;
+}
+
+@media screen and (min-width: 1024px) {
+  .container {
+    margin: 15vh 23%;
+    width: 60%;
+  }
+
+  .subContainer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

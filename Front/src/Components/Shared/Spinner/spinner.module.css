@@ -1,0 +1,69 @@
+.spinnerContainer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #111111bd;
+  z-index: 1101;
+}
+
+.circleContainer {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  animation: spin 1.2s infinite linear;
+}
+
+.circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 5px solid transparent;
+  border-top-color: aliceblue;
+  box-sizing: border-box;
+}
+
+.logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.logo img {
+  object-fit: cover;
+  animation: increment 1.2s infinite linear;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(180deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes increment {
+  0% {
+    width: 20px;
+  }
+
+  50% {
+    width: 50px;
+  }
+
+  100% {
+    width: 80px;
+  }
+}

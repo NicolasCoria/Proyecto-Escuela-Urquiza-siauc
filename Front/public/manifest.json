@@ -1,0 +1,28 @@
+{
+  "short_name": "Urquiza's School system",
+  "name": "Urquiza's School system",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "114x114",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#6d8366",
+  "background_color": "#ffffff"
+}

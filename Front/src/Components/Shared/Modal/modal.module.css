@@ -1,0 +1,174 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #00000096;
+  opacity: 1;
+  animation: modalAppear 0.2s ease-in;
+  z-index: 1100;
+}
+
+.subContainer {
+  position: fixed;
+  padding: 0 20px 20px 20px;
+  width: 71%;
+  max-width: 370px;
+  margin: 0 20px;
+  box-shadow: 3px 3px 10px;
+  border-radius: 10px;
+  background-color: #fff;
+}
+
+.icon {
+  position: relative;
+  bottom: 25px;
+  border-radius: 30px;
+  font-size: 60px;
+  background-color: #fff;
+  color: rgb(212, 30, 30);
+}
+
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  object-fit: contain;
+}
+
+.title {
+  padding-bottom: 10px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.4rem;
+  border-bottom: 2px solid;
+}
+
+.subTitle {
+  margin: 10px 5px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-style: italic;
+}
+
+.containerSelfClose {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  z-index: 999;
+}
+
+.subContainerOpen {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 10px 15px;
+  margin: 0 20px;
+  box-shadow: 3px 3px 10px;
+  border-radius: 5px;
+  background-color: #757474;
+  animation: fadeInSelfClose 0.5s ease-in forwards;
+}
+
+.subContainerSelfClose {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 10px 15px;
+  margin: 0 20px;
+  box-shadow: 3px 3px 10px;
+  border-radius: 5px;
+  background-color: #757474;
+  animation: fadeOutSelfClose 0.5s ease-in forwards;
+}
+
+.subContainerOpenDs {
+  background-color: #86a17c;
+}
+
+.subContainerSelfCloseDs {
+  background-color: #86a17c;
+}
+
+.subContainerOpenAf {
+  background-color: rgb(127, 148, 194);
+}
+
+.subContainerSelfCloseAf {
+  background-color: rgb(127, 148, 194);
+}
+
+.subContainerOpenIti {
+  background-color: #c97878;
+}
+
+.subContainerSelfCloseIti {
+  background-color: #c97878;
+}
+
+.subContainerOpenSa {
+  background-color: aliceblue;
+}
+
+.subContainerSelfCloseSa {
+  background-color: aliceblue;
+}
+
+.descriptionSelfCloseSa {
+  margin-right: 5px;
+  color: #000;
+  font-weight: 500;
+}
+
+.descriptionSelfClose {
+  margin-right: 5px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.btnsContainer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.btnsContainerConfirm {
+  margin-top: 30px;
+  text-align: center;
+}
+
+@keyframes fadeInSelfClose {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-40px);
+  }
+}
+
+@keyframes fadeOutSelfClose {
+  0% {
+    opacity: 1;
+    transform: translateY(-40px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalAppear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,323 @@
+.aside {
+  display: flex;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  background-color: aliceblue;
+  box-shadow: 2px 1px 10px #000000b8;
+  z-index: 1000;
+  min-width: 200px;
+}
+
+.asideDs {
+  background-color: #86a17c;
+}
+
+.asideAf {
+  background-color: rgb(127, 148, 194);
+}
+
+.asideIti {
+  background-color: #c97878;
+}
+
+.asideSubContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 30px 0;
+}
+
+.title {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.titleLanding {
+  color: #000;
+}
+
+.menuButton {
+  margin: 20px 30px 20px 30px;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.bar {
+  width: 28px;
+  height: 5px;
+  background-color: #fff;
+  margin: 4px 0;
+  transform: translate(0%);
+  transition: transform 0.3s ease-in-out;
+  box-shadow: 1px 1px 3px #000000;
+}
+
+.x1 {
+  width: 28px;
+  height: 5px;
+  background-color: #fff;
+  margin: 4px 0;
+  transform: rotate(-45deg) translate(-6px, 6px);
+  transition: transform 0.3s ease-in-out;
+  box-shadow: -1px 2px 5px #000;
+}
+
+.x2 {
+  width: 28px;
+  height: 5px;
+  background-color: #fff;
+  margin: 8px 0;
+  transform: rotate(45deg) translate(-3px, -3px);
+  transition: transform 0.3s ease-in-out;
+  box-shadow: 1px 2px 5px #000;
+}
+
+.barLanding {
+  background-color: #757474;
+}
+
+.x1Landing {
+  background-color: #757474;
+}
+
+.x2Landing {
+  background-color: #757474;
+}
+
+/* This is when the menu displays */
+
+.activeMenu {
+  display: flex;
+  position: absolute;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  top: -47px;
+  opacity: 1;
+  text-align: center;
+  transform: translateY(68%);
+  transition:
+    transform 0.5s ease-in-out,
+    opacity 0.5s ease-in-out;
+  background-color: #7a7a7a;
+  box-shadow: 2px 3px 8px #000;
+  box-shadow: inset 2px 3px 8px rgba(0, 0, 0, 0.5);
+}
+
+.activeMenuStudents {
+  transform: translateY(52%);
+}
+
+.activeMenuSAHome {
+  transform: translateY(48%);
+}
+
+.activeMenuSA {
+  transform: translateY(126%);
+}
+
+.activeMenu ul {
+  padding: 0 10px;
+  list-style: none;
+  margin: 0;
+  width: 97%;
+}
+
+.activeMenu li {
+  margin: 20px;
+  padding: 7px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: -1px -1px 2px #00000094;
+  border-bottom: 1px solid #fff;
+  border-top: 1px solid #fff;
+}
+
+.activeMenu a {
+  display: block;
+  color: #fff;
+  text-align: start;
+  text-decoration: none;
+}
+
+.logout {
+  padding: 0 10px;
+  list-style: none;
+  margin: 0;
+  width: 97%;
+  cursor: pointer;
+}
+
+/* This is when the menu folds */
+
+.menu {
+  display: flex;
+  position: absolute;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  top: -47px;
+  opacity: 0;
+  transform: translateY(0%);
+  transition:
+    transform 0.5s ease-in-out,
+    opacity 0.5s ease-in-out;
+  background-color: #7a7a7a;
+  pointer-events: none;
+  cursor: not-allowed;
+  box-shadow: inset 2px 3px 8px rgba(0, 0, 0, 0.5);
+}
+
+.menu ul {
+  padding: 0 10px;
+  list-style: none;
+  margin: 0;
+  width: 97%;
+}
+
+.menu li {
+  margin: 20px;
+  padding: 7px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: -1px -1px 2px #00000094;
+  border-bottom: 1px solid #fff;
+  border-top: 1px solid #fff;
+}
+
+.menu a {
+  color: #fff;
+  text-align: start;
+  text-decoration: none;
+}
+
+.logo {
+  width: 60px;
+  margin: 0 20px;
+}
+
+@media only screen and (min-width: 1024px) {
+  .aside {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: fixed;
+    width: 20vh;
+    height: 100vh;
+    min-width: 175px;
+  }
+
+  .asideSubContainer {
+    flex-direction: column;
+  }
+
+  .title {
+    display: none;
+  }
+
+  .menuButton {
+    display: none;
+  }
+
+  .menu {
+    display: contents;
+    background-color: #fff;
+    opacity: 1;
+    pointer-events: all;
+    cursor: pointer;
+  }
+
+  .menu ul {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    padding: 0;
+    font-size: 30px;
+  }
+
+  .menu ul.ruteSAdmin {
+    justify-content: flex-start;
+    margin-top: 9vh;
+  }
+
+  .menu li {
+    position: relative;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 1.3rem;
+    border: 0;
+    box-shadow: none;
+    text-shadow: none;
+    transition: color 0.4s ease-in-out;
+  }
+
+  .menu li:hover {
+    color: #fff;
+  }
+
+  .menu a.btn {
+    display: block;
+    margin: 6px 0;
+    padding: 7px;
+    width: 135px;
+    border-radius: 5px;
+    text-align: center;
+    background-color: #fff;
+    color: #000;
+    font-weight: 500;
+    font-size: 20px;
+    box-shadow: 5px 5px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .menu a.btn:hover {
+    background-color: #7a7a7a;
+    color: white;
+    transition: background-color 0.3s ease-in-out;
+    cursor: pointer;
+  }
+
+  .menu a.btnLanding {
+    background-color: #cecece;
+    color: #000;
+  }
+
+  .menu a.btnLanding:hover {
+    background-color: #7a7a7a;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .menu a.activeBtn {
+    display: block;
+    margin: 6px 0;
+    padding: 7px;
+    width: 133px;
+    text-align: center;
+    border-radius: 5px;
+    color: #fff;
+    font-weight: 500;
+    font-size: 20px;
+    background-color: #7a7a7a;
+    box-shadow: inset 6px 7px 6px rgb(0 0 0 / 31%);
+  }
+
+  .logout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo {
+    width: 100px;
+  }
+}

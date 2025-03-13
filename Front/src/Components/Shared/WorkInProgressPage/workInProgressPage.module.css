@@ -1,0 +1,42 @@
+.container {
+  position: relative;
+  top: 170px;
+}
+
+.subContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 4vh 8vw;
+  padding: 20px;
+  box-shadow: 3px 5px 10px #0000007d;
+  background-color: #fff;
+}
+
+.historyContainer {
+  text-align: center;
+}
+
+.p {
+  font-style: italic;
+}
+
+@media only screen and (min-width: 1024px) {
+  .container {
+    top: 150px;
+  }
+  .subContainer {
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    margin: 10vh 110px 0 347px;
+  }
+
+  .img {
+    width: 60%;
+  }
+
+  .historyContainer {
+    margin-right: 15%;
+  }
+}
