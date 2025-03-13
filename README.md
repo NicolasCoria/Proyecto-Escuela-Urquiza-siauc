@@ -10,7 +10,7 @@ Para deployar el proyecto necesitamos tener instalado [Composer](https://getcomp
 
 - Usamos Git Bash para descargar el proyecto con git clone en alguna carpeta.
 ```bash
-  git clone https://github.com/LucianoStradiot/Proyecto-Escuela-Urquiza.git
+  git clone https://github.com/NicolasCoria/Proyecto-Escuela-Urquiza.git
 ```
 - Abrimos el proyecto con Visual Studio Code.
 - En la carpeta Back abrimos la terminal y ejecutamos el siguiente codigo para descargar las dependencias:
