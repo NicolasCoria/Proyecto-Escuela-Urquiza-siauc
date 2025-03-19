@@ -3,7 +3,6 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\StudentController;
 use Illuminate\Support\Facades\Route;
-use Laravel\Socialite\Facades\Socialite;
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -20,13 +19,3 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
 Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 Route::get('/verify-token/{token}', [AuthController::class, 'verifyResetToken']);
-
-Route::get('auth/google', function () {
-    return Socialite::driver('google')->redirect();
-});
-
-Route::get('auth/google/callback', function () {
-    $user = Socialite::driver('google')->user();
-});
-
-Route::post('/auth/google/callback', [AuthController::class, 'googleCallback']);

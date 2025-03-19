@@ -9,7 +9,6 @@ import Spinner from '../../../Components/Shared/Spinner';
 import axiosClient from '../../../Components/Shared/Axios';
 import { FaEyeSlash, FaEye } from 'react-icons/fa';
 import { useStateContext, useModalContext } from '../../../Components/Contexts';
-import Authentication from '../Authentication';
 
 const Login = () => {
   const { openModal, modalState, closeModal } = useModalContext();
@@ -125,7 +124,6 @@ const Login = () => {
                   />
                 )}
               </div>
-              <Authentication />
               <Link to="/signup" className={styles.password}>
                 <p>No tenés una cuenta? Registrate</p>
               </Link>
