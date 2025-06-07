@@ -8,6 +8,8 @@
 .env
 .env.backup
 .env.production
+/.env.*.local
+/.env.backup
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
@@ -17,3 +19,8 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+.phpstorm.meta.php
+*.swp
+*.swo
+/storage/certs/*
+!/storage/certs/.gitkeep
