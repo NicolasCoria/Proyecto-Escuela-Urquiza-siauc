@@ -133,10 +133,10 @@ const Profile = () => {
                 {students?.career === 'AF'
                   ? 'Analista Funcional'
                   : students?.career === 'DS'
-                  ? 'Desarrollo de Software'
-                  : students?.career === 'ITI'
-                  ? 'Tecnologías de la Información'
-                  : null}
+                    ? 'Desarrollo de Software'
+                    : students?.career === 'ITI'
+                      ? 'Tecnologías de la Información'
+                      : null}
               </p>
             </div>
           </div>

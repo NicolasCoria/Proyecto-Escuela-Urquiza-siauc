@@ -194,10 +194,10 @@ const SuperAdmin = () => {
                           {s.career === 'AF'
                             ? 'Analista Funcional'
                             : s.career === 'DS'
-                            ? 'Desarrollo de Software'
-                            : s.career === 'ITI'
-                            ? 'Tecnologías de la Información'
-                            : null}
+                              ? 'Desarrollo de Software'
+                              : s.career === 'ITI'
+                                ? 'Tecnologías de la Información'
+                                : null}
                         </td>
                         <td className={styles.thTable}>{s.created_at}</td>
                       </>

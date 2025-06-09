@@ -20,12 +20,12 @@ const Button = ({ text, type, onClick, classBtn }) => {
             ? `${styles.cancelBtn} ${classBtn}`
             : `${styles.cancelBtn} ${styles.button}`
           : type === 'x'
-          ? classBtn
-            ? `${classBtn}`
-            : `${styles.xBtn}`
-          : classBtn
-          ? `${styles.editBtn} ${classBtn}`
-          : `${styles.editBtn} ${styles.button}`
+            ? classBtn
+              ? `${classBtn}`
+              : `${styles.xBtn}`
+            : classBtn
+              ? `${styles.editBtn} ${classBtn}`
+              : `${styles.editBtn} ${styles.button}`
       }
       type="button"
     >
