@@ -29,7 +29,7 @@ class AuthController extends Controller
             $profilePhotoPath = null;
 
             if ($request->hasFile('profile_photo')) {
-                $profilePhotoPath = $request->file('profile_photo')->storeOnCloudinary()->getPublicId();
+                $profilePhotoPath = $request->file('profile_photo')->store('profile-photos', 'public');
             }
 
             $user = Student::create([
@@ -106,7 +106,7 @@ class AuthController extends Controller
             $profilePhotoPath = null;
 
             if ($request->hasFile('profile_photo')) {
-                $profilePhotoPath = $request->file('profile_photo')->storeOnCloudinary()->getPublicId();
+                $profilePhotoPath = $request->file('profile_photo')->store('profile-photos', 'public');
             }
 
             Auth::login($user);

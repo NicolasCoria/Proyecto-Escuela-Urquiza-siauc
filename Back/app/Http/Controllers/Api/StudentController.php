@@ -9,12 +9,15 @@ use App\Mail\StudentMail;
 use Illuminate\Http\Request;
 use App\Http\Requests\UpdateStudentProfile;
 use Illuminate\Support\Facades\Mail;
-use \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class StudentController extends Controller
 {
     /**
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return AnonymousResourceCollection|JsonResponse
      */
     public function index()
     {
@@ -23,44 +26,54 @@ class StudentController extends Controller
 
             return StudentResource::collection($students);
         } catch (\Exception $e) {
-            \Log::error($e);
+            Log::error($e);
             error_log($e->getMessage());
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
-    public function indexById($studentId)
+    /**
+     * @param int $studentId
+     * @return JsonResponse|StudentResource
+     */
+    public function indexById(int $studentId)
     {
         try {
-            $id = Student::find($studentId);
+            $student = Student::find($studentId);
 
-            if (!$id) {
+            if (!$student) {
                 return response()->json(['error' => 'Student not found'], 404);
             }
 
-            return new StudentResource($id);
+            return new StudentResource($student);
         } catch (\Exception $e) {
-            \Log::error($e);
+            Log::error($e);
             error_log($e->getMessage());
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
-    public function updateProfilePhoto(UpdateStudentProfile $request)
+    /**
+     * @param UpdateStudentProfile $request
+     * @return JsonResponse
+     */
+    public function updateProfilePhoto(UpdateStudentProfile $request): JsonResponse
     {
         try {
+            /** @var Student $user */
             $user = auth()->user();
 
             $oldProfilePhoto = $user->profile_photo;
 
             if ($oldProfilePhoto) {
-                Cloudinary::destroy($oldProfilePhoto);
+                Storage::disk('public')->delete($oldProfilePhoto);
             }
 
             $profilePhoto = $request->file('profile_photo');
-            $profilePhotoPath = $profilePhoto->storeOnCloudinary()->getPublicId();
+            $profilePhotoPath = $profilePhoto->store('profile-photos', 'public');
 
-            $user->update(['profile_photo' => $profilePhotoPath]);
+            $user->profile_photo = $profilePhotoPath;
+            $user->save();
 
             $userResource = new StudentResource($user);
 
@@ -69,25 +82,33 @@ class StudentController extends Controller
                 'user' => $userResource,
             ]);
         } catch (\Exception $e) {
-            \Log::error($e);
+            Log::error($e);
             error_log($e->getMessage());
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
-
     }
 
+    /**
+     * @param Student $student
+     * @return StudentResource|JsonResponse
+     */
     public function show(Student $student)
     {
         try {
             return new StudentResource($student);
         } catch (\Exception $e) {
-            \Log::error($e);
+            Log::error($e);
             error_log($e->getMessage());
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
-    public function updateApprovalStatus(Request $request, Student $id)
+    /**
+     * @param Request $request
+     * @param Student $id
+     * @return JsonResponse
+     */
+    public function updateApprovalStatus(Request $request, Student $id): JsonResponse
     {
         try {
             $approved = $request->input('approved', false);
@@ -101,14 +122,18 @@ class StudentController extends Controller
 
             return response()->json(['message' => 'Estado de aprobación actualizado con éxito.']);
         } catch (\Exception $e) {
-            \Log::error($e);
+            Log::error($e);
             error_log($e->getMessage());
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
-
-    public function destroy(Request $request, Student $id)
+    /**
+     * @param Request $request
+     * @param Student $id
+     * @return JsonResponse
+     */
+    public function destroy(Request $request, Student $id): JsonResponse
     {
         try {
             $approved = $request->input('approved', false);
@@ -122,7 +147,7 @@ class StudentController extends Controller
 
             return response()->json(['message' => 'Estado de aprobación actualizado con éxito.']);
         } catch (\Exception $e) {
-            \Log::error($e);
+            Log::error($e);
             error_log($e->getMessage());
             return response()->json(['error' => 'Internal Server Error'], 500);
         }

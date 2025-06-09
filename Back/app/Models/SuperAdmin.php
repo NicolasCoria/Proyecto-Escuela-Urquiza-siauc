@@ -1,30 +1,39 @@
 <?php
 
+/**
+ * Created by Reliese Model.
+ */
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
-class SuperAdmin extends Authenticatable
+/**
+ * Class SuperAdmin
+ * 
+ * @property int $id
+ * @property string $email
+ * @property string $career
+ * @property string $password
+ * @property string|null $notifications
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
+ * @package App\Models
+ */
+class SuperAdmin extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable;
-    protected $fillable = [
-        'email',
-        'password',
-        'career',
-        'notifications'
-    ];
+	protected $table = 'super_admins';
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+	protected $hidden = [
+		'password'
+	];
 
-
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
+	protected $fillable = [
+		'email',
+		'career',
+		'password',
+		'notifications'
+	];
 }
