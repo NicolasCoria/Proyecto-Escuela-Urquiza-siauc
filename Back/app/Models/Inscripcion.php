@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $id_alumno
  * @property int|null $id_carrera
  * @property int|null $id_grado
+ * @property int|null $id_uc
  * 
  * @property Alumno|null $alumno
  * @property Carrera|null $carrera
@@ -33,6 +34,7 @@ class Inscripcion extends Model
 	protected $casts = [
 		'FechaHora' => 'datetime',
 		'id_alumno' => 'int',
+		'id_uc' => 'int',
 		'id_carrera' => 'int',
 		'id_grado' => 'int'
 	];
@@ -40,6 +42,7 @@ class Inscripcion extends Model
 	protected $fillable = [
 		'FechaHora',
 		'id_alumno',
+		'id_uc',
 		'id_carrera',
 		'id_grado'
 	];

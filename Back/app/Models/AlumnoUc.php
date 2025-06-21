@@ -30,6 +30,11 @@ class AlumnoUc extends Model
 		'id_uc' => 'int'
 	];
 
+	protected $fillable = [
+		'id_alumno',
+		'id_uc'
+	];
+
 	public function unidad_curricular()
 	{
 		return $this->belongsTo(UnidadCurricular::class, 'id_uc');

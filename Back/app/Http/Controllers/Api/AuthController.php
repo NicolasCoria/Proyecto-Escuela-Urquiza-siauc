@@ -212,4 +212,54 @@ class AuthController extends Controller
         $student->currentAccessToken()->delete();
         return response('', 204);
     }
+
+    /**
+     * Registro de alumno
+     */
+    public function registerAlumno(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:20',
+            'apellido' => 'required|string|max:20',
+            'email' => 'required|email|unique:alumno,email',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $alumno = new \App\Models\Alumno();
+        $alumno->nombre = $validated['nombre'];
+        $alumno->apellido = $validated['apellido'];
+        $alumno->email = $validated['email'];
+        $alumno->password = bcrypt($validated['password']);
+        $alumno->save();
+
+        return response()->json([
+            'success' => true,
+            'alumno' => $alumno
+        ], 201);
+    }
+
+    /**
+     * Login de alumno
+     */
+    public function loginAlumno(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $alumno = \App\Models\Alumno::where('email', $validated['email'])->first();
+        if (!$alumno || !\Illuminate\Support\Facades\Hash::check($validated['password'], $alumno->password)) {
+            return response()->json(['error' => 'Credenciales incorrectas'], 401);
+        }
+
+        // Crear token de Sanctum
+        $token = $alumno->createToken('alumno_token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+            'alumno' => $alumno
+        ]);
+    }
 }

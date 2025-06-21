@@ -9,6 +9,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * Class Alumno
@@ -40,6 +41,7 @@ class Alumno extends Model
 	protected $table = 'alumno';
 	protected $primaryKey = 'id_alumno';
 	public $timestamps = false;
+	use HasApiTokens;
 
 	protected $casts = [
 		'DNI' => 'int',
@@ -93,5 +95,15 @@ class Alumno extends Model
 	public function inscripcions()
 	{
 		return $this->hasMany(Inscripcion::class, 'id_alumno');
+	}
+
+	public function alumno_carreras()
+	{
+		return $this->hasMany(\App\Models\AlumnoCarrera::class, 'id_alumno');
+	}
+
+	public function alumno_grados()
+	{
+		return $this->hasMany(\App\Models\AlumnoGrado::class, 'id_alumno');
 	}
 }
