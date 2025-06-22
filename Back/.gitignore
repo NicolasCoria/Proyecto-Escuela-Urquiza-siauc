@@ -23,4 +23,7 @@ yarn-error.log
 *.swp
 *.swo
 /storage/certs/*
-!/storage/certs/.gitkeep
+/storage/certs/*.pem
+*.pem
+
+
