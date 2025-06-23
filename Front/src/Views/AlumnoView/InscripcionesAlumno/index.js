@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../../../Components/Shared/Axios';
+import Skeleton from '../../../Components/Shared/Skeleton';
 
 const InscripcionesAlumno = () => {
   const [unidades, setUnidades] = useState([]);
@@ -84,14 +85,20 @@ const InscripcionesAlumno = () => {
     <main
       style={{
         maxWidth: 500,
-        margin: '40px auto',
+        margin: '60px auto 40px auto',
         fontFamily: 'Inter, Arial, sans-serif'
       }}
     >
-      <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Inscripción a Unidades Curriculares</h2>
-      {loading && <p style={{ textAlign: 'center' }}>Cargando...</p>}
+      <h2 style={{ textAlign: 'center', marginBottom: 36 }}>Inscripción a Unidades Curriculares</h2>
+      {loading && (
+        <div style={{ marginBottom: 24 }}>
+          {[...Array(7)].map((_, i) => (
+            <Skeleton key={i} height={28} style={{ marginBottom: 14, borderRadius: 8 }} />
+          ))}
+        </div>
+      )}
       {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-      {!success ? (
+      {!success && !loading ? (
         <>
           <div
             style={{
@@ -142,7 +149,7 @@ const InscripcionesAlumno = () => {
             Inscribirse
           </button>
         </>
-      ) : (
+      ) : !loading ? (
         <div style={{ textAlign: 'center' }}>
           <h3>¡Inscripción exitosa!</h3>
           <p>Te has inscripto en las siguientes unidades curriculares:</p>
@@ -169,7 +176,7 @@ const InscripcionesAlumno = () => {
             Descargar comprobante PDF
           </button>
         </div>
-      )}
+      ) : null}
     </main>
   );
 };
