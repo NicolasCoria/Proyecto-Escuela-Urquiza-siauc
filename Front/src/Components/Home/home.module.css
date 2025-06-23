@@ -34,6 +34,26 @@
   text-align: center;
 }
 
+.menuBtn {
+  width: 100%;
+  max-width: 350px;
+  padding: 14px;
+  margin: 12px 0;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px #0002;
+}
+.menuBtn:hover {
+  background: #125ea2;
+  box-shadow: 0 4px 16px #0003;
+}
+
 @media only screen and (min-width: 1024px) {
   .container {
     top: 190px;

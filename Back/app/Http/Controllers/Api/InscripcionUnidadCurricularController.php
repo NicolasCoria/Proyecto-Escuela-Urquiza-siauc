@@ -9,6 +9,11 @@ use App\Models\Correlatividad;
 use App\Models\Nota;
 use App\Models\AlumnoUc;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Inscripcion;
+use App\Models\Alumno;
+use App\Models\Carrera;
+use App\Models\Grado;
 
 class InscripcionUnidadCurricularController extends Controller
 {
@@ -136,5 +141,43 @@ class InscripcionUnidadCurricularController extends Controller
             'success' => true,
             'inscripciones' => $inscripciones
         ]);
+    }
+
+    // Generar comprobante grupal en PDF de las inscripciones
+    public function comprobantePdf(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+        $id_alumno = $user->id_alumno ?? $user->id ?? null;
+        if (!$id_alumno) {
+            return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
+        }
+        $validated = $request->validate([
+            'inscripciones' => 'required|array|min:1',
+            'inscripciones.*' => 'integer|exists:inscripcion,id_inscripcion',
+        ]);
+        $inscripciones = Inscripcion::whereIn('id_inscripcion', $validated['inscripciones'])
+            ->where('id_alumno', $id_alumno)
+            ->get();
+        if ($inscripciones->isEmpty()) {
+            return response()->json(['error' => 'No se encontraron inscripciones para el alumno'], 404);
+        }
+        $alumno = Alumno::find($id_alumno);
+        $carrera = $inscripciones->first()->id_carrera ? Carrera::find($inscripciones->first()->id_carrera) : null;
+        $grado = $inscripciones->first()->id_grado ? Grado::find($inscripciones->first()->id_grado) : null;
+        $ucs = UnidadCurricular::whereIn('id_uc', $inscripciones->pluck('id_uc'))->get();
+        $fecha = $inscripciones->first()->FechaHora;
+
+        $pdf = Pdf::loadView('comprobante.inscripcion', [
+            'alumno' => $alumno,
+            'carrera' => $carrera,
+            'grado' => $grado,
+            'ucs' => $ucs,
+            'fecha' => $fecha,
+            'inscripciones' => $inscripciones
+        ]);
+        return $pdf->download('comprobante_inscripcion.pdf');
     }
 } 

@@ -32,24 +32,14 @@ const Login = () => {
     setIsLoading(true);
     setErrors({});
     try {
-      const { data } = await axiosClient.post('/login', payload);
-      if (data.user.career === 'SA') {
-        setUser(data.user);
-        setTokenAndRole(data.token, data.user.career);
-        openModal({
-          description: 'Sesión iniciada correctamente',
-          chooseModal: false
-        });
-        navigate('/super-admin');
-      } else {
-        setUser(data.user);
-        setTokenAndRole(data.token, data.user.career);
-        openModal({
-          description: 'Sesión iniciada correctamente',
-          chooseModal: false
-        });
-        navigate(`/alumno/profile/${data.user.id}`);
-      }
+      const { data } = await axiosClient.post('/alumnos/login', payload);
+      setUser(data.alumno);
+      setTokenAndRole(data.token, 'alumno');
+      openModal({
+        description: 'Sesión iniciada correctamente',
+        chooseModal: false
+      });
+      navigate('/alumno');
     } catch (err) {
       if (err.response && err.response.status === 422) {
         const apiErrors = err.response;

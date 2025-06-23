@@ -13,6 +13,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/students/delete/{id}', [StudentController::class, 'destroy']);
     Route::get('/alumno/unidades-disponibles', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'disponiblesParaInscripcion']);
     Route::post('/alumno/inscribir-unidades', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'inscribir']);
+    Route::post('/alumno/comprobante-inscripcion', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'comprobantePdf']);
 });
 
 Route::post('/signup/super-admin', [AuthController::class, 'signupSuperAdmin']);
