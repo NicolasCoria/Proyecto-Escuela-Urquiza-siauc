@@ -3,9 +3,7 @@ import { Outlet } from 'react-router';
 import { Navigate } from 'react-router';
 
 const LandingView = () => {
-  if (sessionStorage.getItem('role') === 'SA') {
-    return <Navigate to={'/super-admin'} />;
-  } else if (
+  if (
     sessionStorage.getItem('role') === 'AF' ||
     sessionStorage.getItem('role') === 'DS' ||
     sessionStorage.getItem('role') === 'ITI'

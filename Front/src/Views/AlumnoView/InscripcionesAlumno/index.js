@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import axios from '../../../Components/Shared/Axios';
+import React, { useState } from 'react';
 import Skeleton from '../../../Components/Shared/Skeleton';
+import { useStateContext } from '../../../Components/Contexts';
 
 const InscripcionesAlumno = () => {
-  const [unidades, setUnidades] = useState([]);
+  const { carrera, unidadesDisponibles } = useStateContext();
   const [seleccionadas, setSeleccionadas] = useState([]);
   const [inscripciones, setInscripciones] = useState([]);
   const [success, setSuccess] = useState(false);
@@ -13,23 +13,6 @@ const InscripcionesAlumno = () => {
   // Obtener token del localStorage (ajusta según tu auth)
   const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    const fetchUnidades = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get('/alumno/unidades-disponibles', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUnidades(res.data);
-      } catch (err) {
-        setError('Error al cargar las unidades curriculares');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUnidades();
-  }, [token]);
-
   const handleSelect = (id) => {
     setSeleccionadas((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
@@ -38,15 +21,17 @@ const InscripcionesAlumno = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post(
-        '/alumno/inscribir-unidades',
-        { unidades: seleccionadas },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await import('../../../Components/Shared/Axios').then((m) =>
+        m.default.post(
+          '/alumno/inscribir-unidades',
+          { unidades: seleccionadas },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
       );
       setInscripciones(res.data.inscripciones);
       setSuccess(true);
     } catch (err) {
-      setError('Error al inscribirse.');
+      setError(err.response?.data?.message || 'Error al inscribirse');
     } finally {
       setLoading(false);
     }
@@ -54,8 +39,8 @@ const InscripcionesAlumno = () => {
 
   const handleDescargarComprobante = async () => {
     setLoading(true);
-    setError('');
     try {
+      const axios = (await import('../../../Components/Shared/Axios')).default;
       const res = await axios.post(
         '/alumno/comprobante-inscripcion',
         { inscripciones: inscripciones.map((i) => i.id_inscripcion) },
@@ -81,6 +66,29 @@ const InscripcionesAlumno = () => {
     }
   };
 
+  // Función para obtener el nombre de la UC por ID
+  const getUnidadName = (id_uc) => {
+    const unidad = unidadesDisponibles.find((uc) => uc.id_uc === id_uc);
+    return unidad ? unidad.unidad_curricular || unidad.Unidad_Curricular : 'UC no encontrada';
+  };
+
+  // Función para formatear fecha y hora
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    return {
+      fecha: date.toLocaleDateString('es-AR'),
+      hora: date.toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    };
+  };
+
+  // Función para obtener el nombre de la carrera desde el contexto
+  const getCarreraName = () => {
+    return carrera ? carrera.carrera : 'Carrera no especificada';
+  };
+
   return (
     <main
       style={{
@@ -90,7 +98,8 @@ const InscripcionesAlumno = () => {
       }}
     >
       <h2 style={{ textAlign: 'center', marginBottom: 36 }}>Inscripción a Unidades Curriculares</h2>
-      {loading && (
+      {/* Mostrar skeleton solo cuando está cargando las UC inicialmente */}
+      {loading && !success && (
         <div style={{ marginBottom: 24 }}>
           {[...Array(7)].map((_, i) => (
             <Skeleton key={i} height={28} style={{ marginBottom: 14, borderRadius: 8 }} />
@@ -98,7 +107,8 @@ const InscripcionesAlumno = () => {
         </div>
       )}
       {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-      {!success && !loading ? (
+      {/* Formulario de inscripción */}
+      {!success && !loading && (
         <>
           <div
             style={{
@@ -110,7 +120,7 @@ const InscripcionesAlumno = () => {
             }}
           >
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {unidades.map((uc) => (
+              {unidadesDisponibles.map((uc) => (
                 <li
                   key={uc.id_uc}
                   style={{
@@ -149,34 +159,72 @@ const InscripcionesAlumno = () => {
             Inscribirse
           </button>
         </>
-      ) : !loading ? (
-        <div style={{ textAlign: 'center' }}>
-          <h3>¡Inscripción exitosa!</h3>
-          <p>Te has inscripto en las siguientes unidades curriculares:</p>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {inscripciones.map((insc, i) => (
-              <li key={insc.id_inscripcion} style={{ marginBottom: 8 }}>
-                {i + 1}. ID Inscripción: {insc.id_inscripcion}
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={handleDescargarComprobante}
-            style={{
-              marginTop: 20,
-              padding: '10px 24px',
-              background: '#43a047',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              fontSize: 16,
-              cursor: 'pointer'
-            }}
-          >
-            Descargar comprobante PDF
-          </button>
+      )}
+      {/* Comprobante de inscripción exitosa */}
+      {success && (
+        <div
+          style={{
+            background: '#fff',
+            borderRadius: 12,
+            boxShadow: '0 2px 12px #0002',
+            padding: 24,
+            marginBottom: 24
+          }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <h3 style={{ color: '#43a047', marginBottom: 16 }}>¡Inscripción exitosa!</h3>
+            <p style={{ color: '#666', marginBottom: 20 }}>
+              Te has inscripto en las siguientes unidades curriculares:
+            </p>
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            {inscripciones.map((insc, i) => {
+              const { fecha, hora } = formatDateTime(
+                insc.FechaHora || insc.fecha_inscripcion || insc.created_at || new Date()
+              );
+              return (
+                <div
+                  key={insc.id_inscripcion}
+                  style={{
+                    padding: 16,
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 8,
+                    marginBottom: 12,
+                    backgroundColor: '#fafafa'
+                  }}
+                >
+                  <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
+                    {i + 1}. {getUnidadName(insc.id_uc)}
+                  </div>
+                  <div style={{ fontSize: 14, color: '#666' }}>
+                    <div>Fecha: {fecha}</div>
+                    <div>Hora: {hora}</div>
+                    <div>Carrera: {getCarreraName()}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={handleDescargarComprobante}
+              disabled={loading}
+              style={{
+                padding: '12px 24px',
+                background: '#43a047',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                fontSize: 16,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1
+              }}
+            >
+              {loading ? 'Descargando...' : 'Descargar comprobante PDF'}
+            </button>
+          </div>
         </div>
-      ) : null}
+      )}
     </main>
   );
 };

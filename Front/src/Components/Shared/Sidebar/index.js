@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import styles from '../Sidebar/aside.module.css';
+import styles from './aside.module.css';
 import { useStateContext } from '../../Contexts';
 import axiosClient from '../Axios';
 import { useModalContext } from '../../Contexts';
 import Modal from '../Modal';
 import Spinner from '../Spinner';
-import sidebarThemes from '../Sidebar/sidebarTheme';
+import sidebarThemes from './sidebarTheme';
 
 const getTheme = (user, carrera) => {
   if (!user) return sidebarThemes.guest;
@@ -16,7 +16,7 @@ const getTheme = (user, carrera) => {
   return sidebarThemes.guest;
 };
 
-const Aside = () => {
+const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeButton, setActiveButton] = useState('');
@@ -201,4 +201,4 @@ const Aside = () => {
   );
 };
 
-export default Aside;
+export default Sidebar;

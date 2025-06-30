@@ -1,37 +1,63 @@
 .container {
-  position: relative;
-  top: 200px;
-  overflow: hidden;
+  position: static;
+  top: 0;
+  overflow: visible;
+  width: 100%;
+  max-width: 900px;
+  margin: 40px auto 0 auto;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .subContainer {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
-  margin: 3vh 8vw;
-  padding: 20px;
-  box-shadow: 3px 5px 10px #0000007d;
-  background-color: #fff;
+  align-items: stretch;
+  margin: 24px auto 0 auto;
+  padding: 32px 24px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px #bbb;
+  min-width: 320px;
+  max-width: 900px;
+  width: 100%;
+  gap: 32px;
   opacity: 0;
   animation: slideInFromRight 1s ease-in-out forwards;
 }
 
-.title {
-  margin: 0 8vw;
-  padding: 10px;
-  text-align: center;
-  border-radius: 5px;
-  font-size: 1.7rem;
-  font-weight: 600;
-  color: #757474;
-  background-color: #fff;
-  box-shadow: 3px 5px 10px #0000007d;
-  opacity: 0;
-  animation: slideInFromLeft 1s ease-in-out forwards;
+.img {
+  width: 45%;
+  min-width: 180px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .historyContainer {
+  flex: 1;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 16px;
+}
+
+.title {
+  margin: 0 auto;
+  padding: 10px 0;
   text-align: center;
+  border-radius: 5px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #757474;
+  background: none;
+  box-shadow: none;
+  opacity: 0;
+  animation: slideInFromLeft 1s ease-in-out forwards;
 }
 
 .menuBtn {
@@ -54,29 +80,20 @@
   box-shadow: 0 4px 16px #0003;
 }
 
-@media only screen and (min-width: 1024px) {
-  .container {
-    top: 190px;
-  }
+@media only screen and (max-width: 900px) {
   .subContainer {
+    flex-direction: column;
     align-items: center;
-    flex-direction: row;
-    margin: 7vh 110px 0 347px;
-    padding: 4vh;
+    gap: 16px;
+    padding: 24px 8px;
   }
-
-  .title {
-    width: 200px;
-    margin: 0 51vw;
-  }
-
   .img {
-    width: 50%;
+    width: 100%;
+    min-width: 120px;
   }
-
   .historyContainer {
-    text-align: start;
-    padding: 0 0 0 25px;
+    padding-left: 0;
+    text-align: center;
   }
 }
 

@@ -4,9 +4,13 @@ import { useContext, useState, createContext } from 'react';
 const StateContext = createContext({
   user: null,
   role: null,
+  carrera: null,
+  unidadesDisponibles: [],
   setUser: () => {},
   setTokenAndRole: () => {},
   setUserHeader: () => {},
+  setCarrera: () => {},
+  setUnidadesDisponibles: () => {},
   updateNotification: () => {}
 });
 
@@ -18,6 +22,14 @@ export const ContextProvider = ({ children }) => {
   const [token, setToken] = useState(sessionStorage.getItem('ACCESS_TOKEN'));
   const [role, setRole] = useState(sessionStorage.getItem('role'));
   const [notification, setNotification] = useState([]);
+  const [carrera, setCarrera] = useState(() => {
+    const storedCarrera = sessionStorage.getItem('carrera');
+    return storedCarrera ? JSON.parse(storedCarrera) : null;
+  });
+  const [unidadesDisponibles, setUnidadesDisponibles] = useState(() => {
+    const storedUC = sessionStorage.getItem('unidadesDisponibles');
+    return storedUC ? JSON.parse(storedUC) : [];
+  });
 
   const setTokenAndRole = (token, role) => {
     setToken(token);
@@ -40,6 +52,24 @@ export const ContextProvider = ({ children }) => {
     }
   };
 
+  const setCarreraPersist = (carreraData) => {
+    setCarrera(carreraData);
+    if (carreraData) {
+      sessionStorage.setItem('carrera', JSON.stringify(carreraData));
+    } else {
+      sessionStorage.removeItem('carrera');
+    }
+  };
+
+  const setUnidadesDisponiblesPersist = (ucList) => {
+    setUnidadesDisponibles(ucList);
+    if (ucList) {
+      sessionStorage.setItem('unidadesDisponibles', JSON.stringify(ucList));
+    } else {
+      sessionStorage.removeItem('unidadesDisponibles');
+    }
+  };
+
   const updateNotification = (newNotifications) => {
     setNotification(newNotifications);
   };
@@ -54,7 +84,11 @@ export const ContextProvider = ({ children }) => {
         setUserHeader,
         setUser,
         setTokenAndRole,
-        updateNotification
+        updateNotification,
+        carrera,
+        setCarrera: setCarreraPersist,
+        unidadesDisponibles,
+        setUnidadesDisponibles: setUnidadesDisponiblesPersist
       }}
     >
       {children}

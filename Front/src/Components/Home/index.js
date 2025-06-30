@@ -1,5 +1,4 @@
 import React from 'react';
-import Aside from '../Shared/Aside';
 import styles from './home.module.css';
 import Modal from '../Shared/Modal';
 import { useModalContext } from '../Contexts';
@@ -8,7 +7,6 @@ const Home = () => {
   const { modalState, closeModal } = useModalContext();
   return (
     <>
-      <Aside page={'home'} />
       {modalState.isOpen && modalState.chooseModal === false ? (
         <Modal description={modalState.description} isOpen={modalState.isOpen} close={closeModal} />
       ) : null}

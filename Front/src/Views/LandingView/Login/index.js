@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import styles from './login.module.css';
 import { Link, useNavigate } from 'react-router-dom';
-import Aside from '../../../Components/Shared/Aside';
 import TextInput from '../../../Components/Shared/TextInput';
 import Button from '../../../Components/Shared/Button';
 import Modal from '../../../Components/Shared/Modal';
@@ -12,7 +11,7 @@ import { useStateContext, useModalContext } from '../../../Components/Contexts';
 
 const Login = () => {
   const { openModal, modalState, closeModal } = useModalContext();
-  const { setUser, setTokenAndRole } = useStateContext();
+  const { setUser, setTokenAndRole, setCarrera, setUnidadesDisponibles } = useStateContext();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -35,6 +34,8 @@ const Login = () => {
       const { data } = await axiosClient.post('/alumnos/login', payload);
       setUser(data.alumno);
       setTokenAndRole(data.token, 'alumno');
+      setCarrera(data.carrera);
+      setUnidadesDisponibles(data.unidades_disponibles);
       openModal({
         description: 'Sesión iniciada correctamente',
         chooseModal: false
@@ -76,7 +77,6 @@ const Login = () => {
   return (
     <>
       {isLoading && <Spinner />}
-      <Aside page={'home'} />
       {modalState.isOpen && modalState.chooseModal === false ? (
         <Modal />
       ) : modalState.isOpen && modalState.confirmModal === true ? (

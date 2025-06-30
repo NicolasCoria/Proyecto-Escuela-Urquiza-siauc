@@ -1,16 +1,26 @@
 .container {
-  position: relative;
-  top: 170px;
+  position: static;
+  top: 0;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
 }
 
 .subContainer {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin: 4vh 8vw;
-  padding: 20px;
-  box-shadow: 3px 5px 10px #0000007d;
-  background-color: #fff;
+  align-items: center;
+  margin: 0 auto;
+  padding: 32px 24px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px #bbb;
+  min-width: 320px;
+  max-width: 600px;
+  width: 100%;
 }
 
 .historyContainer {
@@ -23,20 +33,27 @@
 
 @media only screen and (min-width: 1024px) {
   .container {
-    top: 150px;
+    min-height: 60vh;
+    margin: 0 auto;
+    top: 0;
   }
   .subContainer {
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    flex-direction: row;
-    margin: 10vh 110px 0 347px;
+    justify-content: center;
+    margin: 0 auto;
+    padding: 32px 24px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px #bbb;
+    min-width: 320px;
+    max-width: 600px;
+    width: 100%;
   }
-
   .img {
     width: 60%;
   }
-
   .historyContainer {
-    margin-right: 15%;
+    margin-right: 0;
   }
 }

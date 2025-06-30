@@ -1,8 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import styles from './signUp.module.css';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../../../Components/Shared/Axios';
-import Aside from '../../../Components/Shared/Aside';
 import TextInput from '../../../Components/Shared/TextInput';
 import Button from '../../../Components/Shared/Button';
 import { FaEyeSlash, FaEye } from 'react-icons/fa';
@@ -30,6 +29,22 @@ const SignUp = () => {
     password: null,
     career: null
   });
+  const [carreras, setCarreras] = useState([]);
+
+  // Obtener las carreras desde la base de datos
+  useEffect(() => {
+    const fetchCarreras = async () => {
+      try {
+        const res = await axiosClient.get('/carreras');
+        if (res.data.success) {
+          setCarreras(res.data.carreras);
+        }
+      } catch (err) {
+        console.error('Error al obtener las carreras:', err);
+      }
+    };
+    fetchCarreras();
+  }, []);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -132,7 +147,6 @@ const SignUp = () => {
   return (
     <>
       {isLoading && <Spinner />}
-      <Aside page={'home'} />
       <Modal />
       <main>
         <section className={styles.container}>
@@ -186,9 +200,11 @@ const SignUp = () => {
                   <option hidden value={''}>
                     Seleccione una carrera
                   </option>
-                  <option value={'AF'}>Analista Funcional</option>
-                  <option value={'DS'}>Desarrollo de Software</option>
-                  <option value={'ITI'}>Tecnologías de la Información</option>
+                  {carreras.map((carrera) => (
+                    <option key={carrera.id_carrera} value={carrera.id_carrera}>
+                      {carrera.carrera}
+                    </option>
+                  ))}
                 </TextInput>
                 <TextInput
                   input={'input'}
