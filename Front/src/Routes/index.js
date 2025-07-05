@@ -13,6 +13,10 @@ import SignUp from '../Views/LandingView/SignUp';
 import RecoverPassword from '../Views/LandingView/Login/RecoverPassword';
 import ResetPassword from '../Views/LandingView/Login/ResetPassword';
 import Login from '../Views/LandingView/Login';
+import AdminLogin from '../Views/AdminView/Login';
+import AdminDashboard from '../Views/AdminView/Dashboard';
+import AdminInformes from '../Views/AdminView/Informes';
+import AdminLayout from '../Components/Shared/AdminLayout';
 import Layout from '../Components/Shared/Layout';
 
 const RoutesLanding = () => {
@@ -40,6 +44,13 @@ const RoutesLanding = () => {
           <Route path="profile/:id" element={<AlumnoProfile />} />
           <Route path="materias" element={<Materias />} />
           <Route path="inscripciones" element={<InscripcionesAlumno />} />
+        </Route>
+
+        {/* Rutas de Administrador */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="informes" element={<AdminInformes />} />
         </Route>
 
         <Route path="*" element={<Error404 />} />
