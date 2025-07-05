@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import styles from './recoverPassword.module.css';
-import Aside from '../../../../Components/Shared/Aside';
 import TextInput from '../../../../Components/Shared/TextInput';
 import Button from '../../../../Components/Shared/Button';
 import Modal from '../../../../Components/Shared/Modal';
@@ -71,7 +70,6 @@ function RecoverPassword() {
   return (
     <>
       {isLoading && <Spinner />}
-      <Aside page={'home'} />
       {modalState.isOpen && modalState.chooseModal === false ? (
         <Modal />
       ) : modalState.isOpen && modalState.confirmModal === true ? (
