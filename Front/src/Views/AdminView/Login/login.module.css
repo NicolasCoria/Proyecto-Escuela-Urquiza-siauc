@@ -1,0 +1,95 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.subContainer {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 450px;
+}
+
+.headerContainer {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #718096;
+  margin: 0;
+}
+
+.loginContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.passwordContainer {
+  position: relative;
+}
+
+.showPasswordIcon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #718096;
+  font-size: 18px;
+  transition: color 0.3s ease;
+}
+
+.showPasswordIcon:hover {
+  color: #4a5568;
+}
+
+.backToLogin {
+  text-align: center;
+  text-decoration: none;
+  color: #667eea;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.backToLogin:hover {
+  color: #5a67d8;
+}
+
+.backToLogin p {
+  margin: 0;
+}
+
+.btnContainer {
+  margin-top: 10px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .subContainer {
+    padding: 30px 20px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .subtitle {
+    font-size: 14px;
+  }
+} 
