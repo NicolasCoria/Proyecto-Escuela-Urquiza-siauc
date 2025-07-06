@@ -20,6 +20,7 @@ class CreateCarreraUcTable extends Migration
             $table->primary(['id_carrera', 'id_uc']);
             $table->foreign('id_carrera', 'fk_carrera_uc_carrera')->references('id_carrera')->on('carrera')->onDelete('cascade');
             $table->foreign('id_uc', 'fk_carrera_uc_uc')->references('id_uc')->on('unidad_curricular')->onDelete('cascade');
+            $table->index('id_carrera');
         });
     }
 
