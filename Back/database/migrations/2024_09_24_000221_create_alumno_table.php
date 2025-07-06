@@ -14,11 +14,12 @@ class CreateAlumnoTable extends Migration
     public function up()
     {
         Schema::create('alumno', function (Blueprint $table) {
-            $table->integer('id_alumno')->primary();
+            $table->increments('id_alumno');
             $table->integer('DNI')->nullable();
             $table->string('nombre', 20)->nullable();
             $table->string('apellido', 20)->nullable();
             $table->string('email', 30)->nullable();
+            $table->string('password', 255)->nullable();
             $table->string('telefono', 20)->nullable();
             $table->string('genero', 10)->nullable();
             $table->date('fecha_nac')->nullable();
@@ -27,6 +28,7 @@ class CreateAlumnoTable extends Migration
             $table->integer('id_localidad')->nullable();
             
             $table->foreign('id_localidad', 'alumno_ibfk_1')->references('id_localidad')->on('localidad');
+            $table->unique('email');
         });
     }
 

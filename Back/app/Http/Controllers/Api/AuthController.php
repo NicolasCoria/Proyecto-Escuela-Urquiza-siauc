@@ -45,47 +45,66 @@ class AuthController extends Controller
      */
     public function loginAlumno(Request $request)
     {
+        $startTotal = microtime(true);
+        
         $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
+        $startQuery = microtime(true);
         $alumno = \App\Models\Alumno::where('email', $validated['email'])->first();
+        $endQuery = microtime(true);
+        
+        \Log::info('Tiempo consulta Alumno: ' . ($endQuery - $startQuery) . ' segundos');
+
         if (!$alumno || !\Illuminate\Support\Facades\Hash::check($validated['password'], $alumno->password)) {
+            $endTotal = microtime(true);
+            \Log::info('Tiempo total login (credenciales incorrectas): ' . ($endTotal - $startTotal) . ' segundos');
             return response()->json(['error' => 'Credenciales incorrectas'], 401);
         }
 
         // Obtener la carrera del alumno
+        $startCarrera = microtime(true);
         $alumnoCarrera = \App\Models\AlumnoCarrera::where('id_alumno', $alumno->id_alumno)->first();
         $carrera = null;
         if ($alumnoCarrera) {
             $carrera = \App\Models\Carrera::find($alumnoCarrera->id_carrera);
         }
+        $endCarrera = microtime(true);
+        \Log::info('Tiempo consulta Carrera: ' . ($endCarrera - $startCarrera) . ' segundos');
         $alumno->carrera = $carrera;
 
-        // Obtener las UCs disponibles para inscribirse (lógica de InscripcionUnidadCurricularController)
+        // Obtener las UCs disponibles para inscribirse (optimizado para evitar N+1)
+        $startUC = microtime(true);
         $id_alumno = $alumno->id_alumno;
         $id_carrera = $alumnoCarrera ? $alumnoCarrera->id_carrera : null;
         $unidades_disponibles = [];
         if ($id_carrera) {
+            // Traer IDs de UCs en las que ya está inscripto
             $inscripto_ids = \App\Models\AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
+            // Traer IDs de todas las UCs de la carrera
             $uc_carrera = \App\Models\CarreraUc::where('id_carrera', $id_carrera)->pluck('id_uc')->toArray();
-            $todas_uc = \App\Models\UnidadCurricular::whereIn('id_uc', $uc_carrera)->get();
-            foreach ($todas_uc as $uc) {
-                if (in_array($uc->id_uc, $inscripto_ids)) continue;
-                $correlativas = \App\Models\Correlatividad::where('id_uc', $uc->id_uc)->pluck('correlativa')->toArray();
-                $aprobadas = true;
-                if (empty($correlativas)) {
+            // Traer todas las UCs de la carrera
+            $todas_uc = \App\Models\UnidadCurricular::whereIn('id_uc', $uc_carrera)->get()->keyBy('id_uc');
+            // Traer todas las correlatividades de las UCs de la carrera
+            $correlatividades = \App\Models\Correlatividad::whereIn('id_uc', $uc_carrera)->get()->groupBy('id_uc');
+            // Traer todas las notas del alumno de las UCs de la carrera
+            $notas = \App\Models\Nota::where('id_alumno', $id_alumno)
+                ->whereIn('id_uc', $uc_carrera)
+                ->where('nota', '>=', 6)
+                ->get()
+                ->keyBy('id_uc');
+            foreach ($todas_uc as $uc_id => $uc) {
+                if (in_array($uc_id, $inscripto_ids)) continue;
+                $correlativas = $correlatividades->get($uc_id, collect())->pluck('correlativa')->filter();
+                if ($correlativas->isEmpty()) {
                     $unidades_disponibles[] = $uc;
                     continue;
                 }
+                $aprobadas = true;
                 foreach ($correlativas as $id_correlativa) {
-                    if (!$id_correlativa) continue;
-                    $nota = \App\Models\Nota::where('id_alumno', $id_alumno)
-                        ->where('id_uc', $id_correlativa)
-                        ->where('nota', '>=', 6)
-                        ->first();
-                    if (!$nota) {
+                    if (!$notas->has($id_correlativa)) {
                         $aprobadas = false;
                         break;
                     }
@@ -95,9 +114,17 @@ class AuthController extends Controller
                 }
             }
         }
+        $endUC = microtime(true);
+        \Log::info('Tiempo consulta UCs disponibles: ' . ($endUC - $startUC) . ' segundos');
 
         // Crear token de Sanctum
+        $startToken = microtime(true);
         $token = $alumno->createToken('alumno_token')->plainTextToken;
+        $endToken = microtime(true);
+        \Log::info('Tiempo creación token: ' . ($endToken - $startToken) . ' segundos');
+
+        $endTotal = microtime(true);
+        \Log::info('Tiempo total login: ' . ($endTotal - $startTotal) . ' segundos');
 
         return response()->json([
             'success' => true,

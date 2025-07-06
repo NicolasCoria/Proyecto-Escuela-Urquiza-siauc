@@ -20,6 +20,7 @@ class CreateAlumnoUcTable extends Migration
             $table->primary(['id_alumno', 'id_uc']);
             $table->foreign('id_uc', 'alumno_uc_ibfk_1')->references('id_uc')->on('unidad_curricular')->onDelete('cascade');
             $table->foreign('id_alumno', 'alumno_uc_ibfk_2')->references('id_alumno')->on('alumno')->onDelete('cascade');
+            $table->index('id_alumno');
         });
     }
 

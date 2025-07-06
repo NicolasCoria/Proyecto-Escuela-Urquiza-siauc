@@ -10,9 +10,7 @@ import sidebarThemes from './sidebarTheme';
 
 const getTheme = (user, carrera) => {
   if (!user) return sidebarThemes.guest;
-  if (carrera && carrera.codigo === 'DS') return sidebarThemes.DS;
-  if (carrera && carrera.codigo === 'ITI') return sidebarThemes.ITI;
-  if (carrera && carrera.codigo === 'AF') return sidebarThemes.AF;
+  if (carrera && carrera.id) return sidebarThemes[carrera.id] || sidebarThemes.guest;
   return sidebarThemes.guest;
 };
 
@@ -147,7 +145,11 @@ const Sidebar = () => {
                 className={
                   activeButton === `alumno/profile/${user.id}` ? styles.activeBtn : styles.btn
                 }
-                style={{ color: theme.primary }}
+                style={
+                  activeButton === `alumno/profile/${user.id}`
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
               >
                 Perfil
               </Link>
@@ -156,7 +158,11 @@ const Sidebar = () => {
               <Link
                 to="/alumno"
                 className={activeButton === 'alumno' ? styles.activeBtn : styles.btn}
-                style={{ color: theme.primary }}
+                style={
+                  activeButton === 'alumno'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
               >
                 Home
               </Link>
@@ -165,7 +171,11 @@ const Sidebar = () => {
               <Link
                 to="/alumno/materias"
                 className={activeButton === 'alumno/materias' ? styles.activeBtn : styles.btn}
-                style={{ color: theme.primary }}
+                style={
+                  activeButton === 'alumno/materias'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
               >
                 Materias
               </Link>
@@ -174,7 +184,11 @@ const Sidebar = () => {
               <Link
                 to="/alumno/inscripciones"
                 className={activeButton === 'alumno/inscripciones' ? styles.activeBtn : styles.btn}
-                style={{ color: theme.primary }}
+                style={
+                  activeButton === 'alumno/inscripciones'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
               >
                 Inscripción a UC
               </Link>
@@ -189,7 +203,11 @@ const Sidebar = () => {
                     : `${styles.btn} ${styles.btnLanding}`
                 }
                 onClick={onLogout}
-                style={{ color: theme.primary }}
+                style={
+                  activeButton === 'logout'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
               >
                 Salir
               </a>

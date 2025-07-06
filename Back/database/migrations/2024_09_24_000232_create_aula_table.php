@@ -14,7 +14,7 @@ class CreateAulaTable extends Migration
     public function up()
     {
         Schema::create('aula', function (Blueprint $table) {
-            $table->integer('id_aula')->primary();
+            $table->increments('id_aula');
             $table->string('nombre', 50)->nullable();
             $table->integer('capacidad')->nullable();
             $table->string('tipo_aula', 50)->nullable();

@@ -14,7 +14,7 @@ class CreateAdministradorTable extends Migration
     public function up()
     {
         Schema::create('administrador', function (Blueprint $table) {
-            $table->integer('id_admin')->primary();
+            $table->increments('id_admin');
             $table->integer('DNI')->nullable();
             $table->string('nombre', 20)->nullable();
             $table->string('apellido', 20)->nullable();
