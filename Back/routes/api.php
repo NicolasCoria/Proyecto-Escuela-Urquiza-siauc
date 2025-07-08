@@ -36,3 +36,12 @@ Route::post('/admin/login', [AdminAuthController::class, 'loginAdmin']);
 // Rutas para encuestas académicas (CU-005)
 Route::get('/encuestas', [EncuestaController::class, 'index']);
 Route::post('/encuestas', [EncuestaController::class, 'store']);
+
+// Rutas para plantillas de informe (CU-004)
+Route::get('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeController::class, 'index']);
+Route::post('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeController::class, 'store']);
+Route::put('/plantillas-informe/{id}', [\App\Http\Controllers\PlantillaInformeController::class, 'update']);
+Route::delete('/plantillas-informe/{id}', [\App\Http\Controllers\PlantillaInformeController::class, 'destroy']);
+
+Route::get('/grados', [\App\Http\Controllers\Api\GradoController::class, 'getAllGrados']);
+Route::get('/unidades-curriculares', [\App\Http\Controllers\Api\UnidadCurricularController::class, 'getAllUnidadesCurriculares']);

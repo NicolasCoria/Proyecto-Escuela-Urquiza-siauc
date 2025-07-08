@@ -20,7 +20,7 @@ const Sidebar = () => {
   const [activeButton, setActiveButton] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { user, setUser, setTokenAndRole, carrera } = useStateContext();
+  const { user, setUser, setTokenAndRole, carrera, role } = useStateContext();
   const { openModal } = useModalContext();
   const theme = getTheme(user, carrera);
 
@@ -115,6 +115,41 @@ const Sidebar = () => {
             </li>
           </ul>
         </nav>
+      </aside>
+    );
+  }
+
+  // Opciones para alumno logueado o admin
+  if (role === 'admin') {
+    return (
+      <aside className={styles.sidebarBase} style={{ background: theme.background }}>
+        <img
+          src={logoSrc}
+          alt={logoAlt}
+          className={styles.logo}
+          style={{ maxWidth: '100%', height: 'auto' }}
+        />
+        <div className={styles.title}>Panel Administrativo</div>
+        <nav className={styles.menu}>
+          <ul className={styles.rutes}>
+            <li>
+              <Link
+                to="/admin/dashboard"
+                className={activeButton === 'admin/dashboard' ? styles.activeBtn : styles.btn}
+                style={{ color: theme.primary }}
+              >
+                Admin Dashboard
+              </Link>
+            </li>
+          </ul>
+        </nav>
+        <div className={styles.logout}>
+          <li>
+            <a className={styles.btn} onClick={onLogout} style={{ color: theme.primary }}>
+              Cerrar Sesión
+            </a>
+          </li>
+        </div>
       </aside>
     );
   }
