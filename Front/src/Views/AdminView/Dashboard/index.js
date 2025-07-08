@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './dashboard.module.css';
 import { Link } from 'react-router-dom';
 import { useStateContext } from '../../../Components/Contexts';
+import EncuestaForm from './EncuestaForm';
 
 const AdminDashboard = () => {
   const { user } = useStateContext();
@@ -21,6 +22,7 @@ const AdminDashboard = () => {
 
       <main className={styles.main}>
         <section className={styles.section}>
+          <EncuestaForm />
           <h2>Bienvenido al Panel de Administración</h2>
           <p>Desde aquí puedes gestionar el sistema y generar informes personalizados.</p>
 

@@ -18,6 +18,7 @@ import AdminDashboard from '../Views/AdminView/Dashboard';
 import AdminInformes from '../Views/AdminView/Informes';
 import AdminLayout from '../Components/Shared/AdminLayout';
 import Layout from '../Components/Shared/Layout';
+import EncuestasAlumno from '../Views/AlumnoView/EncuestasAlumno';
 
 const RoutesLanding = () => {
   const { pathname } = useLocation();
@@ -44,6 +45,7 @@ const RoutesLanding = () => {
           <Route path="profile/:id" element={<AlumnoProfile />} />
           <Route path="materias" element={<Materias />} />
           <Route path="inscripciones" element={<InscripcionesAlumno />} />
+          <Route path="encuestas" element={<EncuestasAlumno />} />
         </Route>
 
         {/* Rutas de Administrador */}

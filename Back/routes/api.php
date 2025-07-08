@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\CarreraController;
 use App\Http\Controllers\Api\InformeController;
+use App\Http\Controllers\Api\EncuestaController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -31,3 +32,7 @@ Route::post('/alumnos/login', [AuthController::class, 'loginAlumno']);
 // Rutas de autenticación para administradores
 Route::post('/admin/register', [AdminAuthController::class, 'registerAdmin']);
 Route::post('/admin/login', [AdminAuthController::class, 'loginAdmin']);
+
+// Rutas para encuestas académicas (CU-005)
+Route::get('/encuestas', [EncuestaController::class, 'index']);
+Route::post('/encuestas', [EncuestaController::class, 'store']);
