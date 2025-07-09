@@ -17,11 +17,11 @@ const Layout = ({ children }) => {
   console.log('theme usado:', theme);
 
   useEffect(() => {
-    document.body.style.background = theme.primary;
+    document.body.style.background = theme.soft;
     return () => {
       document.body.style.background = '';
     };
-  }, [theme.primary]);
+  }, [theme.soft]);
 
   return (
     <div
@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
         display: 'flex',
         minHeight: '100vh',
         position: 'relative',
-        background: theme.primary,
+        background: theme.soft,
         flexWrap: 'wrap'
       }}
     >
@@ -39,7 +39,7 @@ const Layout = ({ children }) => {
           flex: 1,
           padding: '48px 0',
           minHeight: '100vh',
-          background: theme.primary,
+          background: theme.soft,
           zIndex: 1,
           width: '100%',
           boxSizing: 'border-box',
