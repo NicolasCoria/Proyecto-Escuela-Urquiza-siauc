@@ -10,7 +10,8 @@ import sidebarThemes from './sidebarTheme';
 
 const getTheme = (user, carrera) => {
   if (!user) return sidebarThemes.guest;
-  if (carrera && carrera.id) return sidebarThemes[carrera.id] || sidebarThemes.guest;
+  const carreraId = carrera?.id || carrera?.id_carrera;
+  if (carreraId) return sidebarThemes[carreraId] || sidebarThemes.guest;
   return sidebarThemes.guest;
 };
 
@@ -24,20 +25,29 @@ const Sidebar = () => {
   const { openModal } = useModalContext();
   const theme = getTheme(user, carrera);
 
+  // Logo por id de carrera
   let logoSrc = '/assets/images/logoTS.png';
   let logoAlt = 'logo-TS';
-  if (user && carrera) {
-    if (carrera.codigo === 'DS') {
+  const carreraId = carrera?.id || carrera?.id_carrera;
+  if (user && carreraId) {
+    if (carreraId === 2) {
       logoSrc = '/assets/images/logoDS.png';
       logoAlt = 'logo-DS';
-    } else if (carrera.codigo === 'ITI') {
+    } else if (carreraId === 3) {
       logoSrc = '/assets/images/logoITI.png';
       logoAlt = 'logo-ITI';
-    } else if (carrera.codigo === 'AF') {
+    } else if (carreraId === 1) {
       logoSrc = '/assets/images/logoAF.png';
       logoAlt = 'logo-AF';
     }
   }
+
+  // DEBUG LOGS
+  console.log('Sidebar DEBUG -> user:', user);
+  console.log('Sidebar DEBUG -> carrera:', carrera);
+  console.log('Sidebar DEBUG -> theme:', theme);
+  console.log('Sidebar DEBUG -> logoSrc:', logoSrc);
+  console.log('Sidebar DEBUG -> logoAlt:', logoAlt);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -182,9 +192,19 @@ const Sidebar = () => {
                 }
                 style={
                   activeButton === `alumno/profile/${user.id}`
-                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    ? { backgroundColor: '#fff', color: theme.primary }
                     : { color: theme.primary }
                 }
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#fff';
+                  e.currentTarget.style.color = '#111';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    activeButton === `alumno/profile/${user.id}` ? '#fff' : 'transparent';
+                  e.currentTarget.style.color =
+                    activeButton === `alumno/profile/${user.id}` ? theme.primary : theme.primary;
+                }}
               >
                 Perfil
               </Link>

@@ -322,10 +322,10 @@
 }
 
 .sidebarBase {
-  background: #f5f6fa;
+  background: var(--sidebar-bg, #f5f6fa);
   min-height: 100vh;
   width: 220px;
-  box-shadow: 2px 0 8px #0001;
+  box-shadow: 2px 1px 10px #0000001a;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -346,29 +346,29 @@
 
 .btn {
   display: block;
-  margin: 6px 0;
-  padding: 10px 0;
-  width: 135px;
-  border-radius: 5px;
-  text-align: center;
-  background-color: #fff;
-  color: #222;
+  width: 100%;
+  padding: 12px 0;
+  margin-bottom: 16px;
+  font-size: 1.2rem;
   font-weight: 500;
-  font-size: 20px;
-  box-shadow: 2px 4px 8px #bbb;
   border: none;
-  transition: background 0.2s, color 0.2s;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  box-shadow: 2px 4px 8px #0000002a;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
   cursor: pointer;
 }
 
 .btn:hover, .btn:focus {
-  background-color: #4a90e2 !important;
-  color: #fff !important;
-  box-shadow: 2px 4px 12px #888;
+  /* El color de fondo y texto se setea por inline style desde el componente */
+  filter: brightness(1.05);
+  box-shadow: 2px 6px 12px #0000002a;
 }
 
 .activeBtn, .btn:active, .btn.active {
-  background-color: #4a90e2 !important;
-  color: #fff !important;
-  box-shadow: 2px 4px 12px #888;
+  /* El color de fondo y texto se setea por inline style desde el componente */
+  font-weight: 700;
+  filter: brightness(1.08);
+  box-shadow: 2px 6px 12px #0000003a;
 }
