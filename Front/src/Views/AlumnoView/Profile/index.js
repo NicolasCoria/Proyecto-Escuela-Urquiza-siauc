@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styles from './profile.module.css';
-import Aside from '../../../Components/Shared/Aside';
 import Modal from '../../../Components/Shared/Modal';
 import Spinner from '../../../Components/Shared/Spinner';
 import { useModalContext, useStateContext } from '../../../Components/Contexts';
@@ -17,7 +16,6 @@ const Profile = () => {
 
   return (
     <>
-      <Aside page={'home'} />
       {modalState.isOpen && (
         <Modal description={modalState.description} isOpen={modalState.isOpen} close={closeModal} />
       )}

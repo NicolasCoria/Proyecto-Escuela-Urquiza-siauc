@@ -72,7 +72,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'America/Argentina/Buenos_Aires',
 
     /*
     |--------------------------------------------------------------------------
@@ -170,6 +170,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        Barryvdh\DomPDF\ServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -184,7 +185,7 @@ return [
     */
 
     'aliases' => Facade::defaultAliases()->merge([
-
+        'Pdf' => Barryvdh\DomPDF\Facade\Pdf::class,
     ])->toArray(),
 
 ];

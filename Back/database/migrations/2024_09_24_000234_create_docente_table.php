@@ -14,7 +14,7 @@ class CreateDocenteTable extends Migration
     public function up()
     {
         Schema::create('docente', function (Blueprint $table) {
-            $table->integer('id_docente')->primary();
+            $table->increments('id_docente');
             $table->integer('DNI')->nullable();
             $table->string('nombre', 20)->nullable();
             $table->string('apellido', 20)->nullable();

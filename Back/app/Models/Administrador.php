@@ -8,6 +8,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * Class Administrador
@@ -33,6 +34,7 @@ class Administrador extends Model
 	protected $table = 'administrador';
 	protected $primaryKey = 'id_admin';
 	public $timestamps = false;
+	use HasApiTokens;
 
 	protected $casts = [
 		'DNI' => 'int',
@@ -45,6 +47,7 @@ class Administrador extends Model
 		'nombre',
 		'apellido',
 		'email',
+		'password',
 		'telefono',
 		'genero',
 		'fecha_nac',

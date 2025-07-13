@@ -3,213 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\LoginRequest;
-use App\Http\Requests\SignUpStudentRequest;
-use App\Http\Requests\SignUpSuperAdminRequest;
-use App\Http\Requests\ForgotPasswordRequest;
-use App\Http\Requests\ResetPasswordRequest;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use \App\Models\Student;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\ResetPasswordMail;
-use \App\Models\SuperAdmin;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Log;
-use App\Http\Resources\StudentResource;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function signup(SignUpStudentRequest $request)
-    {
-        try {
-
-
-            $data = $request->validated();
-            $profilePhotoPath = null;
-
-            if ($request->hasFile('profile_photo')) {
-                $profilePhotoPath = $request->file('profile_photo')->store('profile-photos', 'public');
-            }
-
-            $user = Student::create([
-                'name' => $data['name'],
-                'dni' => $data['dni'],
-                'email' => $data['email'],
-                'password' => bcrypt($data['password']),
-                'career' => $data['career'],
-                'profile_photo' => $profilePhotoPath,
-            ]);
-
-            $token = $user->createToken('main')->plainTextToken;
-
-            $userResource = new StudentResource($user);
-
-            return response()->json([
-                'user' => $userResource,
-                'token' => $token
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error($e);
-            error_log($e->getMessage());
-            return response()->json(['error' => 'Internal Server Error'], 500);
-        }
-    }
-
-    public function signupSuperAdmin(SignUpSuperAdminRequest $request)
-    {
-        try {
-            $data = $request->validated();
-            $user = SuperAdmin::create([
-                'email' => $data['email'],
-                'password' => bcrypt($data['password']),
-                'career' => $data['career'],
-            ]);
-
-            $token = $user->createToken('main')->plainTextToken;
-
-            return response()->json([
-                'user' => $user,
-                'token' => $token
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error($e);
-            error_log($e->getMessage());
-            return response()->json(['error' => 'Internal Server Error'], 500);
-        }
-    }
-
-    public function login(LoginRequest $request)
-    {
-        try {
-            $credentials = [
-                'email' => $request->input('email'),
-                'password' => $request->input('password'),
-            ];
-
-            $user = Student::where('email', $request->email)->first() ?? SuperAdmin::where('email', $request->email)->first();
-
-            if (optional($user)->email !== $request->email) {
-                return response()->json(['messageEmail' => 'Email incorrecto para la contraseña ingresada'], 422);
-            }
-
-            if (!password_verify($request->password, $user->password)) {
-                return response()->json(['messagePassword' => 'Contraseña incorrecta para el email ingresado'], 422);
-            }
-
-            if ($user instanceof Student && !$user->approved) {
-                return response()->json(['messageVerification' => 'Su cuenta aún no ha sido verificada. Por favor, revise su casilla de correo electrónico o comuníquese con la institución.'], 422);
-            }
-
-            $profilePhotoPath = null;
-
-            if ($request->hasFile('profile_photo')) {
-                $profilePhotoPath = $request->file('profile_photo')->store('profile-photos', 'public');
-            }
-
-            Auth::login($user);
-            $request->session()->regenerate();
-            $token = $user->createToken('main')->plainTextToken;
-            $userResource = new StudentResource($user);
-
-            return response([
-                'user' => $userResource,
-                'token' => $token,
-                'notifications' => $user instanceof SuperAdmin ? $user->notifications : [],
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error($e);
-            error_log($e->getMessage());
-            return response()->json(['error' => 'Internal Server Error'], 500);
-        }
-    }
-
-    public function forgotPassword(ForgotPasswordRequest $request)
-    {
-        $user = Student::where('email', $request->email)->first();
-
-        if (!$user) {
-            return response()->json(['message' => 'No se encontró un usuario con este correo electrónico'], 404);
-        }
-        if ($user instanceof Student && !$user->approved) {
-            return response()->json(['messageVerification' => 'Su cuenta aún no ha sido verificada. Por favor, revise su casilla de correo electrónico o comuníquese con la institución.'], 422);
-        }
-
-        $user->update(['reset_password_used' => false]);
-
-        $token = app('auth.password.broker')->createToken($user);
-        $user->update(['reset_password_token' => $token]);
-
-        $frontendResetLink = env('FRONTEND_URL') . '/reset-password/' . $token;
-        $name = $user->name;
-
-        Mail::to($user->email)->send(new ResetPasswordMail($frontendResetLink, $name));
-
-        return response()->json(['message' => 'Enlace de restablecimiento de contraseña enviado al correo electrónico.']);
-    }
-
-    public function resetPassword(ResetPasswordRequest $request)
-    {
-
-        try {
-            $user = Student::where('reset_password_token', $request->token)
-                ->where('reset_password_used', false)
-                ->first();
-
-            if (!$user) {
-                return response()->json(['messageReset' => 'Email de restablecimiento ya utilizado. Por favor, vuelva a enviar la solicitud'], 404);
-            }
-
-            $user->update([
-                'password' => bcrypt($request->password),
-                'reset_password_token' => null,
-                'reset_password_used' => true,
-            ]);
-
-            if (!$user->wasChanged()) {
-                return response()->json(['error' => 'No se pudo actualizar la contraseña'], 500);
-            }
-
-            return response()->json(['message' => 'Contraseña restablecida con éxito']);
-        } catch (\Exception $e) {
-            \Log::error($e);
-            error_log($e->getMessage());
-            return response()->json(['error' => 'Internal Server Error', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-
-    public function verifyResetToken($token)
-    {
-        try {
-            $user = Student::where('reset_password_token', $token)
-                ->where('reset_password_used', false)
-                ->first();
-
-            if (!$user) {
-                return response()->json(['messageReset' => 'Token de restablecimiento de contraseña no válido'], 404);
-            }
-
-            $tokenRepository = Password::getRepository();
-            if (!$tokenRepository->exists($user, $token)) {
-                return response()->json(['messageReset' => 'Token de restablecimiento de contraseña no válido'], 404);
-            }
-
-            return response()->json(['messageReset' => 'Token de restablecimiento de contraseña válido'], 200);
-        } catch (\Exception $e) {
-            \Log::error($e);
-            error_log($e->getMessage());
-            return response()->json(['error' => 'Internal Server Error'], 500);
-        }
-    }
-
     public function logout(Request $request)
     {
-        $student = $request->user();
-        $student->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
         return response('', 204);
     }
 
@@ -243,22 +45,123 @@ class AuthController extends Controller
      */
     public function loginAlumno(Request $request)
     {
+        $startTotal = microtime(true);
+        
         $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
+        $startQuery = microtime(true);
         $alumno = \App\Models\Alumno::where('email', $validated['email'])->first();
+        $endQuery = microtime(true);
+        
+        \Log::info('Tiempo consulta Alumno: ' . ($endQuery - $startQuery) . ' segundos');
+
         if (!$alumno || !\Illuminate\Support\Facades\Hash::check($validated['password'], $alumno->password)) {
+            $endTotal = microtime(true);
+            \Log::info('Tiempo total login (credenciales incorrectas): ' . ($endTotal - $startTotal) . ' segundos');
             return response()->json(['error' => 'Credenciales incorrectas'], 401);
         }
 
+        // Obtener la carrera del alumno
+        $startCarrera = microtime(true);
+        $alumnoCarrera = \App\Models\AlumnoCarrera::where('id_alumno', $alumno->id_alumno)->first();
+        $carrera = null;
+        if ($alumnoCarrera) {
+            $carrera = \App\Models\Carrera::find($alumnoCarrera->id_carrera);
+        }
+        $endCarrera = microtime(true);
+        \Log::info('Tiempo consulta Carrera: ' . ($endCarrera - $startCarrera) . ' segundos');
+        $alumno->carrera = $carrera;
+
+        // Obtener las UCs disponibles para inscribirse (optimizado para evitar N+1)
+        $startUC = microtime(true);
+        $id_alumno = $alumno->id_alumno;
+        $id_carrera = $alumnoCarrera ? $alumnoCarrera->id_carrera : null;
+        $unidades_disponibles = [];
+        if ($id_carrera) {
+            // Traer IDs de UCs en las que ya está inscripto
+            $inscripto_ids = \App\Models\AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
+            // Traer IDs de todas las UCs de la carrera
+            $uc_carrera = \App\Models\CarreraUc::where('id_carrera', $id_carrera)->pluck('id_uc')->toArray();
+            // Traer todas las UCs de la carrera
+            $todas_uc = \App\Models\UnidadCurricular::whereIn('id_uc', $uc_carrera)->get()->keyBy('id_uc');
+            // Traer todas las correlatividades de las UCs de la carrera
+            $correlatividades = \App\Models\Correlatividad::whereIn('id_uc', $uc_carrera)->get()->groupBy('id_uc');
+            // Traer todas las notas del alumno de las UCs de la carrera
+            $notas = \App\Models\Nota::where('id_alumno', $id_alumno)
+                ->whereIn('id_uc', $uc_carrera)
+                ->where('nota', '>=', 6)
+                ->get()
+                ->keyBy('id_uc');
+            foreach ($todas_uc as $uc_id => $uc) {
+                if (in_array($uc_id, $inscripto_ids)) continue;
+                $correlativas = $correlatividades->get($uc_id, collect())->pluck('correlativa')->filter();
+                if ($correlativas->isEmpty()) {
+                    $unidades_disponibles[] = $uc;
+                    continue;
+                }
+                $aprobadas = true;
+                foreach ($correlativas as $id_correlativa) {
+                    if (!$notas->has($id_correlativa)) {
+                        $aprobadas = false;
+                        break;
+                    }
+                }
+                if ($aprobadas) {
+                    $unidades_disponibles[] = $uc;
+                }
+            }
+        }
+        $endUC = microtime(true);
+        \Log::info('Tiempo consulta UCs disponibles: ' . ($endUC - $startUC) . ' segundos');
+
         // Crear token de Sanctum
+        $startToken = microtime(true);
         $token = $alumno->createToken('alumno_token')->plainTextToken;
+        $endToken = microtime(true);
+        \Log::info('Tiempo creación token: ' . ($endToken - $startToken) . ' segundos');
+
+        $endTotal = microtime(true);
+        \Log::info('Tiempo total login: ' . ($endTotal - $startTotal) . ' segundos');
 
         return response()->json([
             'success' => true,
             'token' => $token,
+            'alumno' => $alumno,
+            'carrera' => $carrera,
+            'unidades_disponibles' => $unidades_disponibles
+        ]);
+    }
+
+    /**
+     * Obtener información completa del alumno
+     */
+    public function getAlumnoInfo(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+
+        $alumno = \App\Models\Alumno::find($user->id_alumno ?? $user->id);
+        if (!$alumno) {
+            return response()->json(['error' => 'Alumno no encontrado'], 404);
+        }
+
+        // Obtener la carrera del alumno
+        $alumnoCarrera = \App\Models\AlumnoCarrera::where('id_alumno', $alumno->id_alumno)->first();
+        $carrera = null;
+        if ($alumnoCarrera) {
+            $carrera = \App\Models\Carrera::find($alumnoCarrera->id_carrera);
+        }
+
+        // Agregar la información de la carrera al objeto alumno
+        $alumno->carrera = $carrera ? $carrera->carrera : null;
+
+        return response()->json([
+            'success' => true,
             'alumno' => $alumno
         ]);
     }

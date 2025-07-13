@@ -1,6 +1,11 @@
 .container {
-  position: relative;
-  top: 170px;
+  position: static;
+  top: 0;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
   opacity: 0;
   animation: slideInFromLeft 1s ease-in-out forwards;
 }
@@ -9,20 +14,23 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin: 4vh 8vw;
-  padding: 20px;
-  box-shadow: 3px 5px 10px #0000007d;
-  border-radius: 5px;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.8) 44%, rgba(255, 255, 255, 0.8) 58%),
-    url('../../../../public/assets/images/urquizaSchool.jpg');
-  background-position: top;
-  background-size: cover;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+  background: none;
 }
 
 .loginContainer {
-  padding: 10px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px 18px;
   border: 2px solid #7a7a7a;
-  border-radius: 5px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 16px #bbb;
 }
 
 .btnContainer {
@@ -46,6 +54,8 @@
   transition: text-shadow 0.1s ease-in-out;
 }
 
+
+
 .passwordContainer {
   position: relative;
   width: 100%;
@@ -64,42 +74,34 @@
 
 @media only screen and (min-width: 1024px) {
   .container {
-    top: 150px;
+    min-height: 60vh;
+    margin: 0 auto;
+    top: 0;
   }
-
   .subContainer {
+    flex-direction: column;
     align-items: center;
-    flex-direction: row;
-    justify-content: flex-start;
-    margin: 10vh 48px 0 347px;
-    padding: 4vh;
-    background-image: linear-gradient(
-        to right,
-        rgb(255, 255, 255) 44%,
-        rgba(255, 255, 255, 0.3) 58%
-      ),
-      url('../../../../public/assets/images/urquizaSchool.jpg');
-    background-position: right;
-    background-size: contain;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    background: none;
   }
-
+  .loginContainer {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 4px 16px #bbb;
+  }
   .title {
     width: 200px;
     margin: 0 51vw;
   }
-
   .img {
     width: 50%;
   }
-
-  .loginContainer {
-    width: 40%;
-    min-width: 200px;
-    padding: 10px;
-    border: 2px solid #7a7a7a;
-    border-radius: 5px;
-  }
-
   .showPasswordIcon {
     top: 45px;
     font-size: 24px;
@@ -110,7 +112,6 @@
   0% {
     opacity: 0;
   }
-
   100% {
     opacity: 1;
   }

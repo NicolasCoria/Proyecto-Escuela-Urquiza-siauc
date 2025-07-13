@@ -24,6 +24,8 @@ class CreateNotaTable extends Migration
 
             $table->foreign('id_alumno')->references('id_alumno')->on('alumno');
             $table->foreign('id_uc')->references('id_uc')->on('unidad_curricular');
+            $table->index('id_alumno');
+            $table->index('id_uc');
         });
     }
 

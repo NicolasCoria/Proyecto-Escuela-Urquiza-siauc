@@ -22,6 +22,7 @@ class CreateCorrelatividadTable extends Migration
             $table->foreign('id_carrera', 'fk_correlatividad_carrera')->references('id_carrera')->on('carrera')->onDelete('cascade');
             $table->foreign('correlativa', 'fk_correlatividad_correlativa')->references('id_uc')->on('unidad_curricular')->onDelete('cascade');
             $table->foreign('id_uc', 'fk_correlatividad_uc')->references('id_uc')->on('unidad_curricular')->onDelete('cascade');
+            $table->index('id_uc');
         });
     }
 

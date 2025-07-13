@@ -20,6 +20,7 @@ class CreateAlumnoCarreraTable extends Migration
             $table->primary(['id_alumno', 'id_carrera']);
             $table->foreign('id_alumno', 'fk_alumno_carrera_alumno')->references('id_alumno')->on('alumno')->onDelete('cascade');
             $table->foreign('id_carrera', 'fk_alumno_carrera_carrera')->references('id_carrera')->on('carrera')->onDelete('cascade');
+            $table->index('id_alumno');
         });
     }
 

@@ -100,17 +100,6 @@ const Modal = () => {
               <div className={styles.descriptionSelfClose}>{description}</div>
               <Button type="x" text={'X'} onClick={closeModal} />
             </div>
-          ) : sessionStorage.getItem('role') === 'SA' ? (
-            <div
-              className={
-                !isFadingOut
-                  ? `${styles.subContainerSelfClose} ${styles.subContainerSelfCloseSa}`
-                  : `${styles.subContainerOpen} ${styles.subContainerOpenSa}`
-              }
-            >
-              <div className={styles.descriptionSelfCloseSa}>{description}</div>
-              <Button type="x" text={'X'} onClick={closeModal} />
-            </div>
           ) : (
             <div className={!isFadingOut ? styles.subContainerSelfClose : styles.subContainerOpen}>
               <div className={styles.descriptionSelfClose}>{description}</div>
