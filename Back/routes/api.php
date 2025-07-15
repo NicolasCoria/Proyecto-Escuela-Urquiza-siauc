@@ -34,8 +34,10 @@ Route::post('/admin/register', [AdminAuthController::class, 'registerAdmin']);
 Route::post('/admin/login', [AdminAuthController::class, 'loginAdmin']);
 
 // Rutas para encuestas académicas (CU-005)
-Route::get('/encuestas', [EncuestaController::class, 'index']);
-Route::post('/encuestas', [EncuestaController::class, 'store']);
+Route::get('/encuestas', [EncuestaController::class, 'index']); // Listar encuestas activas con preguntas y opciones
+Route::post('/encuestas', [EncuestaController::class, 'store']); // Crear encuesta completa
+Route::post('/encuestas/responder', [EncuestaController::class, 'responder']); // Guardar respuestas de alumno
+Route::get('/encuestas/{id}/estadisticas', [EncuestaController::class, 'estadisticas']); // Estadísticas de encuesta
 
 // Rutas para plantillas de informe (CU-004)
 Route::get('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeController::class, 'index']);

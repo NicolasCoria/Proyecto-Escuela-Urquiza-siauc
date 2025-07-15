@@ -6,20 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Encuesta extends Model
 {
-    protected $table = 'encuestas';
+    protected $table = 'encuesta';
+    protected $primaryKey = 'id_encuesta';
     protected $fillable = [
-        'titulo',
-        'descripcion',
-        'link_google_forms',
-        'creador_id',
-        'fecha_creacion',
-        'estado',
-        'id_carrera',
+        'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'activa', 'id_carrera'
     ];
-    public $timestamps = false;
+
+    public function preguntas()
+    {
+        return $this->hasMany(Pregunta::class, 'id_encuesta');
+    }
 
     public function carrera()
     {
-        return $this->belongsTo(Carrera::class, 'id_carrera', 'id_carrera');
+        return $this->belongsTo(Carrera::class, 'id_carrera');
     }
 } 

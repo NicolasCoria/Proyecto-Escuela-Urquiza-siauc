@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useStateContext } from '../../Components/Contexts';
+import EncuestaForm from './EncuestaForm';
 
 const EncuestasAlumno = () => {
   const { carrera } = useStateContext();
@@ -14,7 +15,7 @@ const EncuestasAlumno = () => {
     }
     axios
       .get(`/api/encuestas?id_carrera=${carrera.id_carrera}`)
-      .then(res => {
+      .then((res) => {
         setEncuestas(res.data.encuestas);
         setLoading(false);
       })
@@ -29,17 +30,11 @@ const EncuestasAlumno = () => {
     <div>
       <h2>Encuestas Académicas</h2>
       <ul>
-        {encuestas.map(encuesta => (
-          <li key={encuesta.id} style={{marginBottom: 20}}>
+        {encuestas.map((encuesta) => (
+          <li key={encuesta.id} style={{ marginBottom: 20 }}>
             <h3>{encuesta.titulo}</h3>
             <p>{encuesta.descripcion}</p>
-            <a
-              href={encuesta.link_google_forms}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{color: 'blue', textDecoration: 'underline'}}>
-              Responder encuesta
-            </a>
+            <EncuestaForm encuesta={encuesta} />
           </li>
         ))}
       </ul>
@@ -47,4 +42,4 @@ const EncuestasAlumno = () => {
   );
 };
 
-export default EncuestasAlumno; 
+export default EncuestasAlumno;
