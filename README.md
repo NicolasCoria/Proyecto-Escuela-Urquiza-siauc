@@ -34,10 +34,10 @@ Necesitamos tener en la carpeta Front y Back el archivo de las variables de ento
 - [X] Caso de uso 4 - Mirko
 - [X] Caso de uso 5 - Mirko
 - [ ] Caso de uso 6
-- [ ] Caso de uso 7
-- [ ] Caso de uso 8
-- [ ] Caso de uso 9
-- [ ] Caso de uso 10
+- [X] Caso de uso 7 - Mirko
+- [X] Caso de uso 8 - Mirko
+- [X] Caso de uso 9 - Mirko
+- [X] Caso de uso 10 - Mirko
 - [ ] Caso de uso 11
 - [ ] Caso de uso 12
 
