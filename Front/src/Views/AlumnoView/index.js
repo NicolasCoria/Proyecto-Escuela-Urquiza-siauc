@@ -1,22 +1,26 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useStateContext } from '../../Components/Contexts';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import AlumnoMenu from './AlumnoMenu';
+import EncuestasAlumno from './EncuestasAlumno';
+import Profile from './Profile';
+import InscripcionesAlumno from './InscripcionesAlumno';
+import Materias from './Materias';
 
 const AlumnoView = () => {
-  const { token } = useStateContext();
-  const location = useLocation();
-
-  if (!token) {
-    return <Navigate to="/login" />;
-  }
-
-  // Si está en /alumno exactamente, mostrar el menú principal
-  if (location.pathname === '/alumno') {
-    return <AlumnoMenu />;
-  }
-
-  // Si está en una subruta, renderizar el contenido correspondiente
-  return <Outlet />;
+  return (
+    <div style={{ display: 'flex' }}>
+      <AlumnoMenu />
+      <div style={{ flex: 1, padding: '20px' }}>
+        <Routes>
+          <Route path="/" element={<EncuestasAlumno />} />
+          <Route path="/encuestas" element={<EncuestasAlumno />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/inscripciones" element={<InscripcionesAlumno />} />
+          <Route path="/materias" element={<Materias />} />
+        </Routes>
+      </div>
+    </div>
+  );
 };
 
 export default AlumnoView;

@@ -8,6 +8,7 @@ class Opcion extends Model
 {
     protected $table = 'opcion';
     protected $primaryKey = 'id_opcion';
+    public $timestamps = false;
     protected $fillable = [
         'id_pregunta', 'texto', 'valor'
     ];
