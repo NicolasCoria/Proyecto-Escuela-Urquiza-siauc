@@ -8,6 +8,9 @@ use App\Models\Encuesta;
 use App\Models\Pregunta;
 use App\Models\Opcion;
 use App\Models\Respuesta;
+use App\Models\AlumnoEncuesta;
+use App\Models\Alumno;
+use App\Models\AlumnoCarrera;
 use Illuminate\Support\Facades\DB;
 
 class EncuestaController extends Controller
@@ -33,7 +36,7 @@ class EncuestaController extends Controller
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date',
             'activa' => 'boolean',
-            'id_carrera' => 'nullable|integer|exists:carrera,id_carrera',
+            'id_carrera' => 'nullable|integer|exists:carrera,id_carrera', // ahora puede ser null
             'preguntas' => 'required|array|min:1',
             'preguntas.*.texto' => 'required|string|max:255',
             'preguntas.*.tipo' => 'required|in:opcion_unica,opcion_multiple',
@@ -91,6 +94,17 @@ class EncuestaController extends Controller
             ];
         }
         Respuesta::insert($toInsert);
+
+        // Marcar la encuesta como respondida
+        if ($idAlumno) {
+            AlumnoEncuesta::where('id_alumno', $idAlumno)
+                ->where('id_encuesta', $request->id_encuesta)
+                ->update([
+                    'respondida' => true,
+                    'fecha_respuesta' => now()
+                ]);
+        }
+
         return response()->json(['success' => true]);
     }
 
@@ -123,5 +137,185 @@ class EncuestaController extends Controller
             ];
         }
         return response()->json(['success' => true, 'estadisticas' => $stats]);
+    }
+
+    // Asignar encuesta a alumnos específicos
+    public function asignarAAlumnos(Request $request)
+    {
+        $validated = $request->validate([
+            'id_encuesta' => 'required|integer|exists:encuesta,id_encuesta',
+            'alumnos' => 'required|array|min:1',
+            'alumnos.*' => 'integer|exists:alumno,id_alumno',
+        ]);
+
+        $asignaciones = [];
+        foreach ($validated['alumnos'] as $id_alumno) {
+            $asignaciones[] = [
+                'id_encuesta' => $validated['id_encuesta'],
+                'id_alumno' => $id_alumno,
+                'fecha_asignacion' => now(),
+                'notificado' => false,
+                'respondida' => false,
+            ];
+        }
+
+        AlumnoEncuesta::insertOrIgnore($asignaciones);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Encuesta asignada a ' . count($validated['alumnos']) . ' alumnos'
+        ]);
+    }
+
+    // Asignar encuesta a todos los alumnos de una carrera
+    public function asignarACarrera(Request $request)
+    {
+        $validated = $request->validate([
+            'id_encuesta' => 'required|integer|exists:encuesta,id_encuesta',
+            'id_carrera' => 'required|integer|exists:carrera,id_carrera',
+        ]);
+
+        // Obtener todos los alumnos de la carrera
+        $alumnos = AlumnoCarrera::where('id_carrera', $validated['id_carrera'])
+            ->pluck('id_alumno')
+            ->toArray();
+
+        if (empty($alumnos)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay alumnos en la carrera especificada'
+            ], 400);
+        }
+
+        $asignaciones = [];
+        foreach ($alumnos as $id_alumno) {
+            $asignaciones[] = [
+                'id_encuesta' => $validated['id_encuesta'],
+                'id_alumno' => $id_alumno,
+                'fecha_asignacion' => now(),
+                'notificado' => false,
+                'respondida' => false,
+            ];
+        }
+
+        AlumnoEncuesta::insertOrIgnore($asignaciones);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Encuesta asignada a ' . count($alumnos) . ' alumnos de la carrera'
+        ]);
+    }
+
+    // Asignar encuesta a alumnos filtrados por carrera, grado y/o materia
+    public function asignarFiltrado(Request $request)
+    {
+        $validated = $request->validate([
+            'id_encuesta' => 'required|integer|exists:encuesta,id_encuesta',
+            'id_carrera' => 'nullable|integer|exists:carrera,id_carrera',
+            'id_grado' => 'nullable|integer|exists:grado,id_grado',
+            'id_uc' => 'nullable|integer|exists:unidad_curricular,id_uc',
+        ]);
+
+        // Si la encuesta es global (id_carrera null), buscar todos los alumnos
+        if (empty($validated['id_carrera'])) {
+            $alumnos = \App\Models\Alumno::pluck('id_alumno')->toArray();
+        } else {
+            $query = \App\Models\AlumnoCarrera::where('id_carrera', $validated['id_carrera']);
+            $alumnos = $query->pluck('id_alumno')->toArray();
+        }
+        $alumnosFiltrados = $alumnos;
+        if ($request->filled('id_grado')) {
+            $alumnosGrado = \App\Models\AlumnoGrado::where('id_grado', $validated['id_grado'])->pluck('id_alumno')->toArray();
+            $alumnosFiltrados = array_intersect($alumnosFiltrados, $alumnosGrado);
+        }
+        if ($request->filled('id_uc')) {
+            $alumnosUc = \App\Models\AlumnoUc::where('id_uc', $validated['id_uc'])->pluck('id_alumno')->toArray();
+            $alumnosFiltrados = array_intersect($alumnosFiltrados, $alumnosUc);
+        }
+        if (empty($alumnosFiltrados)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay alumnos que cumplan con los filtros.'
+            ], 400);
+        }
+        $asignaciones = [];
+        foreach ($alumnosFiltrados as $id_alumno) {
+            $asignaciones[] = [
+                'id_encuesta' => $validated['id_encuesta'],
+                'id_alumno' => $id_alumno,
+                'fecha_asignacion' => now(),
+                'notificado' => false,
+                'respondida' => false,
+            ];
+        }
+        \App\Models\AlumnoEncuesta::insertOrIgnore($asignaciones);
+        return response()->json([
+            'success' => true,
+            'message' => 'Encuesta asignada a ' . count($alumnosFiltrados) . ' alumnos filtrados.'
+        ]);
+    }
+
+    // Obtener encuestas asignadas al alumno autenticado
+    public function encuestasAsignadas(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+
+        $id_alumno = $user->id_alumno ?? $user->id ?? null;
+        if (!$id_alumno) {
+            return response()->json(['error' => 'No se pudo determinar el alumno'], 400);
+        }
+
+        $encuestas = AlumnoEncuesta::with(['encuesta.preguntas.opciones'])
+            ->where('id_alumno', $id_alumno)
+            ->whereHas('encuesta', function ($query) {
+                $query->where('activa', true);
+            })
+            ->get()
+            ->map(function ($alumnoEncuesta) {
+                return [
+                    'id_encuesta' => $alumnoEncuesta->encuesta->id_encuesta,
+                    'titulo' => $alumnoEncuesta->encuesta->titulo,
+                    'descripcion' => $alumnoEncuesta->encuesta->descripcion,
+                    'fecha_inicio' => $alumnoEncuesta->encuesta->fecha_inicio,
+                    'fecha_fin' => $alumnoEncuesta->encuesta->fecha_fin,
+                    'preguntas' => $alumnoEncuesta->encuesta->preguntas,
+                    'fecha_asignacion' => $alumnoEncuesta->fecha_asignacion,
+                    'notificado' => $alumnoEncuesta->notificado,
+                    'respondida' => $alumnoEncuesta->respondida,
+                    'fecha_respuesta' => $alumnoEncuesta->fecha_respuesta,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'encuestas' => $encuestas
+        ]);
+    }
+
+    // Marcar encuesta como notificada
+    public function marcarNotificada(Request $request)
+    {
+        $validated = $request->validate([
+            'id_encuesta' => 'required|integer|exists:encuesta,id_encuesta',
+        ]);
+
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+
+        $id_alumno = $user->id_alumno ?? $user->id ?? null;
+        if (!$id_alumno) {
+            return response()->json(['error' => 'No se pudo determinar el alumno'], 400);
+        }
+
+        AlumnoEncuesta::where('id_alumno', $id_alumno)
+            ->where('id_encuesta', $validated['id_encuesta'])
+            ->update(['notificado' => true]);
+
+        return response()->json(['success' => true]);
     }
 } 

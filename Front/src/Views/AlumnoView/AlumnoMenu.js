@@ -4,6 +4,7 @@ import styles from '../../Components/Home/home.module.css';
 import Button from '../../Components/Shared/Button';
 import { useStateContext } from '../../Components/Contexts';
 import sidebarThemes from '../../Components/Shared/Sidebar/sidebarTheme';
+import NotificacionesEncuestas from './NotificacionesEncuestas';
 
 const AlumnoMenu = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const AlumnoMenu = () => {
 
   return (
     <>
+      <NotificacionesEncuestas />
       <main>
         <section className={styles.container}>
           <div className={styles.title}>Menú Principal Alumno</div>

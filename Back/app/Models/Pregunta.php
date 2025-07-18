@@ -8,6 +8,7 @@ class Pregunta extends Model
 {
     protected $table = 'pregunta';
     protected $primaryKey = 'id_pregunta';
+    public $timestamps = false;
     protected $fillable = [
         'id_encuesta', 'texto', 'tipo', 'orden'
     ];

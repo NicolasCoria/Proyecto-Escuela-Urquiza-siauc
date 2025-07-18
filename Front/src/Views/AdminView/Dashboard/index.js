@@ -3,6 +3,7 @@ import styles from './dashboard.module.css';
 import { Link } from 'react-router-dom';
 import { useStateContext } from '../../../Components/Contexts';
 import EncuestaForm from './EncuestaForm';
+import GestionarAsignaciones from './GestionarAsignaciones';
 
 const AdminDashboard = () => {
   const { user } = useStateContext();
@@ -22,10 +23,14 @@ const AdminDashboard = () => {
 
       <main className={styles.main}>
         <section className={styles.section}>
-          <EncuestaForm />
-          <h2>Bienvenido al Panel de Administración</h2>
-          <p>Desde aquí puedes gestionar el sistema y generar informes personalizados.</p>
+          <h2>Gestión de Encuestas Académicas</h2>
+          <p>Desde aquí puedes crear encuestas y gestionar su asignación a los alumnos.</p>
 
+          <EncuestaForm />
+
+          <GestionarAsignaciones />
+
+          <h2>Otras Funciones</h2>
           <div className={styles.quickActions}>
             <div className={styles.actionCard}>
               <h3>Generar Informes</h3>

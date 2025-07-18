@@ -39,6 +39,16 @@ Route::post('/encuestas', [EncuestaController::class, 'store']); // Crear encues
 Route::post('/encuestas/responder', [EncuestaController::class, 'responder']); // Guardar respuestas de alumno
 Route::get('/encuestas/{id}/estadisticas', [EncuestaController::class, 'estadisticas']); // Estadísticas de encuesta
 
+// Nuevas rutas para asignación de encuestas
+Route::post('/encuestas/asignar-alumnos', [EncuestaController::class, 'asignarAAlumnos']); // Asignar a alumnos específicos
+Route::post('/encuestas/asignar-carrera', [EncuestaController::class, 'asignarACarrera']); // Asignar a toda una carrera
+
+// Rutas para alumnos (requieren autenticación)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/alumno/encuestas', [EncuestaController::class, 'encuestasAsignadas']); // Obtener encuestas asignadas al alumno
+    Route::post('/alumno/encuestas/marcar-notificada', [EncuestaController::class, 'marcarNotificada']); // Marcar como notificada
+});
+
 // Rutas para plantillas de informe (CU-004)
 Route::get('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeController::class, 'index']);
 Route::post('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeController::class, 'store']);
@@ -47,3 +57,8 @@ Route::delete('/plantillas-informe/{id}', [\App\Http\Controllers\PlantillaInform
 
 Route::get('/grados', [\App\Http\Controllers\Api\GradoController::class, 'getAllGrados']);
 Route::get('/unidades-curriculares', [\App\Http\Controllers\Api\UnidadCurricularController::class, 'getAllUnidadesCurriculares']);
+Route::get('/unidades-curriculares/por-carrera-grado', [\App\Http\Controllers\Api\UnidadCurricularController::class, 'getPorCarreraGrado']);
+
+// Rutas para alumnos filtrados y asignación avanzada
+Route::get('/alumnos/filtrados', [\App\Http\Controllers\Api\AlumnoController::class, 'filtrados']);
+Route::post('/encuestas/asignar-filtrado', [\App\Http\Controllers\Api\EncuestaController::class, 'asignarFiltrado']);
