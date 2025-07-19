@@ -22,7 +22,6 @@ class CreateEncuestasTables extends Migration
             $table->date('fecha_fin')->nullable();
             $table->boolean('activa')->default(true);
             $table->integer('id_carrera')->nullable();
-            $table->timestamps();
 
             $table->foreign('id_carrera', 'fk_encuesta_carrera')->references('id_carrera')->on('carrera')->onDelete('set null');
         });

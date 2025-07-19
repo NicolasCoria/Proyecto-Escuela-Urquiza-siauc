@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosClient from '../../../Components/Shared/Axios';
 
 const defaultPregunta = () => ({
   texto: '',
@@ -25,9 +25,16 @@ const EncuestaForm = ({ onSuccess }) => {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    axios.get('/api/carreras').then((res) => {
-      setCarreras(res.data.carreras || []);
-    });
+    const fetchCarreras = async () => {
+      try {
+        const response = await axiosClient.get('/carreras');
+        setCarreras(response.data.carreras || []);
+      } catch (err) {
+        console.error('Error fetching carreras:', err);
+        setError('Error al cargar las carreras');
+      }
+    };
+    fetchCarreras();
   }, []);
 
   const handlePreguntaChange = (idx, field, value) => {
@@ -58,11 +65,19 @@ const EncuestaForm = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!idCarrera) {
+      setError('Debes seleccionar una carrera');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
+
     try {
-      await axios.post('/api/encuestas', {
+      // Crear la encuesta
+      await axiosClient.post('/encuestas', {
         titulo,
         descripcion,
         fecha_inicio: fechaInicio,
@@ -76,6 +91,7 @@ const EncuestaForm = ({ onSuccess }) => {
           opciones: p.opciones.map((o) => ({ texto: o.texto, valor: o.valor || null }))
         }))
       });
+
       setSuccess('Encuesta creada correctamente');
       setTitulo('');
       setDescripcion('');
@@ -86,7 +102,8 @@ const EncuestaForm = ({ onSuccess }) => {
       setPreguntas([defaultPregunta()]);
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError('Error al crear la encuesta');
+      console.error('Error creating encuesta:', err);
+      setError(err.response?.data?.error || 'Error al crear la encuesta');
     } finally {
       setLoading(false);
     }
@@ -164,8 +181,9 @@ const EncuestaForm = ({ onSuccess }) => {
             value={idCarrera}
             onChange={(e) => setIdCarrera(e.target.value)}
             style={{ width: '100%' }}
+            required={false}
           >
-            <option value="">General</option>
+            <option value="">Todas las carreras (Encuesta global)</option>
             {carreras.map((c) => (
               <option key={c.id_carrera} value={c.id_carrera}>
                 {c.carrera}
