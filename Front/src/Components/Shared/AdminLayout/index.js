@@ -6,7 +6,7 @@ import { useModalContext } from '../../Contexts';
 import Modal from '../Modal';
 import Spinner from '../Spinner';
 import axiosClient from '../Axios';
-import { FaChartBar, FaSignOutAlt, FaHome, FaUser } from 'react-icons/fa';
+import { FaChartBar, FaSignOutAlt, FaHome, FaUser, FaEnvelopeOpenText } from 'react-icons/fa';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -94,7 +94,17 @@ const AdminLayout = () => {
                   <span>Generar Informes</span>
                 </Link>
               </li>
-
+              <li>
+                <Link
+                  to="/admin/solicitudes"
+                  className={`${styles.navItem} ${
+                    activeButton === '/admin/solicitudes' ? styles.active : ''
+                  }`}
+                >
+                  <FaEnvelopeOpenText className={styles.navIcon} />
+                  <span>Solicitudes</span>
+                </Link>
+              </li>
               <li>
                 <Link
                   to="/admin/profile"

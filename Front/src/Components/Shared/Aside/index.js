@@ -179,6 +179,12 @@ const Aside = () => {
                 Inscripción a UC
               </Link>
             </li>
+            <li>
+              <Link to="/admin/dashboard">Dashboard</Link>
+            </li>
+            <li>
+              <Link to="/admin/informes">Informes</Link>
+            </li>
           </ul>
           <div className={styles.logout}>
             <li>

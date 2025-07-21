@@ -5,8 +5,11 @@ import EncuestasAlumno from './EncuestasAlumno';
 import Profile from './Profile';
 import InscripcionesAlumno from './InscripcionesAlumno';
 import Materias from './Materias';
+import SolicitudesAlumno from './SolicitudesAlumno';
+import { useStateContext } from '../../Components/Contexts';
 
 const AlumnoView = () => {
+  const { user } = useStateContext();
   return (
     <div style={{ display: 'flex' }}>
       <AlumnoMenu />
@@ -17,6 +20,7 @@ const AlumnoView = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/inscripciones" element={<InscripcionesAlumno />} />
           <Route path="/materias" element={<Materias />} />
+          <Route path="/solicitudes" element={<SolicitudesAlumno idAlumno={user?.id_alumno} />} />
         </Routes>
       </div>
     </div>
