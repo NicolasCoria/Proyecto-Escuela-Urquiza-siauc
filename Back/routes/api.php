@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\CarreraController;
 use App\Http\Controllers\Api\InformeController;
 use App\Http\Controllers\Api\EncuestaController;
+use App\Http\Controllers\Solicitudes\SolicitudController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -33,6 +34,22 @@ Route::post('/alumnos/login', [AuthController::class, 'loginAlumno']);
 Route::post('/admin/register', [AdminAuthController::class, 'registerAdmin']);
 Route::post('/admin/login', [AdminAuthController::class, 'loginAdmin']);
 
+// Grupo de rutas protegidas para Administradores
+Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
+    // Solicitudes
+    Route::get('solicitudes', [SolicitudController::class, 'index']);
+    Route::put('solicitudes/{id}', [SolicitudController::class, 'update']);
+});
+
+// Grupo de rutas protegidas para Alumnos
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/alumno/encuestas', [EncuestaController::class, 'encuestasAsignadas']); // Obtener encuestas asignadas al alumno
+    Route::post('/alumno/encuestas/marcar-notificada', [EncuestaController::class, 'marcarNotificada']); // Marcar como notificada
+    Route::get('solicitudes', [SolicitudController::class, 'index']);
+    Route::post('solicitudes', [SolicitudController::class, 'store']);
+    Route::post('solicitudes/{id}/marcar-visto', [SolicitudController::class, 'marcarEstadoVisto']);
+});
+
 // Rutas para encuestas académicas (CU-005)
 Route::get('/encuestas', [EncuestaController::class, 'index']); // Listar encuestas activas con preguntas y opciones
 Route::post('/encuestas', [EncuestaController::class, 'store']); // Crear encuesta completa
@@ -42,12 +59,6 @@ Route::get('/encuestas/{id}/estadisticas', [EncuestaController::class, 'estadist
 // Nuevas rutas para asignación de encuestas
 Route::post('/encuestas/asignar-alumnos', [EncuestaController::class, 'asignarAAlumnos']); // Asignar a alumnos específicos
 Route::post('/encuestas/asignar-carrera', [EncuestaController::class, 'asignarACarrera']); // Asignar a toda una carrera
-
-// Rutas para alumnos (requieren autenticación)
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/alumno/encuestas', [EncuestaController::class, 'encuestasAsignadas']); // Obtener encuestas asignadas al alumno
-    Route::post('/alumno/encuestas/marcar-notificada', [EncuestaController::class, 'marcarNotificada']); // Marcar como notificada
-});
 
 // Rutas para plantillas de informe (CU-004)
 Route::get('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeController::class, 'index']);

@@ -248,6 +248,19 @@ const Sidebar = () => {
                 Inscripción a UC
               </Link>
             </li>
+            <li>
+              <Link
+                to="/alumno/solicitudes"
+                className={activeButton === 'alumno/solicitudes' ? styles.activeBtn : styles.btn}
+                style={
+                  activeButton === 'alumno/solicitudes'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
+              >
+                Solicitudes
+              </Link>
+            </li>
           </ul>
           <div className={styles.logout}>
             <li>

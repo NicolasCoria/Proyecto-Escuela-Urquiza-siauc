@@ -57,6 +57,11 @@ const AlumnoMenu = () => {
               onClick={() => navigate('encuestas')}
             />
             <Button
+              text="Solicitudes"
+              colorPrimario={colorPrimario}
+              onClick={() => navigate('solicitudes')}
+            />
+            <Button
               text="Cerrar sesión"
               colorPrimario={sidebarThemes['2']?.primary || '#e53935'}
               onClick={handleLogout}

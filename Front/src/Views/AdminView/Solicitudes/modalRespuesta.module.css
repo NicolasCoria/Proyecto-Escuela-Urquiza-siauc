@@ -1,0 +1,150 @@
+.modalContent {
+  padding: 1.5rem;
+  background-color: #fff;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoBlock {
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.infoBlock h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.infoBlock p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.messageSection {
+  margin-bottom: 1.5rem;
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.messageSection h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.messageContent {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.date {
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-align: right;
+  margin-top: 1rem;
+}
+
+.status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.pendiente {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+.en_proceso {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+.respondida {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+.rechazada {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.form .formGroup {
+  margin-bottom: 1rem;
+}
+
+.form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form textarea,
+.form select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  transition: border-color 0.2s;
+}
+
+.form textarea:focus,
+.form select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.error {
+  color: #ef4444;
+  margin-bottom: 1rem;
+  background-color: #fee2e2;
+  padding: 0.75rem;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.buttons button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.buttons button[type='submit'] {
+  background-color: #4f46e5;
+  color: white;
+}
+.buttons button[type='submit']:hover {
+  background-color: #4338ca;
+}
+
+.buttons button[type='button'] {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+.buttons button[type='button']:hover {
+  background-color: #d1d5db;
+} 
