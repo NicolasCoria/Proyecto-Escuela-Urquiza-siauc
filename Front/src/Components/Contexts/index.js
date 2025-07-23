@@ -30,6 +30,18 @@ export const ContextProvider = ({ children }) => {
     const storedUC = sessionStorage.getItem('unidadesDisponibles');
     return storedUC ? JSON.parse(storedUC) : [];
   });
+  const [unidadesCarrera, setUnidadesCarrera] = useState(() => {
+    const stored = sessionStorage.getItem('unidadesCarrera');
+    return stored ? JSON.parse(stored) : [];
+  });
+  const [unidadesAprobadas, setUnidadesAprobadas] = useState(() => {
+    const stored = sessionStorage.getItem('unidadesAprobadas');
+    return stored ? JSON.parse(stored) : [];
+  });
+  const [unidadesInscriptas, setUnidadesInscriptas] = useState(() => {
+    const stored = sessionStorage.getItem('unidadesInscriptas');
+    return stored ? JSON.parse(stored) : [];
+  });
 
   const setTokenAndRole = (token, role) => {
     setToken(token);
@@ -70,6 +82,31 @@ export const ContextProvider = ({ children }) => {
     }
   };
 
+  const setUnidadesCarreraPersist = (ucList) => {
+    setUnidadesCarrera(ucList);
+    if (ucList) {
+      sessionStorage.setItem('unidadesCarrera', JSON.stringify(ucList));
+    } else {
+      sessionStorage.removeItem('unidadesCarrera');
+    }
+  };
+  const setUnidadesAprobadasPersist = (ucList) => {
+    setUnidadesAprobadas(ucList);
+    if (ucList) {
+      sessionStorage.setItem('unidadesAprobadas', JSON.stringify(ucList));
+    } else {
+      sessionStorage.removeItem('unidadesAprobadas');
+    }
+  };
+  const setUnidadesInscriptasPersist = (ucList) => {
+    setUnidadesInscriptas(ucList);
+    if (ucList) {
+      sessionStorage.setItem('unidadesInscriptas', JSON.stringify(ucList));
+    } else {
+      sessionStorage.removeItem('unidadesInscriptas');
+    }
+  };
+
   const updateNotification = (newNotifications) => {
     setNotification(newNotifications);
   };
@@ -88,7 +125,13 @@ export const ContextProvider = ({ children }) => {
         carrera,
         setCarrera: setCarreraPersist,
         unidadesDisponibles,
-        setUnidadesDisponibles: setUnidadesDisponiblesPersist
+        setUnidadesDisponibles: setUnidadesDisponiblesPersist,
+        unidadesCarrera,
+        setUnidadesCarrera: setUnidadesCarreraPersist,
+        unidadesAprobadas,
+        setUnidadesAprobadas: setUnidadesAprobadasPersist,
+        unidadesInscriptas,
+        setUnidadesInscriptas: setUnidadesInscriptasPersist
       }}
     >
       {children}

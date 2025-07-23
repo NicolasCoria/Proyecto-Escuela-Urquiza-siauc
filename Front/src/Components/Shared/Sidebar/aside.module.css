@@ -271,17 +271,20 @@
     width: 135px;
     border-radius: 5px;
     text-align: center;
-    background-color: #fff;
-    color: #000;
+    background-color: #e0e0e0;
+    color: #111;
     font-weight: 500;
     font-size: 20px;
     box-shadow: 5px 5px 4px rgba(0, 0, 0, 0.5);
+    transition: background 0.2s, color 0.2s;
   }
 
-  .menu a.btn:hover {
-    background-color: #7a7a7a;
-    color: #fff;
-    cursor: pointer;
+  .menu a.btn:hover,
+  .menu a.activeBtn {
+    color: #fff !important;
+  }
+  .menu a.btn {
+    color: #111 !important;
   }
 
   .menu a.btnLanding {
@@ -305,7 +308,7 @@
     color: #fff;
     font-weight: 500;
     font-size: 20px;
-    background-color: #7a7a7a;
+    background-color: #424242;
     box-shadow: inset 6px 7px 6px rgb(0 0 0 / 31%);
   }
 
@@ -371,4 +374,9 @@
   font-weight: 700;
   filter: brightness(1.08);
   box-shadow: 2px 6px 12px #0000003a;
+}
+
+.menu a.btn:hover {
+  background-color: #222 !important;
+  color: #fff !important;
 }

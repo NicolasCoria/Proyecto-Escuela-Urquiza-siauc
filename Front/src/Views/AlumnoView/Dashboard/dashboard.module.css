@@ -1,0 +1,46 @@
+.dashboardContainer {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.dashboardTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #222;
+}
+
+.dashboardGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.dashboardCard {
+  flex: 1 1 250px;
+  min-width: 250px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: box-shadow 0.2s;
+}
+
+.dashboardCard:hover {
+  box-shadow: 0 4px 16px #0002;
+}
+
+@media (max-width: 900px) {
+  .dashboardGrid {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .dashboardCard {
+    min-width: unset;
+  }
+} 

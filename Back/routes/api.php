@@ -16,6 +16,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/alumno/unidades-inscriptas', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesInscriptas']);
     Route::post('/alumno/inscribir-unidades', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'inscribir']);
     Route::post('/alumno/comprobante-inscripcion', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'comprobantePdf']);
+    Route::get('/alumno/unidades-inscriptas', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesInscriptas']);
+    Route::get('/alumno/unidades-carrera', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesCarrera']);
+    Route::get('/alumno/unidades-aprobadas', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesAprobadas']);
     
     // Rutas para administrador - Informes
     Route::prefix('admin/informes')->group(function () {

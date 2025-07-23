@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import AlumnoMenu from './AlumnoMenu';
 import EncuestasAlumno from './EncuestasAlumno';
 import Profile from './Profile';
@@ -7,15 +7,22 @@ import InscripcionesAlumno from './InscripcionesAlumno';
 import Materias from './Materias';
 import SolicitudesAlumno from './SolicitudesAlumno';
 import { useStateContext } from '../../Components/Contexts';
+import DashboardAlumno from './Dashboard';
 import styles from './alumnoView.module.css';
 
 const AlumnoView = () => {
   const { user } = useStateContext();
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
+
+  // Si está en /alumno exactamente, mostrar el dashboard principal
+  if (location.pathname === '/alumno') {
+    return <DashboardAlumno />;
+  }
 
   return (
     <div className={styles.container}>
