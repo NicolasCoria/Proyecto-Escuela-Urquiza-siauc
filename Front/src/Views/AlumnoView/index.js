@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useStateContext } from '../../Components/Contexts';
-import AlumnoMenu from './AlumnoMenu';
+import DashboardAlumno from './Dashboard';
 
 const AlumnoView = () => {
   const { token } = useStateContext();
@@ -10,9 +10,9 @@ const AlumnoView = () => {
     return <Navigate to="/login" />;
   }
 
-  // Si está en /alumno exactamente, mostrar el menú principal
+  // Si está en /alumno exactamente, mostrar el dashboard principal
   if (location.pathname === '/alumno') {
-    return <AlumnoMenu />;
+    return <DashboardAlumno />;
   }
 
   // Si está en una subruta, renderizar el contenido correspondiente

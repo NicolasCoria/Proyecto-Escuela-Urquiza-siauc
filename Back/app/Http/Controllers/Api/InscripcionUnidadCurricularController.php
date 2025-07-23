@@ -180,4 +180,69 @@ class InscripcionUnidadCurricularController extends Controller
         ]);
         return $pdf->download('comprobante_inscripcion.pdf');
     }
+
+    // Devuelve las unidades curriculares en las que el alumno autenticado ya está inscripto
+    public function unidadesInscriptas(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+        $id_alumno = $user->id_alumno ?? $user->id ?? null;
+        if (!$id_alumno) {
+            return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
+        }
+
+        // Buscar todas las UCs en las que el alumno está inscripto
+        $uc_ids = \App\Models\AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
+        $unidades = \App\Models\UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+
+        return response()->json($unidades);
+    }
+
+    // Devuelve todas las unidades curriculares del plan/carrera del alumno autenticado
+    public function unidadesCarrera(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+        $id_alumno = $user->id_alumno ?? $user->id ?? null;
+        if (!$id_alumno) {
+            return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
+        }
+
+        // Obtener la carrera del alumno
+        $alumnoCarrera = \App\Models\AlumnoCarrera::where('id_alumno', $id_alumno)->first();
+        if (!$alumnoCarrera) {
+            return response()->json(['error' => 'El alumno no está registrado en ninguna carrera'], 400);
+        }
+        $id_carrera = $alumnoCarrera->id_carrera;
+
+        // Obtener todas las UCs de la carrera
+        $uc_ids = \App\Models\CarreraUc::where('id_carrera', $id_carrera)->pluck('id_uc')->toArray();
+        $unidades = \App\Models\UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+
+        return response()->json($unidades);
+    }
+
+    // Devuelve las unidades curriculares aprobadas por el alumno autenticado
+    public function unidadesAprobadas(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+        $id_alumno = $user->id_alumno ?? $user->id ?? null;
+        if (!$id_alumno) {
+            return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
+        }
+
+        // Buscar todas las notas >= 6 del alumno
+        $notas = \App\Models\Nota::where('id_alumno', $id_alumno)->where('nota', '>=', 6)->get();
+        $uc_ids = $notas->pluck('id_uc')->unique()->toArray();
+        $unidades = \App\Models\UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+
+        return response()->json($unidades);
+    }
 } 

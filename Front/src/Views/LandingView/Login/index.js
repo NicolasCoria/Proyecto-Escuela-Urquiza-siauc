@@ -11,7 +11,15 @@ import { useStateContext, useModalContext } from '../../../Components/Contexts';
 
 const Login = () => {
   const { openModal, modalState, closeModal } = useModalContext();
-  const { setUser, setTokenAndRole, setCarrera, setUnidadesDisponibles } = useStateContext();
+  const {
+    setUser,
+    setTokenAndRole,
+    setCarrera,
+    setUnidadesDisponibles,
+    setUnidadesCarrera,
+    setUnidadesAprobadas,
+    setUnidadesInscriptas
+  } = useStateContext();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -36,6 +44,15 @@ const Login = () => {
       setTokenAndRole(data.token, 'alumno');
       setCarrera(data.carrera);
       setUnidadesDisponibles(data.unidades_disponibles);
+      // Precargar UC de carrera, aprobadas e inscriptas
+      const [ucCarrera, ucAprobadas, ucInscriptas] = await Promise.all([
+        axiosClient.get('/alumno/unidades-carrera'),
+        axiosClient.get('/alumno/unidades-aprobadas'),
+        axiosClient.get('/alumno/unidades-inscriptas')
+      ]);
+      setUnidadesCarrera(ucCarrera.data);
+      setUnidadesAprobadas(ucAprobadas.data);
+      setUnidadesInscriptas(ucInscriptas.data);
       openModal({
         description: 'Sesión iniciada correctamente',
         chooseModal: false

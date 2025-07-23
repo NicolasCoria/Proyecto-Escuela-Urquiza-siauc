@@ -151,31 +151,6 @@ const Sidebar = () => {
           <ul className={styles.rutes}>
             <li>
               <Link
-                to={`/alumno/profile/${user.id}`}
-                className={
-                  activeButton === `alumno/profile/${user.id}` ? styles.activeBtn : styles.btn
-                }
-                style={
-                  activeButton === `alumno/profile/${user.id}`
-                    ? { backgroundColor: '#fff', color: theme.primary }
-                    : { color: theme.primary }
-                }
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = '#fff';
-                  e.currentTarget.style.color = '#111';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    activeButton === `alumno/profile/${user.id}` ? '#fff' : 'transparent';
-                  e.currentTarget.style.color =
-                    activeButton === `alumno/profile/${user.id}` ? theme.primary : theme.primary;
-                }}
-              >
-                Perfil
-              </Link>
-            </li>
-            <li>
-              <Link
                 to="/alumno"
                 className={activeButton === 'alumno' ? styles.activeBtn : styles.btn}
                 style={
@@ -184,7 +159,7 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                Home
+                Dashboard
               </Link>
             </li>
             <li>
