@@ -12,6 +12,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/alumno/info', [AuthController::class, 'getAlumnoInfo']);
     Route::get('/alumno/unidades-disponibles', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'disponiblesParaInscripcion']);
+    Route::get('/alumno/unidades-inscriptas', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesInscriptas']);
     Route::post('/alumno/inscribir-unidades', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'inscribir']);
     Route::post('/alumno/comprobante-inscripcion', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'comprobantePdf']);
     
@@ -64,6 +65,9 @@ Route::post('/encuestas/asignar-carrera', [EncuestaController::class, 'asignarAC
 Route::get('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeController::class, 'index']);
 Route::post('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeController::class, 'store']);
 Route::put('/plantillas-informe/{id}', [\App\Http\Controllers\PlantillaInformeController::class, 'update']);
+
+// Ruta optimizada para datos del dashboard
+Route::get('/dashboard-data', [\App\Http\Controllers\Api\DashboardController::class, 'getDashboardData']);
 Route::delete('/plantillas-informe/{id}', [\App\Http\Controllers\PlantillaInformeController::class, 'destroy']);
 
 Route::get('/grados', [\App\Http\Controllers\Api\GradoController::class, 'getAllGrados']);

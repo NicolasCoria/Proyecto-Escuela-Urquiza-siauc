@@ -19,9 +19,23 @@ class EncuestaController extends Controller
     public function index(Request $request)
     {
         $query = Encuesta::with(['preguntas.opciones']);
+        
         if ($request->has('id_carrera')) {
             $query->where('id_carrera', $request->input('id_carrera'));
         }
+        
+        // Filtrar por fechas si se especifica
+        if ($request->has('fecha_actual')) {
+            $fechaActual = $request->input('fecha_actual');
+            $query->where(function($q) use ($fechaActual) {
+                $q->whereNull('fecha_inicio')
+                  ->orWhere('fecha_inicio', '<=', $fechaActual);
+            })->where(function($q) use ($fechaActual) {
+                $q->whereNull('fecha_fin')
+                  ->orWhere('fecha_fin', '>=', $fechaActual);
+            });
+        }
+        
         $query->where('activa', true);
         $encuestas = $query->get();
         return response()->json(['success' => true, 'encuestas' => $encuestas]);
@@ -82,30 +96,102 @@ class EncuestaController extends Controller
             'respuestas.*.id_pregunta' => 'required|integer|exists:pregunta,id_pregunta',
             'respuestas.*.id_opcion' => 'required|integer|exists:opcion,id_opcion',
         ]);
-        $idAlumno = auth()->id() ?? null;
-        $toInsert = [];
-        foreach ($request->respuestas as $resp) {
-            $toInsert[] = [
-                'id_encuesta' => $request->id_encuesta,
-                'id_pregunta' => $resp['id_pregunta'],
-                'id_opcion' => $resp['id_opcion'],
-                'id_alumno' => $idAlumno,
-                'created_at' => now(),
-            ];
-        }
-        Respuesta::insert($toInsert);
 
-        // Marcar la encuesta como respondida
-        if ($idAlumno) {
-            AlumnoEncuesta::where('id_alumno', $idAlumno)
-                ->where('id_encuesta', $request->id_encuesta)
-                ->update([
-                    'respondida' => true,
-                    'fecha_respuesta' => now()
-                ]);
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['error' => 'No autenticado'], 401);
         }
 
-        return response()->json(['success' => true]);
+        $idAlumno = $user->id_alumno ?? $user->id ?? null;
+        if (!$idAlumno) {
+            return response()->json(['error' => 'No se pudo determinar el alumno'], 400);
+        }
+
+        // Verificar si ya respondió esta encuesta
+        $yaRespondio = AlumnoEncuesta::where('id_alumno', $idAlumno)
+            ->where('id_encuesta', $validated['id_encuesta'])
+            ->where('respondida', true)
+            ->exists();
+
+        if ($yaRespondio) {
+            return response()->json([
+                'error' => 'Ya has respondido esta encuesta anteriormente',
+                'duplicada' => true
+            ], 400);
+        }
+
+        // Verificar que la encuesta esté activa
+        $encuesta = Encuesta::find($validated['id_encuesta']);
+        if (!$encuesta || !$encuesta->activa) {
+            return response()->json([
+                'error' => 'La encuesta no está disponible'
+            ], 400);
+        }
+
+        // Verificar que esté dentro del período de la encuesta si tiene fechas
+        $fechaActual = now();
+        if ($encuesta->fecha_inicio && $fechaActual < $encuesta->fecha_inicio) {
+            return response()->json([
+                'error' => 'La encuesta aún no está disponible'
+            ], 400);
+        }
+
+        if ($encuesta->fecha_fin && $fechaActual > $encuesta->fecha_fin) {
+            return response()->json([
+                'error' => 'La encuesta ya no está disponible'
+            ], 400);
+        }
+
+        // Verificar que el alumno tenga la encuesta asignada
+        $asignacion = AlumnoEncuesta::where('id_alumno', $idAlumno)
+            ->where('id_encuesta', $validated['id_encuesta'])
+            ->first();
+
+        if (!$asignacion) {
+            return response()->json([
+                'error' => 'No tienes esta encuesta asignada'
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Eliminar respuestas previas si las hubiera (por si acaso)
+            Respuesta::where('id_alumno', $idAlumno)
+                ->where('id_encuesta', $validated['id_encuesta'])
+                ->delete();
+
+            // Insertar las nuevas respuestas
+            $toInsert = [];
+            foreach ($request->respuestas as $resp) {
+                $toInsert[] = [
+                    'id_encuesta' => $validated['id_encuesta'],
+                    'id_pregunta' => $resp['id_pregunta'],
+                    'id_opcion' => $resp['id_opcion'],
+                    'id_alumno' => $idAlumno,
+                    'created_at' => now(),
+                ];
+            }
+            Respuesta::insert($toInsert);
+
+            // Marcar la encuesta como respondida
+            $asignacion->update([
+                'respondida' => true,
+                'fecha_respuesta' => now()
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Encuesta respondida exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Error al guardar las respuestas: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     // Obtener estadísticas de una encuesta

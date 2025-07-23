@@ -1,25 +1,20 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from '../../Components/Home/home.module.css';
-import Button from '../../Components/Shared/Button';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useStateContext } from '../../Components/Contexts';
 import sidebarThemes from '../../Components/Shared/Sidebar/sidebarTheme';
 import NotificacionesEncuestas from './NotificacionesEncuestas';
+import styles from './alumnoMenu.module.css';
 
-const AlumnoMenu = () => {
+const AlumnoMenu = ({ onClose }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, carrera } = useStateContext();
   const carreraId = carrera && carrera.id_carrera ? String(carrera.id_carrera) : null;
+
   let colorPrimario = '#1976d2';
   if (user && carreraId && sidebarThemes[carreraId] && sidebarThemes[carreraId].primary) {
     colorPrimario = sidebarThemes[carreraId].primary;
   }
-  console.log('user:', user);
-  console.log('carrera:', carrera);
-  console.log('carreraId:', carreraId);
-  console.log('sidebarThemes:', sidebarThemes);
-  console.log('sidebarThemes[carreraId]:', sidebarThemes[carreraId]);
-  console.log('colorPrimario:', colorPrimario);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -27,50 +22,64 @@ const AlumnoMenu = () => {
     navigate('/login');
   };
 
+  const handleNavigation = (path) => {
+    navigate(path);
+    // Close menu on mobile after navigation
+    if (onClose) {
+      onClose();
+    }
+  };
+
+  const isActive = (path) => {
+    return location.pathname.includes(path);
+  };
+
   return (
     <>
       <NotificacionesEncuestas />
-      <main>
-        <section className={styles.container}>
-          <div className={styles.title}>Menú Principal Alumno</div>
-          <div
-            className={styles.subContainer}
-            style={{
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 24
-            }}
+      <div className={styles.menuContainer}>
+        <div className={styles.menuHeader}>
+          <h1 className={styles.menuTitle}>Menú Principal Alumno</h1>
+        </div>
+
+        <div className={styles.menuContent}>
+          <button
+            className={`${styles.menuButton} ${isActive('inscripciones') ? styles.active : ''}`}
+            onClick={() => handleNavigation('inscripciones')}
+            style={{ backgroundColor: isActive('inscripciones') ? colorPrimario : undefined }}
           >
-            <Button
-              text="Inscripción a Unidades Curriculares"
-              colorPrimario={colorPrimario}
-              onClick={() => navigate('inscripciones')}
-            />
-            <Button
-              text="Perfil"
-              colorPrimario={colorPrimario}
-              onClick={() => navigate('profile')}
-            />
-            <Button
-              text="Encuestas Académicas"
-              colorPrimario={colorPrimario}
-              onClick={() => navigate('encuestas')}
-            />
-            <Button
-              text="Solicitudes"
-              colorPrimario={colorPrimario}
-              onClick={() => navigate('solicitudes')}
-            />
-            <Button
-              text="Cerrar sesión"
-              colorPrimario={sidebarThemes['2']?.primary || '#e53935'}
-              onClick={handleLogout}
-              classBtn={styles.menuBtn}
-              style={{ marginTop: 32 }}
-            />
-          </div>
-        </section>
-      </main>
+            📚 Inscripción a Unidades Curriculares
+          </button>
+
+          <button
+            className={`${styles.menuButton} ${isActive('profile') ? styles.active : ''}`}
+            onClick={() => handleNavigation('profile')}
+            style={{ backgroundColor: isActive('profile') ? colorPrimario : undefined }}
+          >
+            👤 Perfil
+          </button>
+
+          <button
+            className={`${styles.menuButton} ${isActive('encuestas') ? styles.active : ''}`}
+            onClick={() => handleNavigation('encuestas')}
+            style={{ backgroundColor: isActive('encuestas') ? colorPrimario : undefined }}
+          >
+            📊 Encuestas Académicas
+          </button>
+
+          <button
+            className={`${styles.menuButton} ${isActive('solicitudes') ? styles.active : ''}`}
+            onClick={() => handleNavigation('solicitudes')}
+            style={{ backgroundColor: isActive('solicitudes') ? colorPrimario : undefined }}
+          >
+            📝 Solicitudes
+          </button>
+
+          <button className={styles.logoutButton} onClick={handleLogout}>
+            🚪 Cerrar sesión
+          </button>
+        </div>
+      </div>
     </>
   );
 };

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosClient from '../../Components/Shared/Axios';
 import EncuestaForm from './EncuestaForm';
 import Spinner from '../../Components/Shared/Spinner';
+import styles from './alumnoView.module.css';
 
 const EncuestasAlumno = () => {
   const [encuestas, setEncuestas] = useState([]);
@@ -42,11 +43,30 @@ const EncuestasAlumno = () => {
     );
   };
 
+  const isEncuestaVencida = (encuesta) => {
+    if (!encuesta.fecha_fin) return false;
+    return new Date() > new Date(encuesta.fecha_fin);
+  };
+
+  const isEncuestaDisponible = (encuesta) => {
+    if (!encuesta.activa) return false;
+    if (encuesta.fecha_inicio && new Date() < new Date(encuesta.fecha_inicio)) return false;
+    if (encuesta.fecha_fin && new Date() > new Date(encuesta.fecha_fin)) return false;
+    return true;
+  };
+
   if (loading) return <Spinner />;
 
   if (error) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
+      <div
+        style={{
+          padding: '20px',
+          textAlign: 'center',
+          maxWidth: '600px',
+          margin: '0 auto'
+        }}
+      >
         <h3>Error</h3>
         <p>{error}</p>
       </div>
@@ -55,7 +75,14 @@ const EncuestasAlumno = () => {
 
   if (encuestas.length === 0) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
+      <div
+        style={{
+          padding: '20px',
+          textAlign: 'center',
+          maxWidth: '600px',
+          margin: '0 auto'
+        }}
+      >
         <h2>Encuestas Académicas</h2>
         <p>No tienes encuestas asignadas en este momento.</p>
       </div>
@@ -63,93 +90,98 @@ const EncuestasAlumno = () => {
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Encuestas Académicas</h2>
-      <div style={{ display: 'grid', gap: '20px' }}>
-        {encuestas.map((encuesta) => (
-          <div
-            key={encuesta.id_encuesta}
-            style={{
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              padding: '20px',
-              backgroundColor: encuesta.respondida ? '#f8f9fa' : '#ffffff'
-            }}
-          >
+    <div className={styles.encuestasContainer}>
+      <h2 className={styles.encuestasTitle}>Encuestas Académicas</h2>
+
+      <div className={styles.encuestasGrid}>
+        {encuestas.map((encuesta) => {
+          const vencida = isEncuestaVencida(encuesta);
+          const disponible = isEncuestaDisponible(encuesta);
+
+          return (
             <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '15px'
-              }}
+              key={encuesta.id_encuesta}
+              className={`${styles.encuestaCard} ${encuesta.respondida ? styles.respondida : ''}`}
             >
-              <div>
-                <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>{encuesta.titulo}</h3>
-                {encuesta.descripcion && (
-                  <p style={{ margin: '0 0 10px 0', color: '#666' }}>{encuesta.descripcion}</p>
-                )}
-                <div style={{ fontSize: '14px', color: '#888' }}>
-                  <p>Asignada: {new Date(encuesta.fecha_asignacion).toLocaleDateString()}</p>
-                  {encuesta.fecha_inicio && encuesta.fecha_fin && (
+              <div className={styles.encuestaHeader}>
+                <div className={styles.encuestaContent}>
+                  <h3 className={styles.encuestaTitle}>{encuesta.titulo}</h3>
+                  {encuesta.descripcion && (
+                    <p className={styles.encuestaDescription}>{encuesta.descripcion}</p>
+                  )}
+                  <div className={styles.encuestaInfo}>
                     <p>
-                      Período: {new Date(encuesta.fecha_inicio).toLocaleDateString()} -{' '}
-                      {new Date(encuesta.fecha_fin).toLocaleDateString()}
+                      <strong>Asignada:</strong>{' '}
+                      {new Date(encuesta.fecha_asignacion).toLocaleDateString()}
                     </p>
+                    {encuesta.fecha_inicio && encuesta.fecha_fin && (
+                      <p>
+                        <strong>Período:</strong>{' '}
+                        {new Date(encuesta.fecha_inicio).toLocaleDateString()} -{' '}
+                        {new Date(encuesta.fecha_fin).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className={styles.encuestaStatus}>
+                  {encuesta.respondida ? (
+                    <span className={`${styles.statusBadge} ${styles.statusRespondida}`}>
+                      ✅ Respondida
+                    </span>
+                  ) : vencida ? (
+                    <span className={`${styles.statusBadge} ${styles.statusVencida}`}>
+                      ⏰ Vencida
+                    </span>
+                  ) : !disponible ? (
+                    <span className={`${styles.statusBadge} ${styles.statusNoDisponible}`}>
+                      🔒 No disponible
+                    </span>
+                  ) : (
+                    <span className={`${styles.statusBadge} ${styles.statusPendiente}`}>
+                      ⏳ Pendiente
+                    </span>
                   )}
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                {encuesta.respondida ? (
-                  <span
-                    style={{
-                      backgroundColor: '#28a745',
-                      color: 'white',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '12px'
-                    }}
-                  >
-                    Respondida
-                  </span>
-                ) : (
-                  <span
-                    style={{
-                      backgroundColor: '#ffc107',
-                      color: 'black',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '12px'
-                    }}
-                  >
-                    Pendiente
-                  </span>
+
+              <div className={styles.encuestaBody}>
+                {!encuesta.respondida && disponible && !vencida && (
+                  <EncuestaForm
+                    encuesta={encuesta}
+                    onEncuestaRespondida={() => handleEncuestaRespondida(encuesta.id_encuesta)}
+                  />
+                )}
+
+                {encuesta.respondida && (
+                  <div className={styles.completedMessage}>
+                    <div className={styles.completedTitle}>✅ Encuesta completada</div>
+                    <div className={styles.completedDate}>
+                      {new Date(encuesta.fecha_respuesta).toLocaleDateString()}
+                    </div>
+                  </div>
+                )}
+
+                {!encuesta.respondida && vencida && (
+                  <div className={styles.vencidaMessage}>
+                    <div className={styles.vencidaTitle}>⏰ Encuesta vencida</div>
+                    <div className={styles.vencidaDescription}>
+                      El período para responder esta encuesta ha finalizado.
+                    </div>
+                  </div>
+                )}
+
+                {!encuesta.respondida && !disponible && !vencida && (
+                  <div className={styles.noDisponibleMessage}>
+                    <div className={styles.noDisponibleTitle}>🔒 Encuesta no disponible</div>
+                    <div className={styles.noDisponibleDescription}>
+                      Esta encuesta aún no está disponible para responder o ya la respondiste.
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
-
-            {!encuesta.respondida && (
-              <EncuestaForm
-                encuesta={encuesta}
-                onEncuestaRespondida={() => handleEncuestaRespondida(encuesta.id_encuesta)}
-              />
-            )}
-
-            {encuesta.respondida && (
-              <div
-                style={{
-                  backgroundColor: '#d4edda',
-                  color: '#155724',
-                  padding: '10px',
-                  borderRadius: '4px',
-                  textAlign: 'center'
-                }}
-              >
-                ✅ Encuesta completada el {new Date(encuesta.fecha_respuesta).toLocaleDateString()}
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

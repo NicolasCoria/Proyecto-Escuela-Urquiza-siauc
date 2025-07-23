@@ -15,9 +15,14 @@ export default function EncuestaForm({ encuesta, onEncuestaRespondida }) {
     e.preventDefault();
 
     // Validar que todas las preguntas tengan respuesta
-    const preguntasSinRespuesta = encuesta.preguntas.filter(
-      (pregunta) => !respuestas[pregunta.id_pregunta]
-    );
+    const preguntasSinRespuesta = encuesta.preguntas.filter((pregunta) => {
+      const respuesta = respuestas[pregunta.id_pregunta];
+      if (pregunta.tipo === 'opcion_multiple') {
+        return !respuesta || !Array.isArray(respuesta) || respuesta.length === 0;
+      } else {
+        return !respuesta;
+      }
+    });
 
     if (preguntasSinRespuesta.length > 0) {
       setError('Por favor, responde todas las preguntas antes de enviar.');
@@ -29,10 +34,25 @@ export default function EncuestaForm({ encuesta, onEncuestaRespondida }) {
 
     try {
       // Preparar las respuestas en el formato que espera el backend
-      const respuestasFormateadas = Object.entries(respuestas).map(([idPregunta, idOpcion]) => ({
-        id_pregunta: parseInt(idPregunta),
-        id_opcion: parseInt(idOpcion)
-      }));
+      const respuestasFormateadas = [];
+
+      Object.entries(respuestas).forEach(([idPregunta, valor]) => {
+        if (Array.isArray(valor)) {
+          // Para preguntas de opción múltiple, crear una respuesta por cada opción seleccionada
+          valor.forEach((idOpcion) => {
+            respuestasFormateadas.push({
+              id_pregunta: parseInt(idPregunta),
+              id_opcion: parseInt(idOpcion)
+            });
+          });
+        } else {
+          // Para preguntas de opción única
+          respuestasFormateadas.push({
+            id_pregunta: parseInt(idPregunta),
+            id_opcion: parseInt(valor)
+          });
+        }
+      });
 
       const response = await axiosClient.post('/encuestas/responder', {
         id_encuesta: encuesta.id_encuesta,
@@ -49,7 +69,28 @@ export default function EncuestaForm({ encuesta, onEncuestaRespondida }) {
       }
     } catch (err) {
       console.error('Error enviando encuesta:', err);
-      setError(err.response?.data?.error || 'Error al enviar las respuestas. Inténtalo de nuevo.');
+
+      // Manejar errores específicos
+      if (err.response?.data?.duplicada) {
+        setError(
+          '❌ Ya has respondido esta encuesta anteriormente. No puedes responderla nuevamente.'
+        );
+        // Marcar como respondida en el frontend
+        if (onEncuestaRespondida) {
+          onEncuestaRespondida();
+        }
+      } else if (err.response?.status === 400) {
+        setError(
+          err.response?.data?.error ||
+            'Error al enviar las respuestas. Verifica que la encuesta esté disponible.'
+        );
+      } else if (err.response?.status === 401) {
+        setError('❌ Sesión expirada. Por favor, inicia sesión nuevamente.');
+      } else {
+        setError(
+          err.response?.data?.error || 'Error al enviar las respuestas. Inténtalo de nuevo.'
+        );
+      }
     } finally {
       setEnviando(false);
     }
@@ -62,12 +103,18 @@ export default function EncuestaForm({ encuesta, onEncuestaRespondida }) {
           backgroundColor: '#d4edda',
           color: '#155724',
           padding: '15px',
-          borderRadius: '4px',
+          borderRadius: '8px',
           textAlign: 'center',
-          marginTop: '10px'
+          marginTop: '10px',
+          border: '1px solid #c3e6cb'
         }}
       >
-        ✅ ¡Gracias por responder la encuesta!
+        <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '5px' }}>
+          ✅ ¡Gracias por responder la encuesta!
+        </div>
+        <div style={{ fontSize: '14px', color: '#0f5132' }}>
+          Tu respuesta ha sido registrada exitosamente.
+        </div>
       </div>
     );
   }
@@ -79,11 +126,17 @@ export default function EncuestaForm({ encuesta, onEncuestaRespondida }) {
           style={{
             backgroundColor: '#f8d7da',
             color: '#721c24',
-            padding: '10px',
-            borderRadius: '4px',
-            marginBottom: '15px'
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginBottom: '15px',
+            border: '1px solid #f5c6cb',
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}
         >
+          <span style={{ fontSize: '16px' }}>⚠️</span>
           {error}
         </div>
       )}
@@ -122,7 +175,14 @@ export default function EncuestaForm({ encuesta, onEncuestaRespondida }) {
                       borderRadius: '4px',
                       border: '1px solid #ddd',
                       backgroundColor:
-                        respuestas[pregunta.id_pregunta] === opcion.id_opcion ? '#e3f2fd' : '#fff'
+                        pregunta.tipo === 'opcion_multiple'
+                          ? respuestas[pregunta.id_pregunta]?.includes(opcion.id_opcion)
+                            ? '#e3f2fd'
+                            : '#fff'
+                          : respuestas[pregunta.id_pregunta] === opcion.id_opcion
+                            ? '#e3f2fd'
+                            : '#fff',
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     <input
@@ -167,10 +227,12 @@ export default function EncuestaForm({ encuesta, onEncuestaRespondida }) {
             color: 'white',
             border: 'none',
             padding: '12px 24px',
-            borderRadius: '4px',
+            borderRadius: '6px',
             fontSize: '16px',
             cursor: enviando ? 'not-allowed' : 'pointer',
-            minWidth: '120px'
+            minWidth: '120px',
+            transition: 'all 0.2s ease',
+            boxShadow: enviando ? 'none' : '0 2px 4px rgba(0,0,0,0.1)'
           }}
         >
           {enviando ? 'Enviando...' : 'Enviar Encuesta'}

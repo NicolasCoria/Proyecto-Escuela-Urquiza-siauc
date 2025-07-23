@@ -66,11 +66,6 @@ const EncuestaForm = ({ onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!idCarrera) {
-      setError('Debes seleccionar una carrera');
-      return;
-    }
-
     setLoading(true);
     setError('');
     setSuccess('');
@@ -175,7 +170,8 @@ const EncuestaForm = ({ onSuccess }) => {
       </div>
       <div style={{ marginBottom: 12 }}>
         <label>
-          Carrera:
+          Carrera (Opcional - Selecciona para encuesta específica o deja vacío para encuesta
+          global):
           <br />
           <select
             value={idCarrera}
@@ -191,6 +187,19 @@ const EncuestaForm = ({ onSuccess }) => {
             ))}
           </select>
         </label>
+        <div
+          style={{
+            backgroundColor: '#e3f2fd',
+            color: '#1976d2',
+            padding: '8px',
+            borderRadius: '4px',
+            marginTop: '5px',
+            fontSize: '12px'
+          }}
+        >
+          💡 <strong>Tip:</strong> Deja vacío para crear una encuesta global que puedas asignar a
+          múltiples carreras desde &quot;Gestionar Asignaciones&quot;
+        </div>
       </div>
       <hr />
       <h4>Preguntas</h4>

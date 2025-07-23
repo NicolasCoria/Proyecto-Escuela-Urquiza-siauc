@@ -10,7 +10,10 @@ class UnidadCurricularController extends Controller
 {
     public function getAllUnidadesCurriculares()
     {
-        $ucs = UnidadCurricular::all(['id_uc', 'unidad_curricular']);
+        // ✅ Optimizado: Solo campos necesarios y ordenado
+        $ucs = UnidadCurricular::select(['id_uc', 'unidad_curricular'])
+            ->orderBy('unidad_curricular')
+            ->get();
         return response()->json($ucs);
     }
 
@@ -22,13 +25,24 @@ class UnidadCurricularController extends Controller
         if (!$idCarrera || !$idGrado) {
             return response()->json(['success' => false, 'error' => 'id_carrera e id_grado son obligatorios'], 400);
         }
-        // Buscar materias asociadas a ese grado y carrera
-        $idsUc = \DB::table('grado_uc')
-            ->join('carrera_uc', 'grado_uc.id_uc', '=', 'carrera_uc.id_uc')
-            ->where('grado_uc.id_grado', $idGrado)
-            ->where('carrera_uc.id_carrera', $idCarrera)
-            ->pluck('grado_uc.id_uc');
-        $materias = UnidadCurricular::whereIn('id_uc', $idsUc)->get(['id_uc', 'unidad_curricular']);
+        
+        // ✅ Optimizado: Consulta más eficiente con índices
+        $materias = UnidadCurricular::select(['id_uc', 'unidad_curricular'])
+            ->whereExists(function ($query) use ($idCarrera, $idGrado) {
+                $query->select(\DB::raw(1))
+                    ->from('grado_uc')
+                    ->whereColumn('grado_uc.id_uc', 'unidad_curricular.id_uc')
+                    ->where('grado_uc.id_grado', $idGrado)
+                    ->whereExists(function ($subQuery) use ($idCarrera) {
+                        $subQuery->select(\DB::raw(1))
+                            ->from('carrera_uc')
+                            ->whereColumn('carrera_uc.id_uc', 'unidad_curricular.id_uc')
+                            ->where('carrera_uc.id_carrera', $idCarrera);
+                    });
+            })
+            ->orderBy('unidad_curricular')
+            ->get();
+            
         return response()->json(['success' => true, 'materias' => $materias]);
     }
 }

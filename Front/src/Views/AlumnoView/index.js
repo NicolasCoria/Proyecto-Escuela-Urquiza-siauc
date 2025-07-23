@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AlumnoMenu from './AlumnoMenu';
 import EncuestasAlumno from './EncuestasAlumno';
@@ -7,13 +7,30 @@ import InscripcionesAlumno from './InscripcionesAlumno';
 import Materias from './Materias';
 import SolicitudesAlumno from './SolicitudesAlumno';
 import { useStateContext } from '../../Components/Contexts';
+import styles from './alumnoView.module.css';
 
 const AlumnoView = () => {
   const { user } = useStateContext();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
   return (
-    <div style={{ display: 'flex' }}>
-      <AlumnoMenu />
-      <div style={{ flex: 1, padding: '20px' }}>
+    <div className={styles.container}>
+      {/* Mobile Menu Toggle Button */}
+      <div className={styles.mobileMenuToggle}>
+        <button onClick={toggleMenu}>☰</button>
+      </div>
+
+      {/* Sidebar */}
+      <div className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`}>
+        <AlumnoMenu onClose={() => setMenuOpen(false)} />
+      </div>
+
+      {/* Main Content */}
+      <div className={styles.mainContent}>
         <Routes>
           <Route path="/" element={<EncuestasAlumno />} />
           <Route path="/encuestas" element={<EncuestasAlumno />} />
@@ -23,6 +40,12 @@ const AlumnoView = () => {
           <Route path="/solicitudes" element={<SolicitudesAlumno idAlumno={user?.id_alumno} />} />
         </Routes>
       </div>
+
+      {/* Mobile Overlay */}
+      <div
+        className={`${styles.mobileOverlay} ${menuOpen ? styles.show : ''}`}
+        onClick={() => setMenuOpen(false)}
+      />
     </div>
   );
 };
