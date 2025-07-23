@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../../../Components/Shared/Axios';
+import Spinner from '../../../Components/Shared/Spinner';
 
 const GruposDestinatarios = () => {
   const [grupos, setGrupos] = useState([]);
@@ -7,6 +8,8 @@ const GruposDestinatarios = () => {
   const [editando, setEditando] = useState(false);
   const [creando, setCreando] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingGrupos, setLoadingGrupos] = useState(false);
+  const [loadingFiltros, setLoadingFiltros] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -87,7 +90,6 @@ const GruposDestinatarios = () => {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        setLoading(true);
         const response = await axiosClient.get('/grupos-destinatarios/datos/creacion');
         if (response.data.success) {
           setCarreras(response.data.datos.carreras || []);
@@ -98,8 +100,6 @@ const GruposDestinatarios = () => {
       } catch (err) {
         console.error('Error cargando datos:', err);
         setError('Error al cargar datos');
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -109,6 +109,7 @@ const GruposDestinatarios = () => {
 
   const cargarGrupos = async () => {
     try {
+      setLoadingGrupos(true);
       const response = await axiosClient.get('/grupos-destinatarios');
       if (response.data.success) {
         setGrupos(response.data.grupos || []);
@@ -116,12 +117,14 @@ const GruposDestinatarios = () => {
     } catch (err) {
       console.error('Error cargando grupos:', err);
       setError('Error al cargar grupos');
+    } finally {
+      setLoadingGrupos(false);
     }
   };
 
   const handleFiltrarAlumnos = async () => {
     try {
-      setLoading(true);
+      setLoadingFiltros(true);
       const params = {};
       if (selectedCarreras.length > 0) params.id_carreras = selectedCarreras;
       if (selectedGrados.length > 0) params.id_grados = selectedGrados;
@@ -135,7 +138,7 @@ const GruposDestinatarios = () => {
       console.error('Error filtrando alumnos:', err);
       setError('Error al filtrar alumnos');
     } finally {
-      setLoading(false);
+      setLoadingFiltros(false);
     }
   };
 
@@ -361,7 +364,18 @@ const GruposDestinatarios = () => {
       {!editando && !creando ? (
         <div>
           <h4>Grupos Existentes</h4>
-          {grupos.length === 0 ? (
+          {loadingGrupos ? (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                padding: '20px',
+                minHeight: '200px'
+              }}
+            >
+              <Spinner />
+            </div>
+          ) : grupos.length === 0 ? (
             <p style={{ color: '#6c757d', fontStyle: 'italic' }}>
               No hay grupos de destinatarios creados. Crea el primer grupo para empezar.
             </p>
@@ -868,23 +882,36 @@ const GruposDestinatarios = () => {
                   backgroundColor: 'white'
                 }}
               >
-                {alumnosFiltrados.map((alumno) => (
-                  <label key={alumno.id_alumno} style={{ display: 'block', marginBottom: '8px' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedAlumnos.includes(alumno.id_alumno)}
-                      onChange={() => handleAlumnoToggle(alumno.id_alumno)}
-                      style={{ marginRight: 8 }}
-                    />
-                    <span style={{ fontSize: '14px' }}>
-                      {alumno.apellido}, {alumno.nombre} - {alumno.email}
-                    </span>
-                    <br />
-                    <span style={{ fontSize: '12px', color: '#666', marginLeft: '20px' }}>
-                      {alumno.carreras} | {alumno.grados}
-                    </span>
-                  </label>
-                ))}
+                {loadingFiltros ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      padding: '20px',
+                      minHeight: '150px'
+                    }}
+                  >
+                    <Spinner />
+                  </div>
+                ) : (
+                  alumnosFiltrados.map((alumno) => (
+                    <label key={alumno.id_alumno} style={{ display: 'block', marginBottom: '8px' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedAlumnos.includes(alumno.id_alumno)}
+                        onChange={() => handleAlumnoToggle(alumno.id_alumno)}
+                        style={{ marginRight: 8 }}
+                      />
+                      <span style={{ fontSize: '14px' }}>
+                        {alumno.apellido}, {alumno.nombre} - {alumno.email}
+                      </span>
+                      <br />
+                      <span style={{ fontSize: '12px', color: '#666', marginLeft: '20px' }}>
+                        {alumno.carreras} | {alumno.grados}
+                      </span>
+                    </label>
+                  ))
+                )}
               </div>
             </div>
           )}

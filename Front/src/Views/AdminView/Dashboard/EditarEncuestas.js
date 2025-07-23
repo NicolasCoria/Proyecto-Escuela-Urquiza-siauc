@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../../../Components/Shared/Axios';
+import Spinner from '../../../Components/Shared/Spinner';
 
 const EditarEncuestas = () => {
   const [encuestas, setEncuestas] = useState([]);
   const [selectedEncuesta, setSelectedEncuesta] = useState(null);
   const [editando, setEditando] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingEncuestas, setLoadingEncuestas] = useState(false);
+  const [loadingEncuesta, setLoadingEncuesta] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -23,7 +26,7 @@ const EditarEncuestas = () => {
 
   const cargarEncuestas = async () => {
     try {
-      setLoading(true);
+      setLoadingEncuestas(true);
       const response = await axiosClient.get('/encuestas');
       if (response.data.success) {
         setEncuestas(response.data.encuestas || []);
@@ -32,13 +35,13 @@ const EditarEncuestas = () => {
       console.error('Error cargando encuestas:', err);
       setError('Error al cargar las encuestas');
     } finally {
-      setLoading(false);
+      setLoadingEncuestas(false);
     }
   };
 
   const handleSeleccionarEncuesta = async (idEncuesta) => {
     try {
-      setLoading(true);
+      setLoadingEncuesta(true);
       const response = await axiosClient.get(`/encuestas/${idEncuesta}`);
       if (response.data.success) {
         const encuesta = response.data.encuesta;
@@ -55,7 +58,7 @@ const EditarEncuestas = () => {
       console.error('Error cargando encuesta:', err);
       setError('Error al cargar la encuesta seleccionada');
     } finally {
-      setLoading(false);
+      setLoadingEncuesta(false);
     }
   };
 
@@ -216,74 +219,100 @@ const EditarEncuestas = () => {
             <label>
               <strong>Seleccionar Encuesta para Editar:</strong>
               <br />
-              <select
-                value={selectedEncuesta?.id_encuesta || ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    handleSeleccionarEncuesta(parseInt(e.target.value));
-                  } else {
-                    setSelectedEncuesta(null);
-                  }
-                }}
-                style={{ width: '100%', marginTop: 5 }}
-              >
-                <option value="">Selecciona una encuesta</option>
-                {encuestas.map((encuesta) => (
-                  <option key={encuesta.id_encuesta} value={encuesta.id_encuesta}>
-                    {encuesta.titulo} - {encuesta.activa ? 'Activa' : 'Inactiva'}
-                  </option>
-                ))}
-              </select>
+              {loadingEncuestas ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    padding: '20px',
+                    minHeight: '100px'
+                  }}
+                >
+                  <Spinner />
+                </div>
+              ) : (
+                <select
+                  value={selectedEncuesta?.id_encuesta || ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleSeleccionarEncuesta(parseInt(e.target.value));
+                    } else {
+                      setSelectedEncuesta(null);
+                    }
+                  }}
+                  style={{ width: '100%', marginTop: 5 }}
+                >
+                  <option value="">Selecciona una encuesta</option>
+                  {encuestas.map((encuesta) => (
+                    <option key={encuesta.id_encuesta} value={encuesta.id_encuesta}>
+                      {encuesta.titulo} - {encuesta.activa ? 'Activa' : 'Inactiva'}
+                    </option>
+                  ))}
+                </select>
+              )}
             </label>
           </div>
 
-          {selectedEncuesta && (
+          {loadingEncuesta ? (
             <div
               style={{
-                backgroundColor: '#e3f2fd',
-                padding: '15px',
-                borderRadius: '6px',
-                marginBottom: '20px'
+                display: 'flex',
+                justifyContent: 'center',
+                padding: '20px',
+                minHeight: '200px'
               }}
             >
-              <h4>Vista Previa: {selectedEncuesta.titulo}</h4>
-              <p>
-                <strong>Descripción:</strong> {selectedEncuesta.descripcion || 'Sin descripción'}
-              </p>
-              <p>
-                <strong>Estado:</strong> {selectedEncuesta.activa ? 'Activa' : 'Inactiva'}
-              </p>
-              <p>
-                <strong>Preguntas:</strong> {selectedEncuesta.preguntas?.length || 0}
-              </p>
-              <button
-                onClick={() => setEditando(true)}
-                style={{
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  marginRight: '10px'
-                }}
-              >
-                ✏️ Editar
-              </button>
-              <button
-                onClick={handleEliminar}
-                style={{
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                🗑️ Eliminar
-              </button>
+              <Spinner />
             </div>
+          ) : (
+            selectedEncuesta && (
+              <div
+                style={{
+                  backgroundColor: '#e3f2fd',
+                  padding: '15px',
+                  borderRadius: '6px',
+                  marginBottom: '20px'
+                }}
+              >
+                <h4>Vista Previa: {selectedEncuesta.titulo}</h4>
+                <p>
+                  <strong>Descripción:</strong> {selectedEncuesta.descripcion || 'Sin descripción'}
+                </p>
+                <p>
+                  <strong>Estado:</strong> {selectedEncuesta.activa ? 'Activa' : 'Inactiva'}
+                </p>
+                <p>
+                  <strong>Preguntas:</strong> {selectedEncuesta.preguntas?.length || 0}
+                </p>
+                <button
+                  onClick={() => setEditando(true)}
+                  style={{
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    marginRight: '10px'
+                  }}
+                >
+                  ✏️ Editar
+                </button>
+                <button
+                  onClick={handleEliminar}
+                  style={{
+                    backgroundColor: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🗑️ Eliminar
+                </button>
+              </div>
+            )
           )}
         </div>
       ) : (
