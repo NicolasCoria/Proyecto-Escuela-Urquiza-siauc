@@ -15,6 +15,125 @@ use Illuminate\Support\Facades\DB;
 
 class EncuestaController extends Controller
 {
+    // Obtener una encuesta específica con sus preguntas y opciones
+    public function show($id_encuesta)
+    {
+        $encuesta = Encuesta::with(['preguntas.opciones'])->find($id_encuesta);
+        
+        if (!$encuesta) {
+            return response()->json(['error' => 'Encuesta no encontrada'], 404);
+        }
+        
+        return response()->json(['success' => true, 'encuesta' => $encuesta]);
+    }
+
+    // Actualizar una encuesta existente
+    public function update(Request $request, $id_encuesta)
+    {
+        $encuesta = Encuesta::find($id_encuesta);
+        
+        if (!$encuesta) {
+            return response()->json(['error' => 'Encuesta no encontrada'], 404);
+        }
+
+        $validated = $request->validate([
+            'titulo' => 'required|string|max:100',
+            'descripcion' => 'nullable|string|max:255',
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin' => 'nullable|date',
+            'activa' => 'boolean',
+            'preguntas' => 'required|array|min:1',
+            'preguntas.*.texto' => 'required|string|max:255',
+            'preguntas.*.tipo' => 'required|in:opcion_unica,opcion_multiple',
+            'preguntas.*.orden' => 'nullable|integer',
+            'preguntas.*.opciones' => 'required|array|min:1',
+            'preguntas.*.opciones.*.texto' => 'required|string|max:100',
+            'preguntas.*.opciones.*.valor' => 'nullable|integer',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Actualizar la encuesta
+            $encuesta->update($request->only([
+                'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'activa'
+            ]));
+
+            // Eliminar preguntas existentes (esto también eliminará las opciones por cascada)
+            $encuesta->preguntas()->delete();
+
+            // Crear las nuevas preguntas
+            foreach ($request->preguntas as $preguntaData) {
+                $pregunta = $encuesta->preguntas()->create([
+                    'texto' => $preguntaData['texto'],
+                    'tipo' => $preguntaData['tipo'],
+                    'orden' => $preguntaData['orden'] ?? 0,
+                ]);
+                
+                foreach ($preguntaData['opciones'] as $opcionData) {
+                    $pregunta->opciones()->create([
+                        'texto' => $opcionData['texto'],
+                        'valor' => $opcionData['valor'] ?? null,
+                    ]);
+                }
+            }
+            
+            DB::commit();
+            return response()->json([
+                'success' => true, 
+                'message' => 'Encuesta actualizada correctamente',
+                'encuesta' => $encuesta->load('preguntas.opciones')
+            ]);
+        
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Error al actualizar la encuesta: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // Eliminar una encuesta
+    public function destroy($id_encuesta)
+    {
+        $encuesta = Encuesta::find($id_encuesta);
+        
+        if (!$encuesta) {
+            return response()->json(['error' => 'Encuesta no encontrada'], 404);
+        }
+
+        // Verificar si hay respuestas asociadas
+        $tieneRespuestas = Respuesta::where('id_encuesta', $id_encuesta)->exists();
+        
+        if ($tieneRespuestas) {
+            return response()->json([
+                'error' => 'No se puede eliminar la encuesta porque ya tiene respuestas asociadas'
+            ], 400);
+        }
+
+        // Verificar si hay asignaciones a alumnos
+        $tieneAsignaciones = AlumnoEncuesta::where('id_encuesta', $id_encuesta)->exists();
+        
+        if ($tieneAsignaciones) {
+            return response()->json([
+                'error' => 'No se puede eliminar la encuesta porque ya está asignada a alumnos'
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Eliminar la encuesta (esto eliminará preguntas y opciones por cascada)
+            $encuesta->delete();
+            
+            DB::commit();
+            return response()->json([
+                'success' => true, 
+                'message' => 'Encuesta eliminada correctamente'
+            ]);
+        
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Error al eliminar la encuesta: ' . $e->getMessage()], 500);
+        }
+    }
+
     // Listar encuestas activas, con preguntas y opciones
     public function index(Request $request)
     {
@@ -66,6 +185,7 @@ class EncuestaController extends Controller
                 'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'activa', 'id_carrera'
             ]));
 
+            // Crear preguntas y opciones
             foreach ($request->preguntas as $preguntaData) {
                 $pregunta = $encuesta->preguntas()->create([
                     'texto' => $preguntaData['texto'],
@@ -79,8 +199,14 @@ class EncuestaController extends Controller
                     ]);
                 }
             }
+
+
+            
             DB::commit();
-            return response()->json(['success' => true, 'encuesta' => $encuesta->load('preguntas.opciones')], 201);
+            return response()->json([
+                'success' => true, 
+                'encuesta' => $encuesta->load('preguntas.opciones')
+            ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
@@ -403,5 +529,72 @@ class EncuestaController extends Controller
             ->update(['notificado' => true]);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Asignar encuesta a grupos de destinatarios
+     */
+    public function asignarGrupos(Request $request)
+    {
+        $validated = $request->validate([
+            'id_encuesta' => 'required|integer|exists:encuesta,id_encuesta',
+            'grupos' => 'required|array|min:1',
+            'grupos.*' => 'integer|exists:grupos_destinatarios,id_grupo'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $encuesta = Encuesta::find($validated['id_encuesta']);
+            if (!$encuesta) {
+                return response()->json(['error' => 'Encuesta no encontrada'], 404);
+            }
+
+            $alumnosAsignados = [];
+            $totalAsignados = 0;
+
+            foreach ($validated['grupos'] as $idGrupo) {
+                // Obtener alumnos del grupo
+                $alumnosGrupo = DB::table('grupo_destinatario_alumno')
+                    ->where('id_grupo', $idGrupo)
+                    ->pluck('id_alumno')
+                    ->toArray();
+                
+                foreach ($alumnosGrupo as $idAlumno) {
+                    // Verificar si ya está asignada
+                    $yaAsignada = AlumnoEncuesta::where('id_alumno', $idAlumno)
+                        ->where('id_encuesta', $encuesta->id_encuesta)
+                        ->exists();
+
+                    if (!$yaAsignada) {
+                        AlumnoEncuesta::create([
+                            'id_alumno' => $idAlumno,
+                            'id_encuesta' => $encuesta->id_encuesta,
+                            'fecha_asignacion' => now(),
+                            'notificado' => false,
+                            'respondida' => false
+                        ]);
+                        $totalAsignados++;
+                    }
+                    $alumnosAsignados[] = $idAlumno;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Encuesta asignada a {$totalAsignados} alumno(s) de los grupos seleccionados",
+                'total_asignados' => $totalAsignados,
+                'total_alumnos_grupos' => count(array_unique($alumnosAsignados))
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al asignar encuesta a grupos: ' . $e->getMessage()
+            ], 500);
+        }
     }
 } 

@@ -21,6 +21,7 @@ import Layout from '../Components/Shared/Layout';
 import EncuestasAlumno from '../Views/AlumnoView/EncuestasAlumno';
 import SolicitudesAlumno from '../Views/AlumnoView/SolicitudesAlumno';
 import SolicitudesAdmin from '../Views/AdminView/Solicitudes';
+import ProtectedRoute from '../Components/Shared/ProtectedRoute';
 
 const RoutesLanding = () => {
   const { pathname } = useLocation();
@@ -42,7 +43,14 @@ const RoutesLanding = () => {
           <Route path="/inscripciones" element={<Inscripciones />} />
         </Route>
 
-        <Route path="/alumno" element={<AlumnoView />}>
+        <Route
+          path="/alumno"
+          element={
+            <ProtectedRoute requiredRole="alumno">
+              <AlumnoView />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Home />} />
           <Route path="profile/:id" element={<AlumnoProfile />} />
           <Route path="materias" element={<Materias />} />
@@ -53,7 +61,14 @@ const RoutesLanding = () => {
 
         {/* Rutas de Administrador */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="informes" element={<AdminInformes />} />
           <Route path="solicitudes" element={<SolicitudesAdmin />} />

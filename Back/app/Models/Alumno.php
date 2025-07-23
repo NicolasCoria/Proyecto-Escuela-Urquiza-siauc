@@ -112,4 +112,9 @@ class Alumno extends Model
 		return $this->belongsToMany(Encuesta::class, 'alumno_encuesta', 'id_alumno', 'id_encuesta')
 					->withPivot('fecha_asignacion', 'notificado', 'respondida', 'fecha_respuesta');
 	}
+
+	public function unidadesCurriculares()
+	{
+		return $this->belongsToMany(UnidadCurricular::class, 'alumno_uc', 'id_alumno', 'id_uc');
+	}
 }

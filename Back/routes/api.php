@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\CarreraController;
 use App\Http\Controllers\Api\InformeController;
 use App\Http\Controllers\Api\EncuestaController;
+use App\Http\Controllers\Api\GruposDestinatariosController;
 use App\Http\Controllers\Solicitudes\SolicitudController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,7 @@ Route::post('/alumnos/login', [AuthController::class, 'loginAlumno']);
 // Rutas de autenticación para administradores
 Route::post('/admin/register', [AdminAuthController::class, 'registerAdmin']);
 Route::post('/admin/login', [AdminAuthController::class, 'loginAdmin']);
+Route::get('/admin/info', [AdminAuthController::class, 'getAdminInfo']);
 
 // Grupo de rutas protegidas para Administradores
 Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
@@ -51,15 +53,28 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('solicitudes/{id}/marcar-visto', [SolicitudController::class, 'marcarEstadoVisto']);
 });
 
+// Rutas para grupos de destinatarios
+Route::get('/grupos-destinatarios', [GruposDestinatariosController::class, 'index']); // Listar grupos
+Route::get('/grupos-destinatarios/{id}', [GruposDestinatariosController::class, 'show']); // Obtener grupo específico
+Route::post('/grupos-destinatarios', [GruposDestinatariosController::class, 'store']); // Crear grupo
+Route::put('/grupos-destinatarios/{id}', [GruposDestinatariosController::class, 'update']); // Actualizar grupo
+Route::delete('/grupos-destinatarios/{id}', [GruposDestinatariosController::class, 'destroy']); // Eliminar grupo
+Route::get('/grupos-destinatarios/datos/creacion', [GruposDestinatariosController::class, 'getDatosCreacion']); // Datos para crear
+Route::post('/grupos-destinatarios/filtrar-alumnos', [GruposDestinatariosController::class, 'filtrarAlumnos']); // Filtrar alumnos
+
 // Rutas para encuestas académicas (CU-005)
 Route::get('/encuestas', [EncuestaController::class, 'index']); // Listar encuestas activas con preguntas y opciones
+Route::get('/encuestas/{id}', [EncuestaController::class, 'show']); // Obtener una encuesta específica
 Route::post('/encuestas', [EncuestaController::class, 'store']); // Crear encuesta completa
+Route::put('/encuestas/{id}', [EncuestaController::class, 'update']); // Actualizar encuesta
+Route::delete('/encuestas/{id}', [EncuestaController::class, 'destroy']); // Eliminar encuesta
 Route::post('/encuestas/responder', [EncuestaController::class, 'responder']); // Guardar respuestas de alumno
 Route::get('/encuestas/{id}/estadisticas', [EncuestaController::class, 'estadisticas']); // Estadísticas de encuesta
 
 // Nuevas rutas para asignación de encuestas
 Route::post('/encuestas/asignar-alumnos', [EncuestaController::class, 'asignarAAlumnos']); // Asignar a alumnos específicos
 Route::post('/encuestas/asignar-carrera', [EncuestaController::class, 'asignarACarrera']); // Asignar a toda una carrera
+Route::post('/encuestas/asignar-grupos', [EncuestaController::class, 'asignarGrupos']); // Asignar a grupos de destinatarios
 
 // Rutas para plantillas de informe (CU-004)
 Route::get('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeController::class, 'index']);

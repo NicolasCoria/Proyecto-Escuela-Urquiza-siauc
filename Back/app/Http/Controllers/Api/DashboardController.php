@@ -39,9 +39,15 @@ class DashboardController extends Controller
                 ->orderBy('carrera')
                 ->get();
                 
-            $grados = Grado::select(['id_grado', 'grado'])
+            $grados = Grado::select(['id_grado', 'grado', 'division', 'detalle'])
                 ->orderBy('grado')
-                ->get();
+                ->orderBy('division')
+                ->get()
+                ->map(function($grado) {
+                    // Formatear el texto de visualización
+                    $grado->display_text = $grado->grado . '-' . $grado->division . '°';
+                    return $grado;
+                });
                 
             $materias = UnidadCurricular::select(['id_uc', 'unidad_curricular'])
                 ->orderBy('unidad_curricular')

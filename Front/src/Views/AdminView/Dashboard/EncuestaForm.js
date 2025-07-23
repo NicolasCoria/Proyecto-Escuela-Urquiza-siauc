@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axiosClient from '../../../Components/Shared/Axios';
 
 const defaultPregunta = () => ({
@@ -17,25 +17,10 @@ const EncuestaForm = ({ onSuccess }) => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [activa, setActiva] = useState(true);
-  const [idCarrera, setIdCarrera] = useState('');
-  const [carreras, setCarreras] = useState([]);
   const [preguntas, setPreguntas] = useState([defaultPregunta()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  useEffect(() => {
-    const fetchCarreras = async () => {
-      try {
-        const response = await axiosClient.get('/carreras');
-        setCarreras(response.data.carreras || []);
-      } catch (err) {
-        console.error('Error fetching carreras:', err);
-        setError('Error al cargar las carreras');
-      }
-    };
-    fetchCarreras();
-  }, []);
 
   const handlePreguntaChange = (idx, field, value) => {
     const updated = [...preguntas];
@@ -72,20 +57,22 @@ const EncuestaForm = ({ onSuccess }) => {
 
     try {
       // Crear la encuesta
-      await axiosClient.post('/encuestas', {
+      const encuestaData = {
         titulo,
         descripcion,
         fecha_inicio: fechaInicio,
         fecha_fin: fechaFin,
         activa,
-        id_carrera: idCarrera || null,
+        id_carrera: null, // Siempre null para encuestas globales
         preguntas: preguntas.map((p, idx) => ({
           texto: p.texto,
           tipo: p.tipo,
           orden: idx,
           opciones: p.opciones.map((o) => ({ texto: o.texto, valor: o.valor || null }))
         }))
-      });
+      };
+
+      await axiosClient.post('/encuestas', encuestaData);
 
       setSuccess('Encuesta creada correctamente');
       setTitulo('');
@@ -93,7 +80,6 @@ const EncuestaForm = ({ onSuccess }) => {
       setFechaInicio('');
       setFechaFin('');
       setActiva(true);
-      setIdCarrera('');
       setPreguntas([defaultPregunta()]);
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -168,38 +154,20 @@ const EncuestaForm = ({ onSuccess }) => {
           />
         </label>
       </div>
-      <div style={{ marginBottom: 12 }}>
-        <label>
-          Carrera (Opcional - Selecciona para encuesta específica o deja vacío para encuesta
-          global):
-          <br />
-          <select
-            value={idCarrera}
-            onChange={(e) => setIdCarrera(e.target.value)}
-            style={{ width: '100%' }}
-            required={false}
-          >
-            <option value="">Todas las carreras (Encuesta global)</option>
-            {carreras.map((c) => (
-              <option key={c.id_carrera} value={c.id_carrera}>
-                {c.carrera}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div
-          style={{
-            backgroundColor: '#e3f2fd',
-            color: '#1976d2',
-            padding: '8px',
-            borderRadius: '4px',
-            marginTop: '5px',
-            fontSize: '12px'
-          }}
-        >
-          💡 <strong>Tip:</strong> Deja vacío para crear una encuesta global que puedas asignar a
-          múltiples carreras desde &quot;Gestionar Asignaciones&quot;
-        </div>
+
+      <div
+        style={{
+          backgroundColor: '#e3f2fd',
+          color: '#1976d2',
+          padding: '12px',
+          borderRadius: '6px',
+          marginBottom: '16px',
+          fontSize: '14px',
+          border: '1px solid #bbdefb'
+        }}
+      >
+        🌐 <strong>Encuesta Global:</strong> Esta encuesta se creará como global y podrás asignarla
+        a carreras específicas desde &quot;Gestionar Asignaciones&quot;.
       </div>
       <hr />
       <h4>Preguntas</h4>
@@ -292,8 +260,8 @@ const EncuestaForm = ({ onSuccess }) => {
         Agregar pregunta
       </button>
       <br />
-      <button type="submit" disabled={loading} style={{ marginTop: 8 }}>
-        {loading ? 'Guardando...' : 'Crear Encuesta'}
+      <button type="submit" disabled={loading} style={{ color: 'green', marginTop: 8 }}>
+        {loading ? 'Guardando...' : 'Guardar Encuesta'}
       </button>
       {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
       {success && <div style={{ color: 'green', marginTop: 8 }}>{success}</div>}

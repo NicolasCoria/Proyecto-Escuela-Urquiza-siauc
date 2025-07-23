@@ -17,6 +17,12 @@ const GestionarAsignaciones = () => {
   const [success, setSuccess] = useState('');
   const [mostrarTodasEncuestas, setMostrarTodasEncuestas] = useState(false);
 
+  // Estados para grupos de destinatarios
+  const [grupos, setGrupos] = useState([]);
+  const [selectedGrupos, setSelectedGrupos] = useState([]);
+  const [cargandoGrupos, setCargandoGrupos] = useState(false);
+  const [usarGrupos, setUsarGrupos] = useState(false);
+
   // Cargar encuestas, carreras, grados y materias al inicio
   useEffect(() => {
     const fetchData = async () => {
@@ -68,6 +74,25 @@ const GestionarAsignaciones = () => {
     };
     fetchData();
   }, [mostrarTodasEncuestas]);
+
+  // Cargar grupos de destinatarios
+  useEffect(() => {
+    const cargarGrupos = async () => {
+      try {
+        setCargandoGrupos(true);
+        const response = await axiosClient.get('/grupos-destinatarios');
+        if (response.data.success) {
+          setGrupos(response.data.grupos || []);
+        }
+      } catch (err) {
+        console.error('Error cargando grupos:', err);
+      } finally {
+        setCargandoGrupos(false);
+      }
+    };
+
+    cargarGrupos();
+  }, []);
 
   // Sincronizar carrera con la encuesta seleccionada
   useEffect(() => {
@@ -129,13 +154,33 @@ const GestionarAsignaciones = () => {
     setAlumnos([]);
     setSelectedAlumnos([]);
     try {
-      const params = {
-        id_carrera: selectedCarrera
-      };
-      if (selectedGrado) params.id_grado = selectedGrado;
-      if (selectedMateria) params.id_uc = selectedMateria;
-      const res = await axiosClient.get('/alumnos/filtrados', { params });
-      setAlumnos(res.data.alumnos || []);
+      if (usarGrupos) {
+        // Modo grupos: obtener alumnos de grupos seleccionados
+        if (selectedGrupos.length === 0) {
+          setError('Debes seleccionar al menos un grupo de destinatarios');
+          return;
+        }
+
+        const params = { grupos: selectedGrupos };
+        const res = await axiosClient.post('/grupos-destinatarios/filtrar-alumnos', params);
+        setAlumnos(res.data.alumnos || []);
+      } else {
+        // Modo normal: filtrar por carrera/año/materia
+        const params = {};
+
+        // Manejar "todas las carreras"
+        if (selectedCarrera === 'todas') {
+          // No enviar id_carrera para obtener todas las carreras
+        } else if (selectedCarrera) {
+          params.id_carrera = selectedCarrera;
+        }
+
+        if (selectedGrado) params.id_grado = selectedGrado;
+        if (selectedMateria) params.id_uc = selectedMateria;
+
+        const res = await axiosClient.get('/alumnos/filtrados', { params });
+        setAlumnos(res.data.alumnos || []);
+      }
     } catch (err) {
       setError('Error al filtrar alumnos');
     } finally {
@@ -157,12 +202,51 @@ const GestionarAsignaciones = () => {
     }
   };
 
+  const handleGrupoToggle = (grupoId) => {
+    setSelectedGrupos((prev) =>
+      prev.includes(grupoId) ? prev.filter((id) => id !== grupoId) : [...prev, grupoId]
+    );
+  };
+
+  const handleSelectAllGrupos = () => {
+    if (selectedGrupos.length === grupos.length) {
+      setSelectedGrupos([]);
+    } else {
+      setSelectedGrupos(grupos.map((g) => g.id_grupo));
+    }
+  };
+
+  const toggleModoAsignacion = () => {
+    setUsarGrupos(!usarGrupos);
+    // Limpiar selecciones al cambiar modo
+    if (!usarGrupos) {
+      // Cambiando a modo grupos
+      setSelectedCarrera('');
+      setSelectedGrado('');
+      setSelectedMateria('');
+      setAlumnos([]);
+      setSelectedAlumnos([]);
+    } else {
+      // Cambiando a modo normal
+      setSelectedGrupos([]);
+      setAlumnos([]);
+      setSelectedAlumnos([]);
+    }
+  };
+
   // Asignar encuesta a los seleccionados o a todos los filtrados
   const handleAsignar = async () => {
-    // Validación obligatoria de carrera
-    if (!selectedCarrera) {
-      setError('Debes seleccionar una carrera para asignar la encuesta');
-      return;
+    // Validación según modo
+    if (usarGrupos) {
+      if (selectedGrupos.length === 0) {
+        setError('Debes seleccionar al menos un grupo de destinatarios');
+        return;
+      }
+    } else {
+      if (!selectedCarrera) {
+        setError('Debes seleccionar una carrera o "Todas las carreras" para asignar la encuesta');
+        return;
+      }
     }
 
     setLoading(true);
@@ -178,13 +262,29 @@ const GestionarAsignaciones = () => {
         setSuccess(`Encuesta asignada a ${selectedAlumnos.length} alumno(s)`);
       } else {
         // Asignar a todos los filtrados
-        await axiosClient.post('/encuestas/asignar-filtrado', {
-          id_encuesta: selectedEncuesta,
-          id_carrera: selectedCarrera,
-          id_grado: selectedGrado || undefined,
-          id_uc: selectedMateria || undefined
-        });
-        setSuccess('Encuesta asignada a todos los alumnos filtrados');
+        if (usarGrupos) {
+          // Asignar por grupos
+          await axiosClient.post('/encuestas/asignar-grupos', {
+            id_encuesta: selectedEncuesta,
+            grupos: selectedGrupos
+          });
+          setSuccess('Encuesta asignada a todos los alumnos de los grupos seleccionados');
+        } else {
+          // Asignar por filtros normales
+          const params = {
+            id_encuesta: selectedEncuesta,
+            id_grado: selectedGrado || undefined,
+            id_uc: selectedMateria || undefined
+          };
+
+          // Solo enviar id_carrera si no es "todas las carreras"
+          if (selectedCarrera !== 'todas') {
+            params.id_carrera = selectedCarrera;
+          }
+
+          await axiosClient.post('/encuestas/asignar-filtrado', params);
+          setSuccess('Encuesta asignada a todos los alumnos filtrados');
+        }
       }
       setSelectedAlumnos([]);
     } catch (err) {
@@ -239,8 +339,11 @@ const GestionarAsignaciones = () => {
     }
   };
 
-  // Validar si se puede asignar (carrera obligatoria siempre)
-  const puedeAsignar = selectedEncuesta && alumnos.length > 0 && selectedCarrera;
+  // Validar si se puede asignar según el modo
+  const puedeAsignar =
+    selectedEncuesta &&
+    alumnos.length > 0 &&
+    (usarGrupos ? selectedGrupos.length > 0 : selectedCarrera);
 
   return (
     <div style={{ background: '#f9f9f9', padding: 24, borderRadius: 8, marginBottom: 32 }}>
@@ -388,137 +491,317 @@ const GestionarAsignaciones = () => {
           </select>
         </label>
       </div>
+
+      {/* Selector de Modo de Asignación */}
       <div style={{ marginBottom: 20 }}>
-        <label>
-          <strong style={{ color: '#dc3545' }}>Carrera: *</strong>
-          <br />
-          <select
-            value={selectedCarrera}
-            onChange={(e) => setSelectedCarrera(e.target.value)}
-            style={{
-              width: '100%',
-              marginTop: 5,
-              border: selectedCarrera ? '1px solid #28a745' : '1px solid #dc3545',
-              backgroundColor: selectedCarrera ? '#f8fff9' : '#fff5f5'
-            }}
-            required
-          >
-            <option value="">Selecciona una carrera (Obligatorio)</option>
-            {carreras.map((carrera) => (
-              <option key={carrera.id_carrera} value={carrera.id_carrera}>
-                {carrera.carrera}
-              </option>
-            ))}
-          </select>
-        </label>
         <div
           style={{
-            backgroundColor: '#fff3cd',
-            color: '#856404',
-            padding: '8px',
-            borderRadius: '4px',
-            marginTop: '5px',
-            fontSize: '12px'
+            backgroundColor: '#e3f2fd',
+            border: '1px solid #bbdefb',
+            borderRadius: '6px',
+            padding: '12px',
+            marginBottom: '15px'
           }}
         >
-          ⚠️ <strong>Importante:</strong> La carrera es obligatoria para asignar encuestas.
-          Selecciona la carrera a la que quieres asignar la encuesta.
-        </div>
-      </div>
-      <div style={{ marginBottom: 20 }}>
-        <label>
-          <strong>Año (Grado):</strong>
-          <br />
-          <select
-            value={selectedGrado}
-            onChange={(e) => setSelectedGrado(e.target.value)}
-            style={{ width: '100%', marginTop: 5 }}
-          >
-            <option value="">Todos los años</option>
-            {grados.map((grado) => (
-              <option key={grado.id_grado} value={grado.id_grado}>
-                {grado.grado}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <div style={{ marginBottom: 20 }}>
-        <label>
-          <strong>Materia (Unidad Curricular):</strong>
-          <br />
-          <select
-            value={selectedMateria}
-            onChange={(e) => setSelectedMateria(e.target.value)}
-            style={{ width: '100%', marginTop: 5 }}
-          >
-            <option value="">Todas las materias</option>
-            {materias.map((uc) => (
-              <option
-                key={uc.id_uc}
-                value={uc.id_uc}
-                style={{
-                  backgroundColor: uc.esDelAnio ? '#d4edda' : '#f8f9fa',
-                  color: uc.esDelAnio ? '#155724' : '#888'
-                }}
-                disabled={selectedGrado && !uc.esDelAnio}
-              >
-                {uc.unidad_curricular || uc.Unidad_Curricular}
-                {uc.esDelAnio ? ' (Año seleccionado)' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <button
-        onClick={handleFiltrarAlumnos}
-        disabled={!selectedCarrera || loading}
-        style={{
-          marginBottom: 20,
-          backgroundColor: '#007bff',
-          color: 'white',
-          padding: '10px 20px',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: loading ? 'not-allowed' : 'pointer'
-        }}
-      >
-        Filtrar Alumnos
-      </button>
-      {alumnos.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <strong>Alumnos filtrados:</strong>
-          <div
-            style={{
-              maxHeight: 250,
-              overflowY: 'auto',
-              border: '1px solid #ddd',
-              padding: 10,
-              marginTop: 5
-            }}
-          >
-            <label style={{ display: 'block', marginBottom: 8 }}>
+          <strong>🎯 Modo de Asignación:</strong>
+          <div style={{ marginTop: '8px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', marginRight: '20px' }}>
               <input
-                type="checkbox"
-                checked={selectedAlumnos.length === alumnos.length}
-                onChange={handleSelectAll}
-                style={{ marginRight: 8 }}
+                type="radio"
+                checked={!usarGrupos}
+                onChange={toggleModoAsignacion}
+                style={{ marginRight: '6px' }}
               />
-              Seleccionar todos
+              📊 <strong>Filtros por Carrera/Año/Materia</strong>
             </label>
-            {alumnos.map((alumno) => (
-              <label key={alumno.id_alumno} style={{ display: 'block', marginBottom: 5 }}>
-                <input
-                  type="checkbox"
-                  checked={selectedAlumnos.includes(alumno.id_alumno)}
-                  onChange={() => handleAlumnoToggle(alumno.id_alumno)}
-                  style={{ marginRight: 8 }}
-                />
-                {alumno.apellido}, {alumno.nombre} - {alumno.email}
-              </label>
-            ))}
+            <label style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <input
+                type="radio"
+                checked={usarGrupos}
+                onChange={toggleModoAsignacion}
+                style={{ marginRight: '6px' }}
+              />
+              🎯 <strong>Grupos de Destinatarios</strong>
+            </label>
           </div>
         </div>
+      </div>
+
+      {!usarGrupos ? (
+        <>
+          <div style={{ marginBottom: 20 }}>
+            <label>
+              <strong style={{ color: '#dc3545' }}>Carrera: *</strong>
+              <br />
+              <select
+                value={selectedCarrera}
+                onChange={(e) => setSelectedCarrera(e.target.value)}
+                style={{
+                  width: '100%',
+                  marginTop: 5,
+                  border: selectedCarrera
+                    ? selectedCarrera === 'todas'
+                      ? '1px solid #007bff'
+                      : '1px solid #28a745'
+                    : '1px solid #dc3545',
+                  backgroundColor: selectedCarrera
+                    ? selectedCarrera === 'todas'
+                      ? '#e3f2fd'
+                      : '#f8fff9'
+                    : '#fff5f5'
+                }}
+                required
+              >
+                <option value="">Selecciona una carrera (Obligatorio)</option>
+                <option value="todas" style={{ fontWeight: 'bold', backgroundColor: '#e3f2fd' }}>
+                  🌟 Todas las carreras
+                </option>
+                {carreras.map((carrera) => (
+                  <option key={carrera.id_carrera} value={carrera.id_carrera}>
+                    {carrera.carrera}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div
+              style={{
+                backgroundColor: '#fff3cd',
+                color: '#856404',
+                padding: '8px',
+                borderRadius: '4px',
+                marginTop: '5px',
+                fontSize: '12px'
+              }}
+            >
+              ⚠️ <strong>Importante:</strong> La carrera es obligatoria para asignar encuestas.
+              Selecciona una carrera específica o &quot;Todas las carreras&quot; para asignar la
+              encuesta.
+            </div>
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label>
+              <strong>Año (Grado):</strong>
+              <br />
+              <select
+                value={selectedGrado}
+                onChange={(e) => setSelectedGrado(e.target.value)}
+                style={{ width: '100%', marginTop: 5 }}
+              >
+                <option value="">Todos los años</option>
+                {grados.map((grado) => (
+                  <option key={grado.id_grado} value={grado.id_grado}>
+                    {grado.display_text || `${grado.grado}-${grado.division}°`}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label>
+              <strong>Materia (Unidad Curricular):</strong>
+              <br />
+              <select
+                value={selectedMateria}
+                onChange={(e) => setSelectedMateria(e.target.value)}
+                style={{ width: '100%', marginTop: 5 }}
+              >
+                <option value="">Todas las materias</option>
+                {materias.map((uc) => (
+                  <option
+                    key={uc.id_uc}
+                    value={uc.id_uc}
+                    style={{
+                      backgroundColor: uc.esDelAnio ? '#d4edda' : '#f8f9fa',
+                      color: uc.esDelAnio ? '#155724' : '#888'
+                    }}
+                    disabled={selectedGrado && !uc.esDelAnio}
+                  >
+                    {uc.unidad_curricular || uc.Unidad_Curricular}
+                    {uc.esDelAnio ? ' (Año seleccionado)' : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <button
+            onClick={handleFiltrarAlumnos}
+            disabled={!selectedCarrera || loading}
+            style={{
+              marginBottom: 20,
+              backgroundColor: '#007bff',
+              color: 'white',
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: loading ? 'not-allowed' : 'pointer'
+            }}
+          >
+            Filtrar Alumnos
+          </button>
+          {alumnos.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <strong>Alumnos filtrados:</strong>
+              <div
+                style={{
+                  maxHeight: 250,
+                  overflowY: 'auto',
+                  border: '1px solid #ddd',
+                  padding: 10,
+                  marginTop: 5
+                }}
+              >
+                <label style={{ display: 'block', marginBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedAlumnos.length === alumnos.length}
+                    onChange={handleSelectAll}
+                    style={{ marginRight: 8 }}
+                  />
+                  Seleccionar todos
+                </label>
+                {alumnos.map((alumno) => (
+                  <label key={alumno.id_alumno} style={{ display: 'block', marginBottom: 5 }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedAlumnos.includes(alumno.id_alumno)}
+                      onChange={() => handleAlumnoToggle(alumno.id_alumno)}
+                      style={{ marginRight: 8 }}
+                    />
+                    {alumno.apellido}, {alumno.nombre} - {alumno.email}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Modo Grupos de Destinatarios */}
+          <div style={{ marginBottom: 20 }}>
+            <label>
+              <strong>🎯 Grupos de Destinatarios:</strong>
+              <br />
+              <div
+                style={{
+                  backgroundColor: '#f8f9fa',
+                  border: '1px solid #dee2e6',
+                  borderRadius: '4px',
+                  padding: '12px',
+                  marginTop: 5,
+                  maxHeight: '200px',
+                  overflowY: 'auto'
+                }}
+              >
+                {cargandoGrupos ? (
+                  <div style={{ textAlign: 'center', color: '#6c757d' }}>Cargando grupos...</div>
+                ) : grupos.length > 0 ? (
+                  <>
+                    <div style={{ marginBottom: '10px' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          marginBottom: '8px',
+                          fontSize: '14px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedGrupos.length === grupos.length && grupos.length > 0}
+                          onChange={handleSelectAllGrupos}
+                          style={{ marginRight: 6 }}
+                        />
+                        🌟 Seleccionar todos los grupos
+                      </label>
+                    </div>
+                    <div style={{ fontSize: '14px' }}>
+                      {grupos.map((grupo) => (
+                        <label
+                          key={grupo.id_grupo}
+                          style={{ display: 'block', marginBottom: '6px' }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedGrupos.includes(grupo.id_grupo)}
+                            onChange={() => handleGrupoToggle(grupo.id_grupo)}
+                            style={{ marginRight: 6 }}
+                          />
+                          <strong>{grupo.nombre}</strong>
+                          {grupo.descripcion && (
+                            <span style={{ color: '#6c757d', marginLeft: '8px' }}>
+                              - {grupo.descripcion}
+                            </span>
+                          )}
+                          <span style={{ color: '#28a745', marginLeft: '8px' }}>
+                            ({grupo.cantidad_alumnos || 0} alumnos)
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ textAlign: 'center', color: '#6c757d', fontStyle: 'italic' }}>
+                    No hay grupos de destinatarios creados.
+                    <br />
+                    <small>
+                      Crea grupos en &quot;Grupos de Destinatarios&quot; para usarlos aquí.
+                    </small>
+                  </div>
+                )}
+              </div>
+            </label>
+          </div>
+          <button
+            onClick={handleFiltrarAlumnos}
+            disabled={selectedGrupos.length === 0 || loading}
+            style={{
+              marginBottom: 20,
+              backgroundColor: '#007bff',
+              color: 'white',
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: loading ? 'not-allowed' : 'pointer'
+            }}
+          >
+            Filtrar Alumnos por Grupos
+          </button>
+          {alumnos.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <strong>Alumnos de grupos seleccionados:</strong>
+              <div
+                style={{
+                  maxHeight: 250,
+                  overflowY: 'auto',
+                  border: '1px solid #ddd',
+                  padding: 10,
+                  marginTop: 5
+                }}
+              >
+                <label style={{ display: 'block', marginBottom: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedAlumnos.length === alumnos.length}
+                    onChange={handleSelectAll}
+                    style={{ marginRight: 8 }}
+                  />
+                  Seleccionar todos
+                </label>
+                {alumnos.map((alumno) => (
+                  <label key={alumno.id_alumno} style={{ display: 'block', marginBottom: 5 }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedAlumnos.includes(alumno.id_alumno)}
+                      onChange={() => handleAlumnoToggle(alumno.id_alumno)}
+                      style={{ marginRight: 8 }}
+                    />
+                    {alumno.apellido}, {alumno.nombre} - {alumno.email}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
       <button
         onClick={handleAsignar}
