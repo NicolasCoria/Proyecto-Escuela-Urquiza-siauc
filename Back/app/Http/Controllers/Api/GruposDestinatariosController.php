@@ -255,22 +255,29 @@ class GruposDestinatariosController extends Controller
     public function getDatosCreacion()
     {
         try {
-            $carreras = Carrera::select(['id_carrera', 'carrera'])
-                ->orderBy('carrera')
-                ->get();
+            // ✅ OPTIMIZACIÓN: Usar caché para datos que no cambian frecuentemente
+            $carreras = \Cache::remember('carreras_list', 3600, function () {
+                return Carrera::select(['id_carrera', 'carrera'])
+                    ->orderBy('carrera')
+                    ->get();
+            });
 
-            $grados = Grado::select(['id_grado', 'grado', 'division', 'detalle'])
-                ->orderBy('grado')
-                ->orderBy('division')
-                ->get()
-                ->map(function($grado) {
-                    $grado->display_text = $grado->grado . '-' . $grado->division . '°';
-                    return $grado;
-                });
+            $grados = \Cache::remember('grados_list', 3600, function () {
+                return Grado::select(['id_grado', 'grado', 'division', 'detalle'])
+                    ->orderBy('grado')
+                    ->orderBy('division')
+                    ->get()
+                    ->map(function($grado) {
+                        $grado->display_text = $grado->grado . '-' . $grado->division . '°';
+                        return $grado;
+                    });
+            });
 
-            $materias = UnidadCurricular::select(['id_uc', 'unidad_curricular'])
-                ->orderBy('unidad_curricular')
-                ->get();
+            $materias = \Cache::remember('materias_list', 3600, function () {
+                return UnidadCurricular::select(['id_uc', 'unidad_curricular'])
+                    ->orderBy('unidad_curricular')
+                    ->get();
+            });
 
             return response()->json([
                 'success' => true,
@@ -304,39 +311,71 @@ class GruposDestinatariosController extends Controller
                 'id_ucs.*' => 'integer|exists:unidad_curricular,id_uc'
             ]);
 
-            $query = Alumno::with(['carreras', 'grados', 'unidadesCurriculares']);
+            // ✅ OPTIMIZACIÓN: Usar JOINs en lugar de whereHas para mejor rendimiento
+            $query = DB::table('alumno as a')
+                ->select([
+                    'a.id_alumno',
+                    'a.nombre',
+                    'a.apellido',
+                    'a.email'
+                ]);
 
-            // Aplicar filtros múltiples
+            // Aplicar filtros con JOINs optimizados
             if (!empty($validated['id_carreras'])) {
-                $query->whereHas('carreras', function($q) use ($validated) {
-                    $q->whereIn('carrera.id_carrera', $validated['id_carreras']);
-                });
+                $query->join('alumno_carrera as ac', 'a.id_alumno', '=', 'ac.id_alumno')
+                      ->whereIn('ac.id_carrera', $validated['id_carreras']);
             }
 
             if (!empty($validated['id_grados'])) {
-                $query->whereHas('grados', function($q) use ($validated) {
-                    $q->whereIn('grado.id_grado', $validated['id_grados']);
-                });
+                $query->join('alumno_grado as ag', 'a.id_alumno', '=', 'ag.id_alumno')
+                      ->whereIn('ag.id_grado', $validated['id_grados']);
             }
 
             if (!empty($validated['id_ucs'])) {
-                $query->whereHas('unidadesCurriculares', function($q) use ($validated) {
-                    $q->whereIn('unidad_curricular.id_uc', $validated['id_ucs']);
-                });
+                $query->join('alumno_uc as auc', 'a.id_alumno', '=', 'auc.id_alumno')
+                      ->whereIn('auc.id_uc', $validated['id_ucs']);
             }
 
-            $alumnos = $query->get()->map(function($alumno) {
-                return [
-                    'id_alumno' => $alumno->id_alumno,
-                    'nombre' => $alumno->nombre,
-                    'apellido' => $alumno->apellido,
-                    'email' => $alumno->email,
-                    'carreras' => $alumno->carreras->pluck('carrera')->join(', '),
-                    'grados' => $alumno->grados->map(function($g) {
+            // ✅ OPTIMIZACIÓN: Usar distinct para evitar duplicados
+            $alumnos = $query->distinct()->get();
+
+            // ✅ OPTIMIZACIÓN: Cargar relaciones solo para los alumnos filtrados
+            $alumnoIds = $alumnos->pluck('id_alumno');
+            
+            if ($alumnoIds->isNotEmpty()) {
+                // Cargar carreras
+                $carreras = DB::table('alumno_carrera as ac')
+                    ->join('carrera as c', 'ac.id_carrera', '=', 'c.id_carrera')
+                    ->whereIn('ac.id_alumno', $alumnoIds)
+                    ->select(['ac.id_alumno', 'c.carrera'])
+                    ->get()
+                    ->groupBy('id_alumno');
+
+                // Cargar grados
+                $grados = DB::table('alumno_grado as ag')
+                    ->join('grado as g', 'ag.id_grado', '=', 'g.id_grado')
+                    ->whereIn('ag.id_alumno', $alumnoIds)
+                    ->select(['ag.id_alumno', 'g.grado', 'g.division'])
+                    ->get()
+                    ->groupBy('id_alumno');
+
+                // Mapear resultados
+                $alumnos = $alumnos->map(function($alumno) use ($carreras, $grados) {
+                    $carrerasAlumno = $carreras->get($alumno->id_alumno, collect())->pluck('carrera')->join(', ');
+                    $gradosAlumno = $grados->get($alumno->id_alumno, collect())->map(function($g) {
                         return $g->grado . '-' . $g->division . '°';
-                    })->join(', ')
-                ];
-            });
+                    })->join(', ');
+
+                    return [
+                        'id_alumno' => $alumno->id_alumno,
+                        'nombre' => $alumno->nombre,
+                        'apellido' => $alumno->apellido,
+                        'email' => $alumno->email,
+                        'carreras' => $carrerasAlumno,
+                        'grados' => $gradosAlumno
+                    ];
+                });
+            }
 
             return response()->json([
                 'success' => true,

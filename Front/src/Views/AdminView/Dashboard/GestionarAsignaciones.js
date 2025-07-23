@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../../../Components/Shared/Axios';
+import Spinner from '../../../Components/Shared/Spinner';
 
 const GestionarAsignaciones = () => {
   const [encuestas, setEncuestas] = useState([]);
@@ -13,6 +14,8 @@ const GestionarAsignaciones = () => {
   const [alumnos, setAlumnos] = useState([]);
   const [selectedAlumnos, setSelectedAlumnos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingDatos, setLoadingDatos] = useState(false);
+  const [loadingFiltros, setLoadingFiltros] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [mostrarTodasEncuestas, setMostrarTodasEncuestas] = useState(false);
@@ -27,6 +30,7 @@ const GestionarAsignaciones = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoadingDatos(true);
         // ✅ Optimizado: Una sola llamada con caché
         const cacheKey = 'dashboardData';
         const cached = sessionStorage.getItem(cacheKey);
@@ -40,6 +44,7 @@ const GestionarAsignaciones = () => {
           setCarreras(data.carreras || []);
           setGrados(data.grados || []);
           setMaterias(data.materias || []);
+          setLoadingDatos(false);
           return;
         }
 
@@ -70,6 +75,8 @@ const GestionarAsignaciones = () => {
       } catch (err) {
         console.error('Error loading dashboard data:', err);
         setError('Error al cargar datos iniciales');
+      } finally {
+        setLoadingDatos(false);
       }
     };
     fetchData();
@@ -148,7 +155,7 @@ const GestionarAsignaciones = () => {
 
   // Filtrar alumnos según los selects
   const handleFiltrarAlumnos = async () => {
-    setLoading(true);
+    setLoadingFiltros(true);
     setError('');
     setSuccess('');
     setAlumnos([]);
@@ -184,7 +191,7 @@ const GestionarAsignaciones = () => {
     } catch (err) {
       setError('Error al filtrar alumnos');
     } finally {
-      setLoading(false);
+      setLoadingFiltros(false);
     }
   };
 
@@ -434,61 +441,74 @@ const GestionarAsignaciones = () => {
         <label>
           <strong>Seleccionar Encuesta:</strong>
           <br />
-          <select
-            value={selectedEncuesta}
-            onChange={(e) => setSelectedEncuesta(e.target.value)}
-            style={{ width: '100%', marginTop: 5 }}
-          >
-            <option value="">Selecciona una encuesta</option>
-            {encuestas.map((encuesta) => {
-              const fechaActual = new Date();
-              const fechaInicio = encuesta.fecha_inicio ? new Date(encuesta.fecha_inicio) : null;
-              const fechaFin = encuesta.fecha_fin ? new Date(encuesta.fecha_fin) : null;
+          {loadingDatos ? (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                padding: '20px',
+                minHeight: '100px'
+              }}
+            >
+              <Spinner />
+            </div>
+          ) : (
+            <select
+              value={selectedEncuesta}
+              onChange={(e) => setSelectedEncuesta(e.target.value)}
+              style={{ width: '100%', marginTop: 5 }}
+            >
+              <option value="">Selecciona una encuesta</option>
+              {encuestas.map((encuesta) => {
+                const fechaActual = new Date();
+                const fechaInicio = encuesta.fecha_inicio ? new Date(encuesta.fecha_inicio) : null;
+                const fechaFin = encuesta.fecha_fin ? new Date(encuesta.fecha_fin) : null;
 
-              let estado = '';
-              if (fechaInicio && fechaFin) {
-                if (fechaActual < fechaInicio) {
-                  estado = ' (Próximamente)';
-                } else if (fechaActual > fechaFin) {
-                  estado = ' (Vencida)';
+                let estado = '';
+                if (fechaInicio && fechaFin) {
+                  if (fechaActual < fechaInicio) {
+                    estado = ' (Próximamente)';
+                  } else if (fechaActual > fechaFin) {
+                    estado = ' (Vencida)';
+                  } else {
+                    estado = ' (Activa)';
+                  }
+                } else if (fechaInicio && !fechaFin) {
+                  if (fechaActual < fechaInicio) {
+                    estado = ' (Próximamente)';
+                  } else {
+                    estado = ' (Activa)';
+                  }
+                } else if (!fechaInicio && fechaFin) {
+                  if (fechaActual > fechaFin) {
+                    estado = ' (Vencida)';
+                  } else {
+                    estado = ' (Activa)';
+                  }
                 } else {
-                  estado = ' (Activa)';
+                  estado = ' (Sin fechas)';
                 }
-              } else if (fechaInicio && !fechaFin) {
-                if (fechaActual < fechaInicio) {
-                  estado = ' (Próximamente)';
-                } else {
-                  estado = ' (Activa)';
-                }
-              } else if (!fechaInicio && fechaFin) {
-                if (fechaActual > fechaFin) {
-                  estado = ' (Vencida)';
-                } else {
-                  estado = ' (Activa)';
-                }
-              } else {
-                estado = ' (Sin fechas)';
-              }
 
-              return (
-                <option
-                  key={encuesta.id_encuesta}
-                  value={encuesta.id_encuesta}
-                  style={{
-                    color: estado.includes('Vencida')
-                      ? '#dc3545'
-                      : estado.includes('Próximamente')
-                        ? '#ffc107'
-                        : estado.includes('Activa')
-                          ? '#28a745'
-                          : '#6c757d'
-                  }}
-                >
-                  {encuesta.titulo} - {encuesta.carrera?.carrera || 'Sin carrera'} {estado}
-                </option>
-              );
-            })}
-          </select>
+                return (
+                  <option
+                    key={encuesta.id_encuesta}
+                    value={encuesta.id_encuesta}
+                    style={{
+                      color: estado.includes('Vencida')
+                        ? '#dc3545'
+                        : estado.includes('Próximamente')
+                          ? '#ffc107'
+                          : estado.includes('Activa')
+                            ? '#28a745'
+                            : '#6c757d'
+                    }}
+                  >
+                    {encuesta.titulo} - {encuesta.carrera?.carrera || 'Sin carrera'} {estado}
+                  </option>
+                );
+              })}
+            </select>
+          )}
         </label>
       </div>
 
@@ -638,40 +658,53 @@ const GestionarAsignaciones = () => {
           >
             Filtrar Alumnos
           </button>
-          {alumnos.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <strong>Alumnos filtrados:</strong>
-              <div
-                style={{
-                  maxHeight: 250,
-                  overflowY: 'auto',
-                  border: '1px solid #ddd',
-                  padding: 10,
-                  marginTop: 5
-                }}
-              >
-                <label style={{ display: 'block', marginBottom: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedAlumnos.length === alumnos.length}
-                    onChange={handleSelectAll}
-                    style={{ marginRight: 8 }}
-                  />
-                  Seleccionar todos
-                </label>
-                {alumnos.map((alumno) => (
-                  <label key={alumno.id_alumno} style={{ display: 'block', marginBottom: 5 }}>
+          {loadingFiltros ? (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                padding: '20px',
+                minHeight: '150px'
+              }}
+            >
+              <Spinner />
+            </div>
+          ) : (
+            alumnos.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <strong>Alumnos filtrados:</strong>
+                <div
+                  style={{
+                    maxHeight: 250,
+                    overflowY: 'auto',
+                    border: '1px solid #ddd',
+                    padding: 10,
+                    marginTop: 5
+                  }}
+                >
+                  <label style={{ display: 'block', marginBottom: 8 }}>
                     <input
                       type="checkbox"
-                      checked={selectedAlumnos.includes(alumno.id_alumno)}
-                      onChange={() => handleAlumnoToggle(alumno.id_alumno)}
+                      checked={selectedAlumnos.length === alumnos.length}
+                      onChange={handleSelectAll}
                       style={{ marginRight: 8 }}
                     />
-                    {alumno.apellido}, {alumno.nombre} - {alumno.email}
+                    Seleccionar todos
                   </label>
-                ))}
+                  {alumnos.map((alumno) => (
+                    <label key={alumno.id_alumno} style={{ display: 'block', marginBottom: 5 }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedAlumnos.includes(alumno.id_alumno)}
+                        onChange={() => handleAlumnoToggle(alumno.id_alumno)}
+                        style={{ marginRight: 8 }}
+                      />
+                      {alumno.apellido}, {alumno.nombre} - {alumno.email}
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )
           )}
         </>
       ) : (
@@ -693,7 +726,16 @@ const GestionarAsignaciones = () => {
                 }}
               >
                 {cargandoGrupos ? (
-                  <div style={{ textAlign: 'center', color: '#6c757d' }}>Cargando grupos...</div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      padding: '20px',
+                      minHeight: '150px'
+                    }}
+                  >
+                    <Spinner />
+                  </div>
                 ) : grupos.length > 0 ? (
                   <>
                     <div style={{ marginBottom: '10px' }}>
