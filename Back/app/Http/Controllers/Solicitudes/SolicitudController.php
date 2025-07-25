@@ -7,6 +7,7 @@ use App\Models\Solicitudes\Solicitud;
 use App\Models\Administrador;
 use App\Models\Alumno;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class SolicitudController extends Controller
 {
@@ -66,6 +67,22 @@ class SolicitudController extends Controller
             'fecha_respuesta' => now(),
             'id_admin' => $admin->id_admin ?? $admin->id ?? null,
         ]);
+
+        // Enviar notificación por correo al alumno si el mail es institucional
+        $alumno = $solicitud->alumno;
+        if ($alumno && isset($alumno->email)) {
+            $email = $alumno->email;
+            if (preg_match('/@(terciariourquiza\.edu\.ar|gmail\.com)$/', $email)) {
+                $nombre = $alumno->nombre;
+                $estado = $validated['estado'];
+                $idSolicitud = $solicitud->id;
+                $asunto = "Notificación de cambio de estado de solicitud #$idSolicitud";
+                $mensaje = "Hola $nombre,\n\nTu solicitud #$idSolicitud cambió de estado a: $estado.\n\nNo responder a este correo.\n\nEscuela Urquiza";
+                Mail::raw($mensaje, function ($message) use ($email, $asunto) {
+                    $message->to($email)->subject($asunto);
+                });
+            }
+        }
 
         return response()->json($solicitud);
     }
