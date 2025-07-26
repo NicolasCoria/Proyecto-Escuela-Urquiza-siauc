@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SolicitudNueva from './SolicitudNueva';
+import WelcomeTooltip from '../../Components/Shared/WelcomeTooltip';
 import styles from '../../Components/Home/home.module.css';
 import axios from '../../Components/Shared/Axios';
 
 const SolicitudesAlumno = ({ idAlumno }) => {
+  const navigate = useNavigate();
   const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notificacion, setNotificacion] = useState(null);
@@ -120,6 +123,9 @@ const SolicitudesAlumno = ({ idAlumno }) => {
                   }}
                 >
                   <div>
+                    <b>ID Solicitud:</b> {s.id}
+                  </div>
+                  <div>
                     <b>Categoría:</b> {s.categoria}
                   </div>
                   <div>
@@ -168,6 +174,13 @@ const SolicitudesAlumno = ({ idAlumno }) => {
           </>
         )}
       </div>
+      <WelcomeTooltip
+        id="alumno-solicitudes"
+        userId={idAlumno}
+        title="¡Bienvenido a Solicitudes!"
+        message="Aquí puedes enviar nuevas solicitudes y ver el estado de las que ya enviaste. Completa el formulario con la categoría, asunto y mensaje para enviar una nueva solicitud."
+        onViewFaqs={() => navigate('/alumno/faqs')}
+      />
     </section>
   );
 };

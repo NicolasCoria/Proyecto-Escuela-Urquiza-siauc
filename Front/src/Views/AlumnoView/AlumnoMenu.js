@@ -75,6 +75,14 @@ const AlumnoMenu = ({ onClose }) => {
             📝 Solicitudes
           </button>
 
+          <button
+            className={`${styles.menuButton} ${isActive('faqs') ? styles.active : ''}`}
+            onClick={() => handleNavigation('faqs')}
+            style={{ backgroundColor: isActive('faqs') ? colorPrimario : undefined }}
+          >
+            ❓ Preguntas frecuentes
+          </button>
+
           <button className={styles.logoutButton} onClick={handleLogout}>
             🚪 Cerrar sesión
           </button>
