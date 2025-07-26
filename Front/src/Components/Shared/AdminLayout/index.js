@@ -157,6 +157,17 @@ const AdminLayout = () => {
               </li>
               <li>
                 <Link
+                  to="/admin/faqs"
+                  className={`${styles.navItem} ${
+                    activeButton === '/admin/faqs' ? styles.active : ''
+                  }`}
+                >
+                  <FaPoll className={styles.navIcon} />
+                  <span>Preguntas frecuentes</span>
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/admin/profile"
                   className={`${styles.navItem} ${
                     activeButton === '/admin/profile' ? styles.active : ''

@@ -21,6 +21,8 @@ import Layout from '../Components/Shared/Layout';
 import EncuestasAlumno from '../Views/AlumnoView/EncuestasAlumno';
 import SolicitudesAlumno from '../Views/AlumnoView/SolicitudesAlumno';
 import SolicitudesAdmin from '../Views/AdminView/Solicitudes';
+import AdminFAQs from '../Views/AdminView/FAQs';
+import AlumnoFAQs from '../Views/AlumnoView/FAQs';
 import ProtectedRoute from '../Components/Shared/ProtectedRoute';
 
 const RoutesLanding = () => {
@@ -57,6 +59,7 @@ const RoutesLanding = () => {
           <Route path="inscripciones" element={<InscripcionesAlumno />} />
           <Route path="encuestas" element={<EncuestasAlumno />} />
           <Route path="solicitudes" element={<SolicitudesAlumno idAlumno={1} />} />
+          <Route path="faqs" element={<AlumnoFAQs />} />
         </Route>
 
         {/* Rutas de Administrador */}
@@ -72,6 +75,7 @@ const RoutesLanding = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="informes" element={<AdminInformes />} />
           <Route path="solicitudes" element={<SolicitudesAdmin />} />
+          <Route path="faqs" element={<AdminFAQs />} />
         </Route>
 
         <Route path="*" element={<Error404 />} />

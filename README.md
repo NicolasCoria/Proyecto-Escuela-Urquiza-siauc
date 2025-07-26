@@ -43,14 +43,14 @@ Necesitamos tener en la carpeta Front y Back el archivo de las variables de ento
 
 # Solicitudes
 
-- [ ] Solicitud 1
-- [ ] Solicitud 2
-- [ ] Solicitud 3
-- [ ] Solicitud 4
-- [ ] Solicitud 5
-- [ ] Solicitud 6
-- [ ] Solicitud 7
-- [ ] Solicitud 8
-- [ ] Solicitud 9
-- [ ] Solicitud 10
+- [X] CU Solicitudes 1 - Franco
+- [X] CU Solicitudes 2 - Franco
+- [X] CU Solicitudes 3 - Franco
+- [X] CU Solicitudes 4 - Franco
+- [X] CU Solicitudes 5 - Franco
+- [X] CU Solicitudes 6 - Franco
+- [X] CU Solicitudes 7 - Franco
+- [X] CU Solicitudes 8 - Franco
+- [X] CU Solicitudes 9 - Franco
+
 

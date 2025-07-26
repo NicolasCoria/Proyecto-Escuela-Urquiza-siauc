@@ -6,6 +6,7 @@ import Profile from './Profile';
 import InscripcionesAlumno from './InscripcionesAlumno';
 import Materias from './Materias';
 import SolicitudesAlumno from './SolicitudesAlumno';
+import AlumnoFAQs from './FAQs';
 import { useStateContext } from '../../Components/Contexts';
 import styles from './alumnoView.module.css';
 
@@ -38,6 +39,7 @@ const AlumnoView = () => {
           <Route path="/inscripciones" element={<InscripcionesAlumno />} />
           <Route path="/materias" element={<Materias />} />
           <Route path="/solicitudes" element={<SolicitudesAlumno idAlumno={user?.id_alumno} />} />
+          <Route path="/faqs" element={<AlumnoFAQs />} />
         </Routes>
       </div>
 

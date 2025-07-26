@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../../../Components/Shared/Axios';
 import CustomModal from './CustomModal';
 import ModalRespuesta from './ModalRespuesta';
+import WelcomeTooltip from '../../../Components/Shared/WelcomeTooltip';
 import styles from './solicitudes.module.css';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { useStateContext } from '../../../Components/Contexts';
 
 const estados = ['', 'pendiente', 'en_proceso', 'respondida', 'rechazada'];
 const categorias = ['', 'general', 'certificado', 'homologacion_interna', 'homologacion_externa'];
 
 const SolicitudesAdmin = () => {
+  const navigate = useNavigate();
+  const { user } = useStateContext();
   const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -423,6 +428,14 @@ const SolicitudesAdmin = () => {
           />
         </CustomModal>
       )}
+
+      <WelcomeTooltip
+        id="admin-solicitudes"
+        userId={user?.id}
+        title="Gestión de Solicitudes"
+        message="Aquí puedes ver todas las solicitudes de los alumnos, filtrarlas por estado o categoría, y responder a cada una. Haz clic en 'Ver Detalles' para ver el contenido completo."
+        onViewFaqs={() => navigate('/admin/faqs')}
+      />
     </div>
   );
 };
