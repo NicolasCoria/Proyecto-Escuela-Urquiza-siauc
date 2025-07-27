@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\InformeController;
 use App\Http\Controllers\Api\EncuestaController;
 use App\Http\Controllers\Api\GruposDestinatariosController;
 use App\Http\Controllers\Solicitudes\SolicitudController;
+use App\Http\Controllers\Api\FaqController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -90,6 +91,10 @@ Route::delete('/plantillas-informe/{id}', [\App\Http\Controllers\PlantillaInform
 
 Route::get('/grados', [\App\Http\Controllers\Api\GradoController::class, 'getAllGrados']);
 Route::get('/unidades-curriculares', [\App\Http\Controllers\Api\UnidadCurricularController::class, 'getAllUnidadesCurriculares']);
+
+// Rutas para FAQs
+Route::get('/faqs/admin', [FaqController::class, 'getAdminFaqs']);
+Route::get('/faqs/alumno', [FaqController::class, 'getAlumnoFaqs']);
 Route::get('/unidades-curriculares/por-carrera-grado', [\App\Http\Controllers\Api\UnidadCurricularController::class, 'getPorCarreraGrado']);
 
 // Rutas para alumnos filtrados y asignación avanzada

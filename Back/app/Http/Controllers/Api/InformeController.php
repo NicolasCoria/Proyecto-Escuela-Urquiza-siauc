@@ -10,6 +10,7 @@ use App\Models\Alumno;
 use App\Models\Carrera;
 use App\Models\UnidadCurricular;
 use App\Models\Inscripcion;
+use Carbon\Carbon;
 
 class InformeController extends Controller
 {
@@ -42,6 +43,12 @@ class InformeController extends Controller
                 'nombre' => 'Informe de Asistencia',
                 'descripcion' => 'Asistencia de alumnos por materia',
                 'filtros_disponibles' => ['carrera', 'unidad_curricular', 'porcentaje_asistencia']
+            ],
+            [
+                'id' => 5,
+                'nombre' => 'Informe de Solicitudes',
+                'descripcion' => 'Volumen y estadísticas de solicitudes recibidas',
+                'filtros_disponibles' => ['fecha_desde', 'fecha_hasta', 'categoria', 'estado']
             ]
         ];
 
@@ -167,6 +174,39 @@ class InformeController extends Controller
                     ]
                 ];
                 break;
+                
+            case 5: // Informe de Solicitudes
+                $filtros = [
+                    'fecha_desde' => [
+                        'tipo' => 'date',
+                        'label' => 'Fecha Desde'
+                    ],
+                    'fecha_hasta' => [
+                        'tipo' => 'date',
+                        'label' => 'Fecha Hasta'
+                    ],
+                    'categoria' => [
+                        'tipo' => 'select',
+                        'label' => 'Categoría',
+                        'opciones' => [
+                            ['value' => 'general', 'label' => 'General'],
+                            ['value' => 'certificado', 'label' => 'Certificado'],
+                            ['value' => 'homologacion_interna', 'label' => 'Homologación Interna'],
+                            ['value' => 'homologacion_externa', 'label' => 'Homologación Externa']
+                        ]
+                    ],
+                    'estado' => [
+                        'tipo' => 'select',
+                        'label' => 'Estado',
+                        'opciones' => [
+                            ['value' => 'pendiente', 'label' => 'Pendiente'],
+                            ['value' => 'en_proceso', 'label' => 'En Proceso'],
+                            ['value' => 'respondida', 'label' => 'Respondida'],
+                            ['value' => 'rechazada', 'label' => 'Rechazada']
+                        ]
+                    ]
+                ];
+                break;
         }
 
         return response()->json([
@@ -218,6 +258,9 @@ class InformeController extends Controller
                 
             case 4: // Informe de Asistencia
                 return $this->obtenerAsistencia($filtros);
+                
+            case 5: // Informe de Solicitudes
+                return $this->obtenerSolicitudes($filtros);
                 
             default:
                 return [];
@@ -360,6 +403,126 @@ class InformeController extends Controller
     }
 
     /**
+     * Obtener datos de solicitudes
+     */
+    private function obtenerSolicitudes($filtros)
+    {
+        $query = \DB::table('solicitudes')
+            ->join('alumno', 'solicitudes.id_alumno', '=', 'alumno.id_alumno');
+
+        // Aplicar filtros
+        if (isset($filtros['fecha_desde'])) {
+            $query->where('solicitudes.fecha_creacion', '>=', $filtros['fecha_desde']);
+        }
+
+        if (isset($filtros['fecha_hasta'])) {
+            $query->where('solicitudes.fecha_creacion', '<=', $filtros['fecha_hasta'] . ' 23:59:59');
+        }
+
+        if (isset($filtros['categoria'])) {
+            $query->where('solicitudes.categoria', $filtros['categoria']);
+        }
+
+        if (isset($filtros['estado'])) {
+            $query->where('solicitudes.estado', $filtros['estado']);
+        }
+
+        // Obtener datos detallados
+        $solicitudes = $query->select(
+            'solicitudes.id',
+            'solicitudes.categoria',
+            'solicitudes.asunto',
+            'solicitudes.estado',
+            'solicitudes.fecha_creacion',
+            'solicitudes.fecha_respuesta',
+            'alumno.nombre as nombre_alumno',
+            'alumno.apellido as apellido_alumno',
+            'alumno.dni as dni_alumno'
+        )->get();
+
+        // Calcular estadísticas
+        $estadisticas = [
+            'total_solicitudes' => $solicitudes->count(),
+            'por_categoria' => $solicitudes->groupBy('categoria')->map->count(),
+            'por_estado' => $solicitudes->groupBy('estado')->map->count(),
+            'tiempo_promedio_respuesta' => $this->calcularTiempoPromedioRespuesta($solicitudes),
+            'tiempo_minimo_respuesta' => $this->calcularTiempoMinimoRespuesta($solicitudes),
+            'tiempo_maximo_respuesta' => $this->calcularTiempoMaximoRespuesta($solicitudes)
+        ];
+
+        return [
+            'solicitudes' => $solicitudes,
+            'estadisticas' => $estadisticas
+        ];
+    }
+
+    /**
+     * Calcular tiempo promedio de respuesta
+     */
+    private function calcularTiempoPromedioRespuesta($solicitudes)
+    {
+        $solicitudesRespondidas = $solicitudes->filter(function($solicitud) {
+            return $solicitud->fecha_respuesta && in_array($solicitud->estado, ['respondida', 'rechazada']);
+        });
+
+        if ($solicitudesRespondidas->isEmpty()) {
+            return 0;
+        }
+
+        $tiempos = $solicitudesRespondidas->map(function($solicitud) {
+            $creacion = \Carbon\Carbon::parse($solicitud->fecha_creacion);
+            $respuesta = \Carbon\Carbon::parse($solicitud->fecha_respuesta);
+            return $creacion->diffInHours($respuesta);
+        });
+
+        return round($tiempos->avg(), 2);
+    }
+
+    /**
+     * Calcular tiempo mínimo de respuesta
+     */
+    private function calcularTiempoMinimoRespuesta($solicitudes)
+    {
+        $solicitudesRespondidas = $solicitudes->filter(function($solicitud) {
+            return $solicitud->fecha_respuesta && in_array($solicitud->estado, ['respondida', 'rechazada']);
+        });
+
+        if ($solicitudesRespondidas->isEmpty()) {
+            return 0;
+        }
+
+        $tiempos = $solicitudesRespondidas->map(function($solicitud) {
+            $creacion = \Carbon\Carbon::parse($solicitud->fecha_creacion);
+            $respuesta = \Carbon\Carbon::parse($solicitud->fecha_respuesta);
+            return $creacion->diffInHours($respuesta);
+        });
+
+        return $tiempos->min();
+    }
+
+    /**
+     * Calcular tiempo máximo de respuesta
+     */
+    private function calcularTiempoMaximoRespuesta($solicitudes)
+    {
+        $solicitudesRespondidas = $solicitudes->filter(function($solicitud) {
+            return $solicitud->fecha_respuesta && in_array($solicitud->estado, ['respondida', 'rechazada']);
+        });
+
+        if ($solicitudesRespondidas->isEmpty()) {
+            return 0;
+        }
+
+        $tiempos = $solicitudesRespondidas->map(function($solicitud) {
+            $creacion = \Carbon\Carbon::parse($solicitud->fecha_creacion);
+            $respuesta = \Carbon\Carbon::parse($solicitud->fecha_respuesta);
+            return $creacion->diffInHours($respuesta);
+        });
+
+        return $tiempos->max();
+    }
+
+    /**
      * Generar PDF
      */
     private function generarPDF($datos, $plantillaId)
@@ -368,16 +531,26 @@ class InformeController extends Controller
             1 => 'Informe de Alumnos por Carrera',
             2 => 'Informe de Inscripciones por Período',
             3 => 'Informe de Rendimiento Académico',
-            4 => 'Informe de Asistencia'
+            4 => 'Informe de Asistencia',
+            5 => 'Informe de Solicitudes'
         ];
 
         $titulo = $plantillas[$plantillaId] ?? 'Informe';
 
-        $pdf = PDF::loadView('informes.pdf', [
-            'datos' => $datos,
-            'titulo' => $titulo,
-            'fecha_generacion' => now()->format('d/m/Y H:i:s')
-        ]);
+        // Para el informe de solicitudes, usar una vista especial
+        if ($plantillaId == 5) {
+            $pdf = PDF::loadView('informes.solicitudes', [
+                'datos' => $datos,
+                'titulo' => $titulo,
+                'fecha_generacion' => now()->format('d/m/Y H:i:s')
+            ]);
+        } else {
+            $pdf = PDF::loadView('informes.pdf', [
+                'datos' => $datos,
+                'titulo' => $titulo,
+                'fecha_generacion' => now()->format('d/m/Y H:i:s')
+            ]);
+        }
 
         return $pdf->download('informe_' . $plantillaId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf');
     }
@@ -408,16 +581,22 @@ class InformeController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function() use ($datos) {
+        $callback = function() use ($datos, $plantillaId) {
             $file = fopen('php://output', 'w');
             
-            if (!empty($datos)) {
-                // Headers
-                fputcsv($file, array_keys((array) $datos[0]));
-                
-                // Data
-                foreach ($datos as $row) {
-                    fputcsv($file, (array) $row);
+            if ($plantillaId == 5) {
+                // Formato especial para solicitudes
+                $this->generarCSVSolicitudes($file, $datos);
+            } else {
+                // Formato estándar para otros informes
+                if (!empty($datos)) {
+                    // Headers
+                    fputcsv($file, array_keys((array) $datos[0]));
+                    
+                    // Data
+                    foreach ($datos as $row) {
+                        fputcsv($file, (array) $row);
+                    }
                 }
             }
             
@@ -425,5 +604,59 @@ class InformeController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Generar CSV específico para solicitudes
+     */
+    private function generarCSVSolicitudes($file, $datos)
+    {
+        // Escribir estadísticas
+        fputcsv($file, ['ESTADÍSTICAS DE SOLICITUDES']);
+        fputcsv($file, ['']);
+        fputcsv($file, ['Total de Solicitudes', $datos['estadisticas']['total_solicitudes']]);
+        fputcsv($file, ['Tiempo Promedio de Respuesta (horas)', $datos['estadisticas']['tiempo_promedio_respuesta']]);
+        fputcsv($file, ['Tiempo Mínimo de Respuesta (horas)', $datos['estadisticas']['tiempo_minimo_respuesta']]);
+        fputcsv($file, ['Tiempo Máximo de Respuesta (horas)', $datos['estadisticas']['tiempo_maximo_respuesta']]);
+        fputcsv($file, ['']);
+        
+        // Solicitudes por categoría
+        fputcsv($file, ['SOLICITUDES POR CATEGORÍA']);
+        foreach ($datos['estadisticas']['por_categoria'] as $categoria => $cantidad) {
+            fputcsv($file, [ucfirst(str_replace('_', ' ', $categoria)), $cantidad]);
+        }
+        fputcsv($file, ['']);
+        
+        // Solicitudes por estado
+        fputcsv($file, ['SOLICITUDES POR ESTADO']);
+        foreach ($datos['estadisticas']['por_estado'] as $estado => $cantidad) {
+            fputcsv($file, [ucfirst(str_replace('_', ' ', $estado)), $cantidad]);
+        }
+        fputcsv($file, ['']);
+        
+        // Detalle de solicitudes
+        fputcsv($file, ['DETALLE DE SOLICITUDES']);
+        fputcsv($file, ['ID', 'Alumno', 'DNI', 'Categoría', 'Asunto', 'Estado', 'Fecha Creación', 'Fecha Respuesta', 'Tiempo Respuesta (horas)']);
+        
+        foreach ($datos['solicitudes'] as $solicitud) {
+            $tiempoRespuesta = '-';
+            if ($solicitud->fecha_respuesta && in_array($solicitud->estado, ['respondida', 'rechazada'])) {
+                $creacion = Carbon::parse($solicitud->fecha_creacion);
+                $respuesta = Carbon::parse($solicitud->fecha_respuesta);
+                $tiempoRespuesta = $creacion->diffInHours($respuesta);
+            }
+            
+            fputcsv($file, [
+                $solicitud->id,
+                $solicitud->nombre_alumno . ' ' . $solicitud->apellido_alumno,
+                $solicitud->dni_alumno,
+                ucfirst(str_replace('_', ' ', $solicitud->categoria)),
+                $solicitud->asunto,
+                ucfirst(str_replace('_', ' ', $solicitud->estado)),
+                Carbon::parse($solicitud->fecha_creacion)->format('d/m/Y H:i'),
+                $solicitud->fecha_respuesta ? Carbon::parse($solicitud->fecha_respuesta)->format('d/m/Y H:i') : '-',
+                $tiempoRespuesta
+            ]);
+        }
     }
 } 
