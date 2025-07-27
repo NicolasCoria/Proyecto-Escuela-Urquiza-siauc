@@ -177,6 +177,7 @@ const Sidebar = () => {
             </li>
             <li>
               <Link
+<<<<<<< HEAD
                 to="/alumno/encuestas"
                 className={activeButton === 'alumno/encuestas' ? styles.activeBtn : styles.btn}
                 style={
@@ -192,6 +193,8 @@ const Sidebar = () => {
 =======
             <li>
               <Link
+=======
+>>>>>>> main
                 to="/alumno/solicitudes"
                 className={activeButton === 'alumno/solicitudes' ? styles.activeBtn : styles.btn}
                 style={
@@ -200,10 +203,16 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
+<<<<<<< HEAD
                 📋 Solicitudes
               </Link>
             </li>
 >>>>>>> Stashed changes
+=======
+                Solicitudes
+              </Link>
+            </li>
+>>>>>>> main
           </ul>
           <div className={styles.logout}>
             <li>

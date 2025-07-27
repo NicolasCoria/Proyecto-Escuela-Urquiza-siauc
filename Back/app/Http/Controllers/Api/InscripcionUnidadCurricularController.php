@@ -117,6 +117,24 @@ class InscripcionUnidadCurricularController extends Controller
             'unidades.*' => 'integer|exists:unidad_curricular,id_uc',
         ]);
 
+        // Verificar si ya está inscripto en alguna de las unidades
+        $yaInscripto = AlumnoUc::where('id_alumno', $id_alumno)
+            ->whereIn('id_uc', $validated['unidades'])
+            ->pluck('id_uc')
+            ->toArray();
+
+        if (!empty($yaInscripto)) {
+            $unidadesNombres = UnidadCurricular::whereIn('id_uc', $yaInscripto)
+                ->pluck('unidad_curricular')
+                ->toArray();
+            
+            return response()->json([
+                'error' => 'Ya estás inscripto en las siguientes unidades curriculares: ' . implode(', ', $unidadesNombres),
+                'unidades_duplicadas' => $yaInscripto,
+                'unidades_nombres' => $unidadesNombres
+            ], 400);
+        }
+
         // Buscar carrera y grado del alumno consultando las relaciones
         $id_carrera = null;
         $id_grado = null;
@@ -139,7 +157,7 @@ class InscripcionUnidadCurricularController extends Controller
         $inscripciones = [];
         foreach ($validated['unidades'] as $id_uc) {
             // Registrar en alumno_uc (registro de unidades curriculares del alumno)
-            \App\Models\AlumnoUc::firstOrCreate([
+            \App\Models\AlumnoUc::create([
                 'id_alumno' => $id_alumno,
                 'id_uc' => $id_uc
             ]);
@@ -159,7 +177,8 @@ class InscripcionUnidadCurricularController extends Controller
         }
         return response()->json([
             'success' => true,
-            'inscripciones' => $inscripciones
+            'inscripciones' => $inscripciones,
+            'message' => 'Inscripción exitosa en ' . count($inscripciones) . ' unidad(es) curricular(es)'
         ]);
     }
 

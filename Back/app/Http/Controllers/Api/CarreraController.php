@@ -43,7 +43,10 @@ class CarreraController extends Controller
     public function getAllCarreras(): JsonResponse
     {
         try {
-            $carreras = Carrera::all();
+            // ✅ Optimizado: Solo campos necesarios y ordenado
+            $carreras = Carrera::select(['id_carrera', 'carrera'])
+                ->orderBy('carrera')
+                ->get();
             
             return response()->json([
                 'success' => true,

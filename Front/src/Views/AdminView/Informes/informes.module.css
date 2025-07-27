@@ -252,4 +252,143 @@
   .header h1 {
     font-size: 24px;
   }
+}
+
+.crearPlantillaBox {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.formPlantilla {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.camposCheckboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+}
+
+.btnCrear {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 18px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.2s;
+}
+
+.btnCrear:hover {
+  background: #0056b3;
+}
+
+.misPlantillasBox {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.listaPlantillas {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plantillaItem {
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 16px;
+}
+
+.plantillaItem:last-child {
+  border-bottom: none;
+}
+
+.misPlantillaOption {
+  background-color: #e6f7ff !important;
+  color: #0056b3 !important;
+  font-weight: bold;
+}
+
+.sistemaPlantillaOption {
+  background-color: #f5f5f5 !important;
+  color: #333 !important;
+}
+
+.btnEditar {
+  background: #ffc107;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.2s;
+}
+
+.btnEditar:hover {
+  background: #e0a800;
+}
+
+.btnEliminar {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.2s;
+}
+
+.btnEliminar:hover {
+  background: #b52a37;
+}
+
+.btnCancelar {
+  background: #6c757d;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: background 0.2s;
+}
+
+.btnCancelar:hover {
+  background: #495057;
 } 

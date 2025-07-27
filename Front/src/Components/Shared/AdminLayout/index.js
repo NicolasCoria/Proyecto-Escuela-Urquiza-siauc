@@ -6,7 +6,7 @@ import { useModalContext } from '../../Contexts';
 import Modal from '../Modal';
 import Spinner from '../Spinner';
 import axiosClient from '../Axios';
-import { FaChartBar, FaSignOutAlt, FaHome, FaUser } from 'react-icons/fa';
+import { FaChartBar, FaSignOutAlt, FaUser, FaEnvelopeOpenText, FaPoll } from 'react-icons/fa';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -14,7 +14,8 @@ const AdminLayout = () => {
   const [activeButton, setActiveButton] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { user, setUser, setTokenAndRole } = useStateContext();
+  const [isInitializing, setIsInitializing] = useState(true);
+  const { user, setUser, setTokenAndRole, token, role } = useStateContext();
   const { openModal } = useModalContext();
 
   const toggleMenu = () => {
@@ -50,6 +51,52 @@ const AdminLayout = () => {
     setActiveButton(currentPath);
   }, [location]);
 
+  // Verificar autenticación al cargar
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      console.log('AdminLayout - Checking auth:', { token, role, user });
+
+      if (!token || role !== 'admin') {
+        console.log('AdminLayout - No token or wrong role, redirecting to login');
+        navigate('/admin/login');
+        return;
+      }
+
+      // Si hay token pero no hay usuario, intentar obtener la información del usuario
+      if (token && !user) {
+        console.log('AdminLayout - Token exists but no user, fetching admin info');
+        try {
+          const response = await axiosClient.get('/admin/info');
+          if (response.data.success) {
+            console.log('AdminLayout - Admin info fetched successfully');
+            setUser(response.data.admin);
+          } else {
+            console.log('AdminLayout - Failed to get admin info, clearing session');
+            setUser(null);
+            setTokenAndRole(null, null);
+            navigate('/admin/login');
+          }
+        } catch (error) {
+          console.error('AdminLayout - Error getting admin info:', error);
+          setUser(null);
+          setTokenAndRole(null, null);
+          navigate('/admin/login');
+        }
+      } else {
+        console.log('AdminLayout - User already exists, proceeding');
+      }
+
+      setIsInitializing(false);
+    };
+
+    checkAuth();
+  }, [token, role, user, navigate, setUser, setTokenAndRole]);
+
+  // Mostrar spinner mientras se inicializa
+  if (isInitializing) {
+    return <Spinner />;
+  }
+
   return (
     <>
       {isLoading && <Spinner />}
@@ -59,7 +106,10 @@ const AdminLayout = () => {
         <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
           <div className={styles.sidebarHeader}>
             <img src="/assets/images/logoTS.png" alt="logo-admin" className={styles.logo} />
-            <div className={styles.title}>Panel Administrativo</div>
+            <div className={styles.titleContainer}>
+              <div className={styles.title}>Admin Dashboard</div>
+              <div className={styles.subtitle}>Escuela Urquiza</div>
+            </div>
           </div>
 
           {/* Botón hamburguesa para móvil */}
@@ -79,8 +129,8 @@ const AdminLayout = () => {
                     activeButton === '/admin/dashboard' ? styles.active : ''
                   }`}
                 >
-                  <FaHome className={styles.navIcon} />
-                  <span>Dashboard</span>
+                  <FaPoll className={styles.navIcon} />
+                  <span>Encuestas</span>
                 </Link>
               </li>
               <li>
@@ -94,7 +144,28 @@ const AdminLayout = () => {
                   <span>Generar Informes</span>
                 </Link>
               </li>
-
+              <li>
+                <Link
+                  to="/admin/solicitudes"
+                  className={`${styles.navItem} ${
+                    activeButton === '/admin/solicitudes' ? styles.active : ''
+                  }`}
+                >
+                  <FaEnvelopeOpenText className={styles.navIcon} />
+                  <span>Solicitudes</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/admin/faqs"
+                  className={`${styles.navItem} ${
+                    activeButton === '/admin/faqs' ? styles.active : ''
+                  }`}
+                >
+                  <FaPoll className={styles.navIcon} />
+                  <span>Preguntas frecuentes</span>
+                </Link>
+              </li>
               <li>
                 <Link
                   to="/admin/profile"

@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('administrador', function (Blueprint $table) {
-            $table->string('password', 255)->nullable()->after('email');
-        });
+//        Schema::table('administrador', function (Blueprint $table) {
+//            $table->string('password', 255)->nullable()->after('email');
+//        });
     }
 
     /**

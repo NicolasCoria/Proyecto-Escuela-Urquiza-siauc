@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Skeleton from '../../../Components/Shared/Skeleton';
 import { useStateContext } from '../../../Components/Contexts';
+import axiosClient from '../../../Components/Shared/Axios';
+import styles from './inscripciones.module.css';
 
 const InscripcionesAlumno = () => {
   const { carrera, unidadesDisponibles } = useStateContext();
@@ -9,14 +11,31 @@ const InscripcionesAlumno = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
   const [unidadesInscriptas, setUnidadesInscriptas] = useState([]);
   const [loadingUnidades, setLoadingUnidades] = useState(true);
 >>>>>>> Stashed changes
+=======
+  const [unidadesInscriptas, setUnidadesInscriptas] = useState([]);
+>>>>>>> main
 
-  // Obtener token del localStorage (ajusta según tu auth)
-  const token = localStorage.getItem('token');
+  // Cargar unidades en las que ya está inscripto
+  useEffect(() => {
+    const cargarUnidadesInscriptas = async () => {
+      try {
+        const response = await axiosClient.get('/alumno/unidades-inscriptas');
+        if (response.data.success) {
+          setUnidadesInscriptas(response.data.unidades);
+        }
+      } catch (err) {
+        console.error('Error cargando unidades inscriptas:', err);
+      }
+    };
+
+    cargarUnidadesInscriptas();
+  }, []);
 
   // Verificar cuando las unidades disponibles están cargadas
   useEffect(() => {
@@ -33,17 +52,30 @@ const InscripcionesAlumno = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await import('../../../Components/Shared/Axios').then((m) =>
-        m.default.post(
-          '/alumno/inscribir-unidades',
-          { unidades: seleccionadas },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-      );
+      const res = await axiosClient.post('/alumno/inscribir-unidades', {
+        unidades: seleccionadas
+      });
+
       setInscripciones(res.data.inscripciones);
       setSuccess(true);
+
+      // Actualizar la lista de unidades inscriptas
+      setUnidadesInscriptas((prev) => [...prev, ...seleccionadas]);
+
+      // Limpiar selección
+      setSeleccionadas([]);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al inscribirse');
+      if (err.response?.data?.unidades_duplicadas) {
+        // Error de duplicados
+        const duplicadas = err.response.data.unidades_nombres;
+        setError(`❌ Ya estás inscripto en: ${duplicadas.join(', ')}`);
+
+        // Remover duplicados de la selección
+        const duplicadasIds = err.response.data.unidades_duplicadas;
+        setSeleccionadas((prev) => prev.filter((id) => !duplicadasIds.includes(id)));
+      } else {
+        setError(err.response?.data?.error || 'Error al inscribirse');
+      }
     } finally {
       setLoading(false);
     }
@@ -52,15 +84,10 @@ const InscripcionesAlumno = () => {
   const handleDescargarComprobante = async () => {
     setLoading(true);
     try {
-      const axios = (await import('../../../Components/Shared/Axios')).default;
-      const res = await axios.post(
+      const res = await axiosClient.post(
         '/alumno/comprobante-inscripcion',
         { inscripciones: inscripciones.map((i) => i.id_inscripcion) },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/pdf'
-          },
           responseType: 'blob'
         }
       );
@@ -101,27 +128,31 @@ const InscripcionesAlumno = () => {
     return carrera ? carrera.carrera : 'Carrera no especificada';
   };
 
+  // Verificar si una unidad ya está inscripta
+  const isUnidadInscripta = (id_uc) => {
+    return unidadesInscriptas.includes(id_uc);
+  };
+
   return (
-    <main
-      style={{
-        maxWidth: 500,
-        margin: '60px auto 40px auto',
-        fontFamily: 'Inter, Arial, sans-serif'
-      }}
-    >
-      <h2 style={{ textAlign: 'center', marginBottom: 36 }}>Inscripción a Unidades Curriculares</h2>
+    <main className={styles.container}>
+      <h2 className={styles.title}>Inscripción a Unidades Curriculares</h2>
+
       {/* Mostrar skeleton solo cuando está cargando las UC inicialmente */}
       {loading && !success && (
-        <div style={{ marginBottom: 24 }}>
+        <div className={styles.skeletonContainer}>
           {[...Array(7)].map((_, i) => (
             <Skeleton key={i} height={28} style={{ marginBottom: 14, borderRadius: 8 }} />
           ))}
         </div>
       )}
-      {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+
+      {/* Mensaje de error */}
+      {error && <div className={styles.errorMessage}>{error}</div>}
+
       {/* Formulario de inscripción */}
       {!success && !loading && (
         <>
+<<<<<<< HEAD
 <<<<<<< Updated upstream
           <div
             style={{
@@ -160,6 +191,10 @@ const InscripcionesAlumno = () => {
                 <p>Cargando unidades curriculares...</p>
               </div>
             ) : unidadesDisponibles.length === 0 ? (
+=======
+          <div className={styles.formContainer}>
+            {unidadesDisponibles.length === 0 ? (
+>>>>>>> main
               <div className={styles.emptyState}>
                 <p>No hay unidades curriculares disponibles para inscripción en este momento.</p>
               </div>
@@ -193,41 +228,26 @@ const InscripcionesAlumno = () => {
                 </ul>
               </>
             )}
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> main
           </div>
-          <button
-            onClick={handleInscribir}
-            disabled={seleccionadas.length === 0 || loading}
-            style={{
-              width: '100%',
-              padding: '12px',
-              background: '#1976d2',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              fontSize: 16,
-              cursor: seleccionadas.length === 0 || loading ? 'not-allowed' : 'pointer',
-              marginTop: 16
-            }}
-          >
-            Inscribirse
-          </button>
+
+          {seleccionadas.length > 0 && (
+            <button onClick={handleInscribir} disabled={loading} className={styles.submitButton}>
+              {loading ? 'Inscribiendo...' : `Inscribirse en ${seleccionadas.length} unidad(es)`}
+            </button>
+          )}
         </>
       )}
+
       {/* Comprobante de inscripción exitosa */}
       {success && (
-        <div
-          style={{
-            background: '#fff',
-            borderRadius: 12,
-            boxShadow: '0 2px 12px #0002',
-            padding: 24,
-            marginBottom: 24
-          }}
-        >
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
-            <h3 style={{ color: '#43a047', marginBottom: 16 }}>¡Inscripción exitosa!</h3>
-            <p style={{ color: '#666', marginBottom: 20 }}>
+        <div className={styles.comprobanteContainer}>
+          <div className={styles.comprobanteHeader}>
+            <h3 className={styles.comprobanteTitle}>¡Inscripción exitosa!</h3>
+            <p className={styles.comprobanteDescription}>
               Te has inscripto en las siguientes unidades curriculares:
             </p>
           </div>
@@ -237,20 +257,11 @@ const InscripcionesAlumno = () => {
                 insc.FechaHora || insc.fecha_inscripcion || insc.created_at || new Date()
               );
               return (
-                <div
-                  key={insc.id_inscripcion}
-                  style={{
-                    padding: 16,
-                    border: '1px solid #e0e0e0',
-                    borderRadius: 8,
-                    marginBottom: 12,
-                    backgroundColor: '#fafafa'
-                  }}
-                >
-                  <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
+                <div key={insc.id_inscripcion} className={styles.inscripcionItem}>
+                  <div className={styles.inscripcionTitle}>
                     {i + 1}. {getUnidadName(insc.id_uc)}
                   </div>
-                  <div style={{ fontSize: 14, color: '#666' }}>
+                  <div className={styles.inscripcionDetails}>
                     <div>Fecha: {fecha}</div>
                     <div>Hora: {hora}</div>
                     <div>Carrera: {getCarreraName()}</div>
@@ -263,16 +274,7 @@ const InscripcionesAlumno = () => {
             <button
               onClick={handleDescargarComprobante}
               disabled={loading}
-              style={{
-                padding: '12px 24px',
-                background: '#43a047',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 16,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1
-              }}
+              className={styles.downloadButton}
             >
               {loading ? 'Descargando...' : 'Descargar comprobante PDF'}
             </button>

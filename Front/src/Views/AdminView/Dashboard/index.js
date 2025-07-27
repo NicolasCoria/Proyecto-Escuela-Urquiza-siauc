@@ -1,10 +1,20 @@
 import React from 'react';
 import styles from './dashboard.module.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useStateContext } from '../../../Components/Contexts';
+import EncuestaForm from './EncuestaForm';
+import GestionarAsignaciones from './GestionarAsignaciones';
+import EditarEncuestas from './EditarEncuestas';
+import GruposDestinatarios from './GruposDestinatarios';
+import WelcomeTooltip from '../../../Components/Shared/WelcomeTooltip';
 
 const AdminDashboard = () => {
   const { user } = useStateContext();
+  const navigate = useNavigate();
+
+  const handleViewFaqs = () => {
+    navigate('/admin/faqs');
+  };
 
   return (
     <div className={styles.dashboard}>
@@ -21,9 +31,20 @@ const AdminDashboard = () => {
 
       <main className={styles.main}>
         <section className={styles.section}>
-          <h2>Bienvenido al Panel de Administración</h2>
-          <p>Desde aquí puedes gestionar el sistema y generar informes personalizados.</p>
+          <h2>Gestión de Encuestas Académicas</h2>
+          <p>
+            Desde aquí puedes crear, editar y gestionar la asignación de encuestas a los alumnos.
+          </p>
 
+          <EncuestaForm />
+
+          <GestionarAsignaciones />
+
+          <EditarEncuestas />
+
+          <GruposDestinatarios />
+
+          <h2>Otras Funciones</h2>
           <div className={styles.quickActions}>
             <div className={styles.actionCard}>
               <h3>Generar Informes</h3>
@@ -43,6 +64,14 @@ const AdminDashboard = () => {
           </div>
         </section>
       </main>
+
+      <WelcomeTooltip
+        id="admin-dashboard"
+        userId={user?.id}
+        title="¡Bienvenido al Panel de Administración!"
+        message="Aquí puedes gestionar encuestas, generar informes, y administrar todas las funcionalidades del sistema. Usa los enlaces de la izquierda para navegar entre las diferentes secciones."
+        onViewFaqs={handleViewFaqs}
+      />
     </div>
   );
 };

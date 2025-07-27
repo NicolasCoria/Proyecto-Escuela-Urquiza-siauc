@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\InformeController;
 use App\Http\Controllers\Api\EncuestaController;
 use App\Http\Controllers\Api\GruposDestinatariosController;
 use App\Http\Controllers\Solicitudes\SolicitudController;
+use App\Http\Controllers\Api\FaqController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -95,3 +96,10 @@ Route::get('/unidades-curriculares/por-carrera-grado', [\App\Http\Controllers\Ap
 // Rutas para alumnos filtrados y asignación avanzada
 Route::get('/alumnos/filtrados', [\App\Http\Controllers\Api\AlumnoController::class, 'filtrados']);
 Route::post('/encuestas/asignar-filtrado', [\App\Http\Controllers\Api\EncuestaController::class, 'asignarFiltrado']);
+
+// Rutas para FAQs
+Route::get('/faqs', [FaqController::class, 'index']);
+Route::get('/faqs/{id}', [FaqController::class, 'show']);
+Route::post('/faqs', [FaqController::class, 'store']);
+Route::put('/faqs/{id}', [FaqController::class, 'update']);
+Route::delete('/faqs/{id}', [FaqController::class, 'destroy']);

@@ -76,4 +76,21 @@ class AdminAuthController extends Controller
         $user->currentAccessToken()->delete();
         return response('', 204);
     }
+
+    /**
+     * Obtener información del administrador autenticado
+     */
+    public function getAdminInfo(Request $request)
+    {
+        $admin = $request->user();
+        
+        if (!$admin) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'admin' => $admin
+        ]);
+    }
 } 
