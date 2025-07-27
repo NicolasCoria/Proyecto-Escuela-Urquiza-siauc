@@ -11,15 +11,8 @@ const InscripcionesAlumno = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
   const [unidadesInscriptas, setUnidadesInscriptas] = useState([]);
   const [loadingUnidades, setLoadingUnidades] = useState(true);
->>>>>>> Stashed changes
-=======
-  const [unidadesInscriptas, setUnidadesInscriptas] = useState([]);
->>>>>>> main
 
   // Cargar unidades en las que ya está inscripto
   useEffect(() => {
@@ -152,49 +145,12 @@ const InscripcionesAlumno = () => {
       {/* Formulario de inscripción */}
       {!success && !loading && (
         <>
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: 12,
-              boxShadow: '0 2px 12px #0002',
-              padding: 24,
-              marginBottom: 24
-            }}
-          >
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {unidadesDisponibles.map((uc) => (
-                <li
-                  key={uc.id_uc}
-                  style={{
-                    marginBottom: 12,
-                    borderBottom: '1px solid #eee',
-                    paddingBottom: 8
-                  }}
-                >
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <input
-                      type="checkbox"
-                      checked={seleccionadas.includes(uc.id_uc)}
-                      onChange={() => handleSelect(uc.id_uc)}
-                    />
-                    <span>{uc.unidad_curricular || uc.Unidad_Curricular}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-=======
           <div className={styles.formContainer}>
             {loadingUnidades ? (
               <div className={styles.loadingUnidades}>
                 <p>Cargando unidades curriculares...</p>
               </div>
             ) : unidadesDisponibles.length === 0 ? (
-=======
-          <div className={styles.formContainer}>
-            {unidadesDisponibles.length === 0 ? (
->>>>>>> main
               <div className={styles.emptyState}>
                 <p>No hay unidades curriculares disponibles para inscripción en este momento.</p>
               </div>
@@ -228,10 +184,6 @@ const InscripcionesAlumno = () => {
                 </ul>
               </>
             )}
-<<<<<<< HEAD
->>>>>>> Stashed changes
-=======
->>>>>>> main
           </div>
 
           {seleccionadas.length > 0 && (

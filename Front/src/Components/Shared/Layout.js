@@ -50,18 +50,11 @@ const Layout = ({ children }) => {
           zIndex: 1,
           width: '100%',
           boxSizing: 'border-box',
-<<<<<<< HEAD
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginLeft: '220px'
-=======
           display: isAdminRoute ? 'block' : 'flex',
           flexDirection: isAdminRoute ? 'unset' : 'column',
           alignItems: isAdminRoute ? 'unset' : 'center',
-          justifyContent: isAdminRoute ? 'unset' : 'center'
->>>>>>> main
+          justifyContent: isAdminRoute ? 'unset' : 'center',
+          marginLeft: isAdminRoute ? '0' : '220px'
         }}
       >
         <div

@@ -177,7 +177,6 @@ const Sidebar = () => {
             </li>
             <li>
               <Link
-<<<<<<< HEAD
                 to="/alumno/encuestas"
                 className={activeButton === 'alumno/encuestas' ? styles.activeBtn : styles.btn}
                 style={
@@ -189,12 +188,8 @@ const Sidebar = () => {
                 📊 Encuestas Académicas
               </Link>
             </li>
-<<<<<<< Updated upstream
-=======
             <li>
               <Link
-=======
->>>>>>> main
                 to="/alumno/solicitudes"
                 className={activeButton === 'alumno/solicitudes' ? styles.activeBtn : styles.btn}
                 style={
@@ -203,16 +198,22 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-<<<<<<< HEAD
                 📋 Solicitudes
               </Link>
             </li>
->>>>>>> Stashed changes
-=======
-                Solicitudes
+            <li>
+              <Link
+                to="/alumno/faqs"
+                className={activeButton === 'alumno/faqs' ? styles.activeBtn : styles.btn}
+                style={
+                  activeButton === 'alumno/faqs'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
+              >
+                ❓ FAQs
               </Link>
             </li>
->>>>>>> main
           </ul>
           <div className={styles.logout}>
             <li>

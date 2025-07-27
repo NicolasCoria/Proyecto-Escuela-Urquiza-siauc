@@ -44,23 +44,6 @@ const RoutesLanding = () => {
           <Route path="/inscripciones" element={<Inscripciones />} />
         </Route>
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-        <Route path="/alumno" element={<AlumnoView />}>
-=======
-        <Route
-          path="/alumno"
-          element={
-            <ProtectedRoute requiredRole="alumno">
-              <AlumnoView />
-            </ProtectedRoute>
-          }
-        >
->>>>>>> main
-          <Route index element={<Home />} />
-          <Route path="profile/:id" element={<AlumnoProfile />} />
-          <Route path="materias" element={<Materias />} />
-=======
         <Route
           path="/alumno"
           element={
@@ -71,7 +54,6 @@ const RoutesLanding = () => {
         >
           <Route index element={<AlumnoView />} />
           <Route path="profile" element={<AlumnoProfile />} />
->>>>>>> Stashed changes
           <Route path="inscripciones" element={<InscripcionesAlumno />} />
           <Route path="encuestas" element={<EncuestasAlumno />} />
           <Route path="solicitudes" element={<SolicitudesAlumno idAlumno={1} />} />
