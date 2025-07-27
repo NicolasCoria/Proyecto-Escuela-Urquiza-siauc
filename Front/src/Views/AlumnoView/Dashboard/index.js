@@ -1,10 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './dashboard.module.css';
 import { useStateContext } from '../../../Components/Contexts';
 
 const DashboardAlumno = () => {
   const { user, carrera, unidadesCarrera, unidadesAprobadas, unidadesInscriptas } =
     useStateContext();
+  const navigate = useNavigate();
 
   // Progreso académico
   const total = unidadesCarrera?.length || 0;
@@ -16,7 +18,12 @@ const DashboardAlumno = () => {
 
   return (
     <div className={styles.dashboardContainer}>
-      <h2 className={styles.dashboardTitle}>Dashboard Alumno</h2>
+      <div className={styles.dashboardHeader}>
+        <h2 className={styles.dashboardTitle}>Dashboard Alumno</h2>
+        <button onClick={() => navigate('/alumno/faqs')} className={styles.faqButton}>
+          Preguntas Frecuentes
+        </button>
+      </div>
       <div className={styles.dashboardGrid}>
         {/* Inscripciones activas */}
         <section className={styles.dashboardCard}>

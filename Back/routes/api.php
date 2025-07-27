@@ -98,6 +98,8 @@ Route::get('/alumnos/filtrados', [\App\Http\Controllers\Api\AlumnoController::cl
 Route::post('/encuestas/asignar-filtrado', [\App\Http\Controllers\Api\EncuestaController::class, 'asignarFiltrado']);
 
 // Rutas para FAQs
+Route::get('/faqs/admin', [FaqController::class, 'getAdminFaqs']);
+Route::get('/faqs/alumno', [FaqController::class, 'getAlumnoFaqs']);
 Route::get('/faqs', [FaqController::class, 'index']);
 Route::get('/faqs/{id}', [FaqController::class, 'show']);
 Route::post('/faqs', [FaqController::class, 'store']);
