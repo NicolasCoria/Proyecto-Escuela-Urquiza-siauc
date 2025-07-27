@@ -3,8 +3,6 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import Home from '../Components/Home';
 import Carreras from '../Views/LandingView/Carreras';
 import Inscripciones from '../Views/LandingView/Inscripciones';
-import AlumnoProfile from '../Views/AlumnoView/Profile';
-import InscripcionesAlumno from '../Views/AlumnoView/InscripcionesAlumno';
 import Error404 from '../Views/Error404';
 import LandingView from '../Views/LandingView';
 import AlumnoView from '../Views/AlumnoView';
@@ -17,11 +15,8 @@ import AdminDashboard from '../Views/AdminView/Dashboard';
 import AdminInformes from '../Views/AdminView/Informes';
 import AdminLayout from '../Components/Shared/AdminLayout';
 import Layout from '../Components/Shared/Layout';
-import EncuestasAlumno from '../Views/AlumnoView/EncuestasAlumno';
-import SolicitudesAlumno from '../Views/AlumnoView/SolicitudesAlumno';
 import SolicitudesAdmin from '../Views/AdminView/Solicitudes';
 import AdminFAQs from '../Views/AdminView/FAQs';
-import AlumnoFAQs from '../Views/AlumnoView/FAQs';
 import ProtectedRoute from '../Components/Shared/ProtectedRoute';
 
 const RoutesLanding = () => {
@@ -45,20 +40,13 @@ const RoutesLanding = () => {
         </Route>
 
         <Route
-          path="/alumno"
+          path="/alumno/*"
           element={
             <ProtectedRoute requiredRole="alumno">
               <AlumnoView />
             </ProtectedRoute>
           }
-        >
-          <Route index element={<AlumnoView />} />
-          <Route path="profile" element={<AlumnoProfile />} />
-          <Route path="inscripciones" element={<InscripcionesAlumno />} />
-          <Route path="encuestas" element={<EncuestasAlumno />} />
-          <Route path="solicitudes" element={<SolicitudesAlumno idAlumno={1} />} />
-          <Route path="faqs" element={<AlumnoFAQs />} />
-        </Route>
+        />
 
         {/* Rutas de Administrador */}
         <Route path="/admin/login" element={<AdminLogin />} />
