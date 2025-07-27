@@ -1,5 +1,6 @@
 /* eslint-disable no-debugger */
-import { useContext, useState, createContext } from 'react';
+import { useContext, useState, createContext, useEffect } from 'react';
+import axiosClient from '../Shared/Axios';
 
 const StateContext = createContext({
   user: null,
@@ -42,6 +43,80 @@ export const ContextProvider = ({ children }) => {
     const stored = sessionStorage.getItem('unidadesInscriptas');
     return stored ? JSON.parse(stored) : [];
   });
+  const [isValidating, setIsValidating] = useState(false);
+
+  // Validar token al cargar la aplicación
+  useEffect(() => {
+    const validateToken = async () => {
+      const storedToken = sessionStorage.getItem('ACCESS_TOKEN');
+      const storedRole = sessionStorage.getItem('role');
+
+      if (storedToken && storedRole) {
+        setIsValidating(true);
+        try {
+          // Intentar hacer una petición para validar el token
+          if (storedRole === 'alumno') {
+            console.log('Validando token de alumno...');
+            const response = await axiosClient.get('/alumno/info');
+            // Actualizar el estado del usuario con la información del backend
+            if (response.data.success && response.data.alumno) {
+              console.log('Token válido, actualizando estado del alumno:', response.data.alumno);
+              setUser(response.data.alumno);
+              sessionStorage.setItem('user', JSON.stringify(response.data.alumno));
+
+              // Si el alumno tiene carrera, actualizar el estado de la carrera
+              if (response.data.alumno.carrera) {
+                // Buscar la carrera completa en sessionStorage o usar la información básica
+                const storedCarrera = sessionStorage.getItem('carrera');
+                if (storedCarrera) {
+                  const carreraData = JSON.parse(storedCarrera);
+                  console.log('Actualizando estado de carrera:', carreraData);
+                  setCarrera(carreraData);
+                }
+              }
+            }
+          } else if (storedRole === 'admin') {
+            console.log('Validando token de admin...');
+            const response = await axiosClient.get('/admin/info');
+            // Actualizar el estado del usuario con la información del backend
+            if (response.data.success && response.data.admin) {
+              console.log('Token válido, actualizando estado del admin:', response.data.admin);
+              setUser(response.data.admin);
+              sessionStorage.setItem('user', JSON.stringify(response.data.admin));
+            }
+          }
+          // Si llega aquí, el token es válido
+          console.log('Token válido, usuario autenticado');
+        } catch (error) {
+          console.log('Token inválido, limpiando sesión');
+          // Token inválido, limpiar sesión
+          sessionStorage.removeItem('ACCESS_TOKEN');
+          sessionStorage.removeItem('role');
+          sessionStorage.removeItem('user');
+          sessionStorage.removeItem('carrera');
+          sessionStorage.removeItem('unidadesDisponibles');
+          sessionStorage.removeItem('unidadesCarrera');
+          sessionStorage.removeItem('unidadesAprobadas');
+          sessionStorage.removeItem('unidadesInscriptas');
+
+          setToken(null);
+          setRole(null);
+          setUser(null);
+          setCarrera(null);
+          setUnidadesDisponibles([]);
+          setUnidadesCarrera([]);
+          setUnidadesAprobadas([]);
+          setUnidadesInscriptas([]);
+        } finally {
+          setIsValidating(false);
+        }
+      } else {
+        setIsValidating(false);
+      }
+    };
+
+    validateToken();
+  }, []);
 
   const setTokenAndRole = (token, role) => {
     setToken(token);
@@ -74,34 +149,42 @@ export const ContextProvider = ({ children }) => {
   };
 
   const setUnidadesDisponiblesPersist = (ucList) => {
-    setUnidadesDisponibles(ucList);
-    if (ucList) {
-      sessionStorage.setItem('unidadesDisponibles', JSON.stringify(ucList));
+    // Asegurar que ucList sea un array
+    const safeUcList = Array.isArray(ucList) ? ucList : [];
+    setUnidadesDisponibles(safeUcList);
+    if (safeUcList) {
+      sessionStorage.setItem('unidadesDisponibles', JSON.stringify(safeUcList));
     } else {
       sessionStorage.removeItem('unidadesDisponibles');
     }
   };
 
   const setUnidadesCarreraPersist = (ucList) => {
-    setUnidadesCarrera(ucList);
-    if (ucList) {
-      sessionStorage.setItem('unidadesCarrera', JSON.stringify(ucList));
+    // Asegurar que ucList sea un array
+    const safeUcList = Array.isArray(ucList) ? ucList : [];
+    setUnidadesCarrera(safeUcList);
+    if (safeUcList) {
+      sessionStorage.setItem('unidadesCarrera', JSON.stringify(safeUcList));
     } else {
       sessionStorage.removeItem('unidadesCarrera');
     }
   };
   const setUnidadesAprobadasPersist = (ucList) => {
-    setUnidadesAprobadas(ucList);
-    if (ucList) {
-      sessionStorage.setItem('unidadesAprobadas', JSON.stringify(ucList));
+    // Asegurar que ucList sea un array
+    const safeUcList = Array.isArray(ucList) ? ucList : [];
+    setUnidadesAprobadas(safeUcList);
+    if (safeUcList) {
+      sessionStorage.setItem('unidadesAprobadas', JSON.stringify(safeUcList));
     } else {
       sessionStorage.removeItem('unidadesAprobadas');
     }
   };
   const setUnidadesInscriptasPersist = (ucList) => {
-    setUnidadesInscriptas(ucList);
-    if (ucList) {
-      sessionStorage.setItem('unidadesInscriptas', JSON.stringify(ucList));
+    // Asegurar que ucList sea un array
+    const safeUcList = Array.isArray(ucList) ? ucList : [];
+    setUnidadesInscriptas(safeUcList);
+    if (safeUcList) {
+      sessionStorage.setItem('unidadesInscriptas', JSON.stringify(safeUcList));
     } else {
       sessionStorage.removeItem('unidadesInscriptas');
     }
@@ -131,7 +214,8 @@ export const ContextProvider = ({ children }) => {
         unidadesAprobadas,
         setUnidadesAprobadas: setUnidadesAprobadasPersist,
         unidadesInscriptas,
-        setUnidadesInscriptas: setUnidadesInscriptasPersist
+        setUnidadesInscriptas: setUnidadesInscriptasPersist,
+        isValidating
       }}
     >
       {children}

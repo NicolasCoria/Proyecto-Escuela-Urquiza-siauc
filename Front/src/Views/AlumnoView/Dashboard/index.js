@@ -7,9 +7,12 @@ const DashboardAlumno = () => {
     useStateContext();
 
   // Progreso académico
-  const total = unidadesCarrera.length;
-  const aprobadas = unidadesAprobadas.length;
+  const total = unidadesCarrera?.length || 0;
+  const aprobadas = unidadesAprobadas?.length || 0;
   const progreso = total ? Math.round((aprobadas / total) * 100) : 0;
+
+  // Verificar que unidadesInscriptas sea un array
+  const unidadesInscriptasArray = Array.isArray(unidadesInscriptas) ? unidadesInscriptas : [];
 
   return (
     <div className={styles.dashboardContainer}>
@@ -18,11 +21,11 @@ const DashboardAlumno = () => {
         {/* Inscripciones activas */}
         <section className={styles.dashboardCard}>
           <h3>Inscripciones activas</h3>
-          {unidadesInscriptas.length === 0 ? (
+          {unidadesInscriptasArray.length === 0 ? (
             <div>No hay inscripciones activas.</div>
           ) : (
             <ul>
-              {unidadesInscriptas.map((uc) => (
+              {unidadesInscriptasArray.map((uc) => (
                 <li key={uc.id_uc || uc.id}>
                   {uc.Unidad_Curricular || uc.unidad_curricular || uc.nombre || 'Unidad Curricular'}
                 </li>

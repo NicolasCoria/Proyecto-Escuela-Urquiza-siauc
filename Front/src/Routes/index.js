@@ -5,7 +5,6 @@ import Carreras from '../Views/LandingView/Carreras';
 import Inscripciones from '../Views/LandingView/Inscripciones';
 import AlumnoProfile from '../Views/AlumnoView/Profile';
 import InscripcionesAlumno from '../Views/AlumnoView/InscripcionesAlumno';
-import Materias from '../Views/AlumnoView/Materias';
 import Error404 from '../Views/Error404';
 import LandingView from '../Views/LandingView';
 import AlumnoView from '../Views/AlumnoView';
@@ -39,10 +38,23 @@ const RoutesLanding = () => {
           <Route path="/inscripciones" element={<Inscripciones />} />
         </Route>
 
+<<<<<<< Updated upstream
         <Route path="/alumno" element={<AlumnoView />}>
           <Route index element={<Home />} />
           <Route path="profile/:id" element={<AlumnoProfile />} />
           <Route path="materias" element={<Materias />} />
+=======
+        <Route
+          path="/alumno"
+          element={
+            <ProtectedRoute requiredRole="alumno">
+              <AlumnoView />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AlumnoView />} />
+          <Route path="profile" element={<AlumnoProfile />} />
+>>>>>>> Stashed changes
           <Route path="inscripciones" element={<InscripcionesAlumno />} />
         </Route>
 

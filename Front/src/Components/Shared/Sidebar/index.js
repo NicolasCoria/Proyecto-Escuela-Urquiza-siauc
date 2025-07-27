@@ -159,20 +159,7 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/alumno/materias"
-                className={activeButton === 'alumno/materias' ? styles.activeBtn : styles.btn}
-                style={
-                  activeButton === 'alumno/materias'
-                    ? { backgroundColor: theme.primary, color: '#fff' }
-                    : { color: theme.primary }
-                }
-              >
-                Materias
+                👤 Perfil
               </Link>
             </li>
             <li>
@@ -185,9 +172,38 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                Inscripción a UC
+                📝 Inscripción a UC
               </Link>
             </li>
+            <li>
+              <Link
+                to="/alumno/encuestas"
+                className={activeButton === 'alumno/encuestas' ? styles.activeBtn : styles.btn}
+                style={
+                  activeButton === 'alumno/encuestas'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
+              >
+                📊 Encuestas Académicas
+              </Link>
+            </li>
+<<<<<<< Updated upstream
+=======
+            <li>
+              <Link
+                to="/alumno/solicitudes"
+                className={activeButton === 'alumno/solicitudes' ? styles.activeBtn : styles.btn}
+                style={
+                  activeButton === 'alumno/solicitudes'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
+              >
+                📋 Solicitudes
+              </Link>
+            </li>
+>>>>>>> Stashed changes
           </ul>
           <div className={styles.logout}>
             <li>

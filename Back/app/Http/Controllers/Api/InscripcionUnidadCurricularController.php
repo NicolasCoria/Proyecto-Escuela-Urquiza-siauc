@@ -17,6 +17,25 @@ use App\Models\Grado;
 
 class InscripcionUnidadCurricularController extends Controller
 {
+    // Obtener las unidades curriculares en las que ya está inscripto el alumno
+    public function unidadesInscriptas(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'No autenticado'], 401);
+        }
+        $id_alumno = $user->id_alumno ?? $user->id ?? null;
+        if (!$id_alumno) {
+            return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
+        }
+
+        // Obtener las unidades curriculares en las que ya está inscripto
+        $uc_ids = AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
+        $unidades = UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+
+        return response()->json($unidades);
+    }
+
     // Devuelve las unidades curriculares disponibles para inscripción para el alumno autenticado
     public function disponiblesParaInscripcion(Request $request)
     {
@@ -77,7 +96,8 @@ class InscripcionUnidadCurricularController extends Controller
                 $disponibles[] = $uc;
             }
         }
-        return response()->json($disponibles);
+
+        return response()->json(['unidades_disponibles' => $disponibles]);
     }
 
     // Inscribir al alumno autenticado en varias unidades curriculares
@@ -181,24 +201,7 @@ class InscripcionUnidadCurricularController extends Controller
         return $pdf->download('comprobante_inscripcion.pdf');
     }
 
-    // Devuelve las unidades curriculares en las que el alumno autenticado ya está inscripto
-    public function unidadesInscriptas(Request $request)
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['error' => 'No autenticado'], 401);
-        }
-        $id_alumno = $user->id_alumno ?? $user->id ?? null;
-        if (!$id_alumno) {
-            return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
-        }
 
-        // Buscar todas las UCs en las que el alumno está inscripto
-        $uc_ids = \App\Models\AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
-        $unidades = \App\Models\UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
-
-        return response()->json($unidades);
-    }
 
     // Devuelve todas las unidades curriculares del plan/carrera del alumno autenticado
     public function unidadesCarrera(Request $request)

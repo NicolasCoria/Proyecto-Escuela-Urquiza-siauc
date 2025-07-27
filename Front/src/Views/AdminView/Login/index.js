@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
 import styles from './login.module.css';
 import { Link, useNavigate } from 'react-router-dom';
-import TextInput from '../../../Components/Shared/TextInput';
-import Button from '../../../Components/Shared/Button';
 import Modal from '../../../Components/Shared/Modal';
 import Spinner from '../../../Components/Shared/Spinner';
 import axiosClient from '../../../Components/Shared/Axios';
@@ -24,46 +22,65 @@ const AdminLogin = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      email: emailRef.current.value,
-      password: passwordRef.current.value
-    };
+
+    // Validación rápida del lado del cliente
+    const email = emailRef.current.value.trim();
+    const password = passwordRef.current.value;
+
+    if (!email || !password) {
+      setErrors({
+        email: !email ? 'El email es requerido' : null,
+        password: !password ? 'La contraseña es requerida' : null
+      });
+      return;
+    }
+
     setIsLoading(true);
     setErrors({});
+
     try {
-      const { data } = await axiosClient.post('/admin/login', payload);
+      const { data } = await axiosClient.post('/admin/login', {
+        email,
+        password
+      });
+
+      // Configurar sesión inmediatamente
       setUser(data.admin);
       setTokenAndRole(data.token, 'admin');
-      openModal({
-        description: 'Sesión de administrador iniciada correctamente',
-        chooseModal: false
-      });
-      navigate('/admin/dashboard');
-    } catch (err) {
-      if (err.response && err.response.status === 422) {
-        const apiErrors = err.response;
 
-        if (apiErrors.data.errors) {
-          setErrors({
-            email: apiErrors.data.errors.email?.[0],
-            password: apiErrors.data.errors.password?.[0]
-          });
-        } else if (apiErrors.data.messageEmail) {
-          setErrors({
-            email: [apiErrors.data.messageEmail]
-          });
-        } else {
-          setErrors({
-            password: [apiErrors.data.messagePassword]
-          });
-        }
-      } else if (err.response && err.response.status === 401) {
+      // Ocultar spinner inmediatamente
+      setIsLoading(false);
+
+      // Navegar inmediatamente
+      navigate('/admin/dashboard');
+
+      // Mostrar modal de éxito después de un breve delay
+      setTimeout(() => {
+        openModal({
+          description: 'Sesión de administrador iniciada correctamente',
+          chooseModal: false
+        });
+      }, 500);
+    } catch (err) {
+      console.error('Login error:', err);
+
+      if (err.response?.status === 401) {
         setErrors({
-          password: ['Credenciales incorrectas']
+          password: 'Credenciales incorrectas'
+        });
+      } else if (err.response?.status === 422) {
+        const apiErrors = err.response.data.errors || {};
+        setErrors({
+          email: apiErrors.email?.[0] || null,
+          password: apiErrors.password?.[0] || null
+        });
+      } else {
+        setErrors({
+          password: 'Error de conexión. Intente nuevamente.'
         });
       }
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -74,52 +91,61 @@ const AdminLogin = () => {
       ) : modalState.isOpen && modalState.confirmModal === true ? (
         <Modal />
       ) : null}
-      <main>
-        <section className={styles.container}>
-          <div className={styles.subContainer}>
-            <div className={styles.headerContainer}>
-              <h1 className={styles.title}>Panel de Administración</h1>
-              <p className={styles.subtitle}>Inicia sesión como administrador</p>
-            </div>
-            <form className={styles.loginContainer}>
-              <TextInput
-                input={'input'}
-                labelName={'E-mail'}
-                placeholderText={'Escribe tu dirección de correo electrónico'}
-                refrerence={emailRef}
-                error={errors.email}
-              />
-              <div className={styles.passwordContainer}>
-                <TextInput
-                  labelName={'Contraseña'}
-                  placeholderText={'Escribe tu contraseña'}
-                  input={'input'}
-                  refrerence={passwordRef}
-                  error={errors.password}
-                  inputType={showPassword ? 'text' : 'password'}
-                />
-                {showPassword ? (
-                  <FaEye
-                    className={styles.showPasswordIcon}
-                    onClick={() => setShowPassword(!showPassword)}
-                  />
-                ) : (
-                  <FaEyeSlash
-                    className={styles.showPasswordIcon}
-                    onClick={() => setShowPassword(!showPassword)}
-                  />
-                )}
-              </div>
-              <Link to="/login" className={styles.backToLogin}>
-                <p>← Volver al login de alumnos</p>
-              </Link>
-              <div className={styles.btnContainer}>
-                <Button type="submit" text="Iniciar Sesión" onClick={onSubmit} />
-              </div>
-            </form>
+
+      <div className={styles.loginContainer}>
+        <div className={styles.loginCard}>
+          <div className={styles.loginHeader}>
+            <h1 className={styles.loginTitle}>Panel de Administración</h1>
+            <p className={styles.loginSubtitle}>Inicia sesión como administrador</p>
           </div>
-        </section>
-      </main>
+
+          <form onSubmit={onSubmit} className={styles.formSection}>
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>Correo Electrónico</label>
+              <input
+                type="email"
+                className={`${styles.inputField} ${errors.email ? styles.error : ''}`}
+                placeholder="Escribe tu dirección de correo electrónico"
+                ref={emailRef}
+                required
+              />
+              {errors.email && <div className={styles.errorMessage}>{errors.email}</div>}
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>Contraseña</label>
+              <div className={styles.passwordContainer}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className={`${styles.passwordInput} ${errors.password ? styles.error : ''}`}
+                  placeholder="Escribe tu contraseña"
+                  ref={passwordRef}
+                  required
+                />
+                <button
+                  type="button"
+                  className={styles.showPasswordIcon}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FaEye /> : <FaEyeSlash />}
+                </button>
+              </div>
+              {errors.password && <div className={styles.errorMessage}>{errors.password}</div>}
+            </div>
+
+            <div className={styles.linksSection}>
+              <Link to="/login" className={styles.link}>
+                ← Volver al login de alumnos
+              </Link>
+            </div>
+
+            <button type="submit" className={styles.submitButton} disabled={isLoading}>
+              {isLoading && <span className={styles.loadingSpinner}></span>}
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            </button>
+          </form>
+        </div>
+      </div>
     </>
   );
 };

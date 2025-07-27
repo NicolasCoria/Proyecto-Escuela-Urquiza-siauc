@@ -326,6 +326,9 @@
 
 .sidebarBase {
   background: var(--sidebar-bg, #f5f6fa);
+  position: fixed;
+  top: 0;
+  left: 0;
   min-height: 100vh;
   width: 220px;
   box-shadow: 2px 1px 10px #0000001a;
@@ -333,6 +336,7 @@
   flex-direction: column;
   align-items: center;
   padding-top: 32px;
+  z-index: 1000;
 }
 .sidebarGuest {
   background: linear-gradient(135deg, #e0e0e0 0%, #f5f6fa 100%);
@@ -379,4 +383,27 @@
 .menu a.btn:hover {
   background-color: #222 !important;
   color: #fff !important;
+}
+
+/* Media queries para el sidebar fijo */
+@media (max-width: 900px) {
+  .sidebarBase {
+    width: 180px;
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebarBase {
+    width: 60px;
+    padding-top: 16px;
+  }
+  
+  .sidebarBase .title {
+    display: none;
+  }
+  
+  .sidebarBase .btn {
+    font-size: 0.8rem;
+    padding: 8px 4px;
+  }
 }

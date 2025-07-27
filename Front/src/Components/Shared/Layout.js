@@ -46,7 +46,8 @@ const Layout = ({ children }) => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          marginLeft: '220px'
         }}
       >
         <div
@@ -70,6 +71,7 @@ const Layout = ({ children }) => {
         @media (max-width: 900px) {
           main {
             padding: 16px 4px !important;
+            margin-left: 180px !important;
           }
         }
         @media (max-width: 600px) {
@@ -80,6 +82,7 @@ const Layout = ({ children }) => {
           }
           main {
             padding: 8px 2px !important;
+            margin-left: 60px !important;
           }
         }
       `}</style>

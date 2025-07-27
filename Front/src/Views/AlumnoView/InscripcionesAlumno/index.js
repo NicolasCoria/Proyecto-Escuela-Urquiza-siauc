@@ -9,9 +9,21 @@ const InscripcionesAlumno = () => {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+<<<<<<< Updated upstream
+=======
+  const [unidadesInscriptas, setUnidadesInscriptas] = useState([]);
+  const [loadingUnidades, setLoadingUnidades] = useState(true);
+>>>>>>> Stashed changes
 
   // Obtener token del localStorage (ajusta según tu auth)
   const token = localStorage.getItem('token');
+
+  // Verificar cuando las unidades disponibles están cargadas
+  useEffect(() => {
+    if (unidadesDisponibles && unidadesDisponibles.length >= 0) {
+      setLoadingUnidades(false);
+    }
+  }, [unidadesDisponibles]);
 
   const handleSelect = (id) => {
     setSeleccionadas((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -110,6 +122,7 @@ const InscripcionesAlumno = () => {
       {/* Formulario de inscripción */}
       {!success && !loading && (
         <>
+<<<<<<< Updated upstream
           <div
             style={{
               background: '#fff',
@@ -140,6 +153,47 @@ const InscripcionesAlumno = () => {
                 </li>
               ))}
             </ul>
+=======
+          <div className={styles.formContainer}>
+            {loadingUnidades ? (
+              <div className={styles.loadingUnidades}>
+                <p>Cargando unidades curriculares...</p>
+              </div>
+            ) : unidadesDisponibles.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>No hay unidades curriculares disponibles para inscripción en este momento.</p>
+              </div>
+            ) : (
+              <>
+                <h3 className={styles.formTitle}>Unidades Disponibles:</h3>
+                <ul className={styles.unidadesList}>
+                  {unidadesDisponibles.map((uc) => (
+                    <li key={uc.id_uc} className={styles.unidadItem}>
+                      <label
+                        className={`${styles.unidadLabel} ${isUnidadInscripta(uc.id_uc) ? styles.disabled : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          className={styles.unidadCheckbox}
+                          checked={seleccionadas.includes(uc.id_uc)}
+                          onChange={() => handleSelect(uc.id_uc)}
+                          disabled={isUnidadInscripta(uc.id_uc)}
+                        />
+                        <span
+                          className={`${styles.unidadName} ${isUnidadInscripta(uc.id_uc) ? styles.disabled : ''}`}
+                        >
+                          {uc.unidad_curricular || uc.Unidad_Curricular}
+                        </span>
+                        {isUnidadInscripta(uc.id_uc) && (
+                          <span className={styles.inscriptoBadge}>✅ Inscripto</span>
+                        )}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+>>>>>>> Stashed changes
           </div>
           <button
             onClick={handleInscribir}

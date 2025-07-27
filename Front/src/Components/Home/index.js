@@ -22,10 +22,16 @@ const Home = () => {
             <div className={styles.historyContainer}>
               <h3>Historia de la escuela</h3>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Officia commodi quaerat
-                mollitia nisi aperiam veniam sapiente fuga magni, nostrum modi tenetur. Qui nisi
-                sunt iure cum ducimus totam mollitia ullam. Repellendus numquam ad officiis! Iure,
-                accusamus.
+                En el año 1986 la Escuela de Comercio Nº 2 «Cap. Gral J.J.de Urquiza» eleva su
+                categoría de Escuela Superior a partir de la creación de la carrera de “Analista de
+                Sistemas de Computación”, la que contó con dos divisiones de primer año en su
+                inicio, dependiendo de la Dirección Nacional de Educación Superior, del Ministerio
+                de Educación y Justicia de la Nación.
+                <br />
+                Los contenidos de la Carrera estaban determinados por el plan RM Nº 1823/83, el cual
+                establecía una duración de tres años para obtener el título de Analista de Sistemas
+                de Computación, con un título intermedio de Analista Programador, al aprobar segundo
+                año.
               </p>
             </div>
           </div>

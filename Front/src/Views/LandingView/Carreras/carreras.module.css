@@ -1,0 +1,188 @@
+.carrerasContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.carrerasHeader {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.carrerasTitle {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.carrerasSubtitle {
+  font-size: 1.2rem;
+  color: #7f8c8d;
+  margin-bottom: 2rem;
+}
+
+.generalidadesSection {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 15px;
+  margin-bottom: 3rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.generalidadesTitle {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.generalidadesContent {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  text-align: justify;
+}
+
+.carrerasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.carreraCard {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #e1e8ed;
+}
+
+.carreraCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.carreraTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.carreraDescription {
+  color: #34495e;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.horarioSection {
+  background: #f8f9fa;
+  padding: 2rem;
+  border-radius: 15px;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.horarioTitle {
+  font-size: 1.6rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.horarioContent {
+  font-size: 1.1rem;
+  color: #34495e;
+  line-height: 1.6;
+}
+
+.modalidadSection {
+  background: #e8f5e8;
+  padding: 2rem;
+  border-radius: 15px;
+  margin: 2rem 0;
+  border-left: 5px solid #27ae60;
+}
+
+.modalidadTitle {
+  font-size: 1.6rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.modalidadContent {
+  font-size: 1.1rem;
+  color: #34495e;
+  line-height: 1.6;
+}
+
+.beneficiosSection {
+  background: #fff3cd;
+  padding: 2rem;
+  border-radius: 15px;
+  margin: 2rem 0;
+  border-left: 5px solid #ffc107;
+}
+
+.beneficiosTitle {
+  font-size: 1.6rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.beneficiosContent {
+  font-size: 1.1rem;
+  color: #34495e;
+  line-height: 1.6;
+}
+
+.mercadoSection {
+  background: #d1ecf1;
+  padding: 2rem;
+  border-radius: 15px;
+  margin: 2rem 0;
+  border-left: 5px solid #17a2b8;
+}
+
+.mercadoTitle {
+  font-size: 1.6rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.mercadoContent {
+  font-size: 1.1rem;
+  color: #34495e;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .carrerasContainer {
+    padding: 1rem;
+  }
+  
+  .carrerasTitle {
+    font-size: 2rem;
+  }
+  
+  .carrerasGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .generalidadesSection,
+  .horarioSection,
+  .modalidadSection,
+  .beneficiosSection,
+  .mercadoSection {
+    padding: 1.5rem;
+  }
+} 
