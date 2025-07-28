@@ -1,0 +1,234 @@
+/* Estilos de respaldo para EncuestasAlumno */
+.encuestas-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.encuestas-title {
+  margin-bottom: 30px;
+  text-align: center;
+  color: #333;
+  font-size: 2rem;
+}
+
+.encuestas-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+}
+
+.encuesta-card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.encuesta-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.encuesta-card.respondida {
+  background-color: #f8f9fa;
+  border-color: #28a745;
+}
+
+.encuesta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.encuesta-content {
+  flex: 1;
+  min-width: 200px;
+}
+
+.encuesta-title {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 1.3rem;
+  line-height: 1.4;
+}
+
+.encuesta-description {
+  margin: 0 0 15px 0;
+  color: #666;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.encuesta-info {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.4;
+}
+
+.encuesta-info p {
+  margin: 5px 0;
+}
+
+.encuesta-status {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.status-respondida {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-pendiente {
+  background-color: #ffc107;
+  color: black;
+}
+
+.status-vencida {
+  background-color: #dc3545;
+  color: white;
+}
+
+.status-no-disponible {
+  background-color: #6c757d;
+  color: white;
+}
+
+.encuesta-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.completed-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: auto;
+  border: 1px solid #c3e6cb;
+}
+
+.completed-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.completed-date {
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.vencida-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: auto;
+  border: 1px solid #f5c6cb;
+}
+
+.vencida-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.vencida-description {
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.no-disponible-message {
+  background-color: #e2e3e5;
+  color: #383d41;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: auto;
+  border: 1px solid #d6d8db;
+}
+
+.no-disponible-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.no-disponible-description {
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .encuestas-container {
+    padding: 15px;
+  }
+
+  .encuestas-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .encuestas-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .encuesta-card {
+    padding: 15px;
+    min-height: 180px;
+  }
+
+  .encuesta-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .encuesta-status {
+    text-align: left;
+    margin-top: 10px;
+  }
+
+  .encuesta-content {
+    min-width: auto;
+  }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+  .encuestas-container {
+    padding: 10px;
+  }
+
+  .encuestas-title {
+    font-size: 1.3rem;
+  }
+
+  .encuesta-card {
+    padding: 12px;
+  }
+
+  .encuesta-title {
+    font-size: 1.1rem;
+  }
+} 

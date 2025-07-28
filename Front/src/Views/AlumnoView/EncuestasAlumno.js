@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axiosClient from '../../Components/Shared/Axios';
 import EncuestaForm from './EncuestaForm';
 import Spinner from '../../Components/Shared/Spinner';
+import styles from './alumnoView.module.css';
+import './EncuestasAlumno.css'; // Estilos de respaldo
 
 const EncuestasAlumno = () => {
   const [encuestas, setEncuestas] = useState([]);
@@ -35,7 +37,7 @@ const EncuestasAlumno = () => {
         const response = await axiosClient.get('/alumno/encuestas');
 
         if (response.data.success) {
-          setEncuestas(response.data.encuestas);
+          setEncuestas(response.data.encuestas || []);
         } else {
           setError('Error al cargar las encuestas');
         }
@@ -51,53 +53,65 @@ const EncuestasAlumno = () => {
   }, []);
 
   const isEncuestaVencida = (encuesta) => {
-    if (!encuesta.fecha_fin) return false;
-    if (encuesta.respondida) return false;
+    if (!encuesta?.fecha_fin) return false;
+    if (encuesta?.respondida) return false;
 
-    const fechaActual = new Date();
-    const fechaFin = new Date(encuesta.fecha_fin);
-    const fechaActualStr = fechaActual.toISOString().split('T')[0];
-    const fechaFinStr = fechaFin.toISOString().split('T')[0];
-
-    return fechaActualStr > fechaFinStr;
-  };
-
-  const isEncuestaDisponible = (encuesta) => {
-    if (!encuesta.activa) return false;
-    if (encuesta.respondida) return false;
-
-    const fechaActual = new Date();
-
-    if (encuesta.fecha_inicio) {
-      const fechaInicio = new Date(encuesta.fecha_inicio);
-      const fechaActualStr = fechaActual.toISOString().split('T')[0];
-      const fechaInicioStr = fechaInicio.toISOString().split('T')[0];
-
-      if (fechaActualStr < fechaInicioStr) {
-        return false;
-      }
-    }
-
-    if (encuesta.fecha_fin) {
+    try {
+      const fechaActual = new Date();
       const fechaFin = new Date(encuesta.fecha_fin);
       const fechaActualStr = fechaActual.toISOString().split('T')[0];
       const fechaFinStr = fechaFin.toISOString().split('T')[0];
 
-      if (fechaActualStr > fechaFinStr) {
-        return false;
-      }
+      return fechaActualStr > fechaFinStr;
+    } catch (error) {
+      console.error('Error verificando si encuesta está vencida:', error);
+      return false;
     }
+  };
 
-    return true;
+  const isEncuestaDisponible = (encuesta) => {
+    if (!encuesta?.activa) return false;
+    if (encuesta?.respondida) return false;
+
+    try {
+      const fechaActual = new Date();
+
+      if (encuesta.fecha_inicio) {
+        const fechaInicio = new Date(encuesta.fecha_inicio);
+        const fechaActualStr = fechaActual.toISOString().split('T')[0];
+        const fechaInicioStr = fechaInicio.toISOString().split('T')[0];
+
+        if (fechaActualStr < fechaInicioStr) {
+          return false;
+        }
+      }
+
+      if (encuesta.fecha_fin) {
+        const fechaFin = new Date(encuesta.fecha_fin);
+        const fechaActualStr = fechaActual.toISOString().split('T')[0];
+        const fechaFinStr = fechaFin.toISOString().split('T')[0];
+
+        if (fechaActualStr > fechaFinStr) {
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error verificando disponibilidad de encuesta:', error);
+      return false;
+    }
   };
 
   // Función para ordenar encuestas por prioridad
   const ordenarEncuestas = (encuestas) => {
+    if (!Array.isArray(encuestas)) return [];
+
     return encuestas.sort((a, b) => {
       const aVencida = isEncuestaVencida(a);
       const bVencida = isEncuestaVencida(b);
-      const aRespondida = a.respondida;
-      const bRespondida = b.respondida;
+      const aRespondida = a?.respondida || false;
+      const bRespondida = b?.respondida || false;
       const aDisponible = isEncuestaDisponible(a);
       const bDisponible = isEncuestaDisponible(b);
 
@@ -114,16 +128,20 @@ const EncuestasAlumno = () => {
       if (!aVencida && bVencida) return -1;
 
       // Prioridad 4: Por fecha de asignación (más reciente primero)
-      const fechaA = new Date(a.fecha_asignacion);
-      const fechaB = new Date(b.fecha_asignacion);
-      return fechaB - fechaA;
+      try {
+        const fechaA = new Date(a?.fecha_asignacion || 0);
+        const fechaB = new Date(b?.fecha_asignacion || 0);
+        return fechaB - fechaA;
+      } catch (error) {
+        return 0;
+      }
     });
   };
 
   const handleEncuestaRespondida = (idEncuesta) => {
     setEncuestas((prevEncuestas) => {
       const encuestasActualizadas = prevEncuestas.map((encuesta) =>
-        encuesta.id_encuesta === idEncuesta
+        encuesta?.id_encuesta === idEncuesta
           ? { ...encuesta, respondida: true, fecha_respuesta: new Date().toISOString() }
           : encuesta
       );
@@ -140,52 +158,66 @@ const EncuestasAlumno = () => {
           padding: '20px',
           textAlign: 'center',
           maxWidth: '600px',
-          margin: '0 auto'
+          margin: '0 auto',
+          backgroundColor: '#fff',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}
       >
-        <h3>Error</h3>
-        <p>{error}</p>
+        <h3 style={{ color: '#dc3545', marginBottom: '10px' }}>Error</h3>
+        <p style={{ color: '#666' }}>{error}</p>
       </div>
     );
   }
 
-  if (encuestas.length === 0) {
+  if (!Array.isArray(encuestas) || encuestas.length === 0) {
     return (
       <div
         style={{
           padding: '20px',
           textAlign: 'center',
           maxWidth: '600px',
-          margin: '0 auto'
+          margin: '0 auto',
+          backgroundColor: '#fff',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}
       >
-        <h2>Encuestas Académicas</h2>
-        <p>No tienes encuestas asignadas en este momento.</p>
+        <h2 style={{ color: '#333', marginBottom: '15px' }}>Encuestas Académicas</h2>
+        <p style={{ color: '#666' }}>No tienes encuestas asignadas en este momento.</p>
       </div>
     );
   }
 
   return (
-    <div className="encuestasContainer">
-      <h2 className="encuestasTitle">Encuestas Académicas</h2>
+    <div className={styles.encuestasContainer || 'encuestas-container'}>
+      <h2 className={styles.encuestasTitle || 'encuestas-title'}>Encuestas Académicas</h2>
 
-      <div className={styles.encuestasGrid}>
+      <div className={styles.encuestasGrid || 'encuestas-grid'}>
         {ordenarEncuestas([...encuestas]).map((encuesta) => {
+          if (!encuesta || !encuesta.id_encuesta) {
+            return null; // Skip invalid encuestas
+          }
+
           const vencida = isEncuestaVencida(encuesta);
           const disponible = isEncuestaDisponible(encuesta);
 
           return (
             <div
               key={encuesta.id_encuesta}
-              className={`encuestaCard ${encuesta.respondida ? 'respondida' : ''}`}
+              className={`${styles.encuestaCard || 'encuesta-card'} ${encuesta.respondida ? styles.respondida || 'respondida' : ''}`}
             >
-              <div className="encuestaHeader">
-                <div className="encuestaContent">
-                  <h3 className="encuestaTitle">{encuesta.titulo}</h3>
+              <div className={styles.encuestaHeader || 'encuesta-header'}>
+                <div className={styles.encuestaContent || 'encuesta-content'}>
+                  <h3 className={styles.encuestaTitle || 'encuesta-title'}>
+                    {encuesta.titulo || 'Sin título'}
+                  </h3>
                   {encuesta.descripcion && (
-                    <p className="encuestaDescription">{encuesta.descripcion}</p>
+                    <p className={styles.encuestaDescription || 'encuesta-description'}>
+                      {encuesta.descripcion}
+                    </p>
                   )}
-                  <div className="encuestaInfo">
+                  <div className={styles.encuestaInfo || 'encuesta-info'}>
                     <p>
                       <strong>Asignada:</strong> {formatearFecha(encuesta.fecha_asignacion)}
                     </p>
@@ -197,20 +229,36 @@ const EncuestasAlumno = () => {
                     )}
                   </div>
                 </div>
-                <div className="encuestaStatus">
+                <div className={styles.encuestaStatus || 'encuesta-status'}>
                   {encuesta.respondida ? (
-                    <span className="statusBadge statusRespondida">✅ Respondida</span>
+                    <span
+                      className={`${styles.statusBadge || 'status-badge'} ${styles.statusRespondida || 'status-respondida'}`}
+                    >
+                      ✅ Respondida
+                    </span>
                   ) : vencida ? (
-                    <span className="statusBadge statusVencida">⏰ Vencida</span>
+                    <span
+                      className={`${styles.statusBadge || 'status-badge'} ${styles.statusVencida || 'status-vencida'}`}
+                    >
+                      ⏰ Vencida
+                    </span>
                   ) : !disponible ? (
-                    <span className="statusBadge statusNoDisponible">🔒 No disponible</span>
+                    <span
+                      className={`${styles.statusBadge || 'status-badge'} ${styles.statusNoDisponible || 'status-no-disponible'}`}
+                    >
+                      🔒 No disponible
+                    </span>
                   ) : (
-                    <span className="statusBadge statusPendiente">⏳ Pendiente</span>
+                    <span
+                      className={`${styles.statusBadge || 'status-badge'} ${styles.statusPendiente || 'status-pendiente'}`}
+                    >
+                      ⏳ Pendiente
+                    </span>
                   )}
                 </div>
               </div>
 
-              <div className="encuestaBody">
+              <div className={styles.encuestaBody || 'encuesta-body'}>
                 {!encuesta.respondida && disponible && !vencida && (
                   <EncuestaForm
                     encuesta={encuesta}
@@ -219,27 +267,33 @@ const EncuestasAlumno = () => {
                 )}
 
                 {encuesta.respondida && (
-                  <div className={styles.completedMessage}>
-                    <div className={styles.completedTitle}>✅ Encuesta completada</div>
-                    <div className={styles.completedDate}>
+                  <div className={styles.completedMessage || 'completed-message'}>
+                    <div className={styles.completedTitle || 'completed-title'}>
+                      ✅ Encuesta completada
+                    </div>
+                    <div className={styles.completedDate || 'completed-date'}>
                       {formatearFecha(encuesta.fecha_respuesta)}
                     </div>
                   </div>
                 )}
 
                 {!encuesta.respondida && vencida && (
-                  <div className="vencidaMessage">
-                    <div className="vencidaTitle">⏰ Encuesta vencida</div>
-                    <div className="vencidaDescription">
+                  <div className={styles.vencidaMessage || 'vencida-message'}>
+                    <div className={styles.vencidaTitle || 'vencida-title'}>
+                      ⏰ Encuesta vencida
+                    </div>
+                    <div className={styles.vencidaDescription || 'vencida-description'}>
                       El período para responder esta encuesta ha finalizado.
                     </div>
                   </div>
                 )}
 
                 {!encuesta.respondida && !disponible && !vencida && (
-                  <div className="noDisponibleMessage">
-                    <div className="noDisponibleTitle">🔒 Encuesta no disponible</div>
-                    <div className="noDisponibleDescription">
+                  <div className={styles.noDisponibleMessage || 'no-disponible-message'}>
+                    <div className={styles.noDisponibleTitle || 'no-disponible-title'}>
+                      🔒 Encuesta no disponible
+                    </div>
+                    <div className={styles.noDisponibleDescription || 'no-disponible-description'}>
                       Esta encuesta aún no está disponible para responder o ya la respondiste.
                     </div>
                   </div>
