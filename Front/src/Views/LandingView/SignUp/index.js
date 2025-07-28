@@ -16,14 +16,16 @@ const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const nameRef = useRef();
+  const nombreRef = useRef();
+  const apellidoRef = useRef();
   const emailRef = useRef();
   const passwordRef = useRef();
   const careerRef = useRef();
   const dniRef = useRef();
   const photoRef = useRef();
   const [errors, setErrors] = useState({
-    name: null,
+    nombre: null,
+    apellido: null,
     dni: null,
     email: null,
     password: null,
@@ -56,7 +58,8 @@ const SignUp = () => {
     const email = emailRef.current.value.trim();
     if (!email.endsWith('@terciariourquiza.edu.ar')) {
       setErrors({
-        name: null,
+        nombre: null,
+        apellido: null,
         dni: null,
         email: 'El email debe ser de dominio educativo (@terciariourquiza.edu.ar)',
         password: null,
@@ -66,7 +69,8 @@ const SignUp = () => {
     }
 
     const payload = new FormData();
-    payload.append('name', nameRef.current.value);
+    payload.append('nombre', nombreRef.current.value);
+    payload.append('apellido', apellidoRef.current.value);
     payload.append('dni', dniRef.current.value);
     payload.append('email', emailRef.current.value);
     payload.append('password', passwordRef.current.value);
@@ -93,7 +97,8 @@ const SignUp = () => {
           // Manejar errores de validación específicos del backend
           if (err.response.data.error && err.response.data.field === 'email') {
             setErrors({
-              name: null,
+              nombre: null,
+              apellido: null,
               dni: null,
               email: err.response.data.error,
               password: null,
@@ -103,7 +108,8 @@ const SignUp = () => {
             const { errors: apiErrors } = err.response.data;
 
             setErrors({
-              name: apiErrors.name?.[0] || null,
+              nombre: apiErrors.nombre?.[0] || null,
+              apellido: apiErrors.apellido?.[0] || null,
               dni: apiErrors.dni?.[0] || null,
               email: apiErrors.email?.[0] || null,
               password: apiErrors.password?.[0] || null,
@@ -201,10 +207,17 @@ const SignUp = () => {
                 </div>
                 <TextInput
                   input={'input'}
-                  refrerence={nameRef}
-                  labelName={'Nombre/Apellido'}
-                  placeholderText={'Escribe tu nombre y apellido'}
-                  error={errors.name}
+                  refrerence={nombreRef}
+                  labelName={'Nombre'}
+                  placeholderText={'Escribe tu nombre'}
+                  error={errors.nombre}
+                />
+                <TextInput
+                  input={'input'}
+                  refrerence={apellidoRef}
+                  labelName={'Apellido'}
+                  placeholderText={'Escribe tu apellido'}
+                  error={errors.apellido}
                 />
                 <TextInput
                   input={'input'}

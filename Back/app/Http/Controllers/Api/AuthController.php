@@ -23,6 +23,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'nombre' => 'required|string|max:20',
             'apellido' => 'required|string|max:20',
+            'dni' => 'required|string|max:20',
             'email' => 'required|email|unique:alumno,email',
             'password' => 'required|string|min:6',
         ]);
@@ -38,6 +39,7 @@ class AuthController extends Controller
         $alumno = new \App\Models\Alumno();
         $alumno->nombre = $validated['nombre'];
         $alumno->apellido = $validated['apellido'];
+        $alumno->dni = $validated['dni'];
         $alumno->email = $validated['email'];
         $alumno->password = bcrypt($validated['password']);
         $alumno->save();
