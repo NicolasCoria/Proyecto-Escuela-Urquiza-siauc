@@ -82,22 +82,30 @@ const GestionarAsignaciones = () => {
     fetchData();
   }, [mostrarTodasEncuestas]);
 
-  // Cargar grupos de destinatarios
-  useEffect(() => {
-    const cargarGrupos = async () => {
-      try {
-        setCargandoGrupos(true);
-        const response = await axiosClient.get('/grupos-destinatarios');
-        if (response.data.success) {
-          setGrupos(response.data.grupos || []);
+  // Función para cargar grupos de destinatarios
+  const cargarGrupos = async () => {
+    try {
+      setCargandoGrupos(true);
+      const response = await axiosClient.get('/grupos-destinatarios');
+      if (response.data.success) {
+        setGrupos(response.data.grupos || []);
+        // Mostrar mensaje de éxito solo si no es la carga inicial
+        if (grupos.length > 0) {
+          setSuccess('Grupos actualizados correctamente');
+          setTimeout(() => setSuccess(''), 3000);
         }
-      } catch (err) {
-        console.error('Error cargando grupos:', err);
-      } finally {
-        setCargandoGrupos(false);
       }
-    };
+    } catch (err) {
+      console.error('Error cargando grupos:', err);
+      setError('Error al cargar grupos');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setCargandoGrupos(false);
+    }
+  };
 
+  // Cargar grupos de destinatarios al montar el componente
+  useEffect(() => {
     cargarGrupos();
   }, []);
 
@@ -233,6 +241,8 @@ const GestionarAsignaciones = () => {
       setSelectedMateria('');
       setAlumnos([]);
       setSelectedAlumnos([]);
+      // Recargar grupos automáticamente al cambiar a modo grupos
+      cargarGrupos();
     } else {
       // Cambiando a modo normal
       setSelectedGrupos([]);
@@ -294,6 +304,11 @@ const GestionarAsignaciones = () => {
         }
       }
       setSelectedAlumnos([]);
+
+      // Recargar grupos después de asignar exitosamente
+      if (usarGrupos) {
+        cargarGrupos();
+      }
     } catch (err) {
       setError('Error al asignar la encuesta');
     } finally {
@@ -711,8 +726,37 @@ const GestionarAsignaciones = () => {
         <>
           {/* Modo Grupos de Destinatarios */}
           <div style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '5px'
+              }}
+            >
+              <label>
+                <strong>🎯 Grupos de Destinatarios:</strong>
+              </label>
+              <button
+                onClick={cargarGrupos}
+                disabled={cargandoGrupos}
+                style={{
+                  backgroundColor: '#17a2b8',
+                  color: 'white',
+                  border: 'none',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                {cargandoGrupos ? '🔄' : '🔄'} Recargar
+              </button>
+            </div>
             <label>
-              <strong>🎯 Grupos de Destinatarios:</strong>
               <br />
               <div
                 style={{
