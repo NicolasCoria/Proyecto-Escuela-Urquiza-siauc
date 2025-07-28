@@ -43,6 +43,15 @@ const Login = () => {
       return;
     }
 
+    // Validar que el email termine con el dominio educativo
+    if (!email.endsWith('@terciariourquiza.edu.ar')) {
+      setErrors({
+        email: 'El email debe ser de dominio educativo (@terciariourquiza.edu.ar)',
+        password: null
+      });
+      return;
+    }
+
     setIsLoading(true);
     setErrors({});
 
@@ -96,11 +105,19 @@ const Login = () => {
           password: 'Credenciales incorrectas'
         });
       } else if (err.response?.status === 422) {
-        const apiErrors = err.response.data.errors || {};
-        setErrors({
-          email: apiErrors.email?.[0] || null,
-          password: apiErrors.password?.[0] || null
-        });
+        // Manejar errores de validación específicos del backend
+        if (err.response.data.error && err.response.data.field === 'email') {
+          setErrors({
+            email: err.response.data.error,
+            password: null
+          });
+        } else {
+          const apiErrors = err.response.data.errors || {};
+          setErrors({
+            email: apiErrors.email?.[0] || null,
+            password: apiErrors.password?.[0] || null
+          });
+        }
       } else {
         setErrors({
           password: 'Error de conexión. Intente nuevamente.'

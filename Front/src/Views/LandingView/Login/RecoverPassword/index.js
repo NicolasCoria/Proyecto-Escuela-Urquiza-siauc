@@ -21,6 +21,16 @@ function RecoverPassword() {
     setIsLoading(true);
     setErrors({});
 
+    // Validar que el email termine con el dominio educativo
+    const email = emailRef.current.value.trim();
+    if (!email.endsWith('@terciariourquiza.edu.ar')) {
+      setErrors({
+        email: 'El email debe ser de dominio educativo (@terciariourquiza.edu.ar)'
+      });
+      setIsLoading(false);
+      return;
+    }
+
     const payload = {
       email: emailRef.current.value
     };

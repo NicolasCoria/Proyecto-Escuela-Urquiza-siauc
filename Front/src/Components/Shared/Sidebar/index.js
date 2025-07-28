@@ -177,6 +177,19 @@ const Sidebar = () => {
             </li>
             <li>
               <Link
+                to="/alumno/plan-estudio"
+                className={activeButton === 'alumno/plan-estudio' ? styles.activeBtn : styles.btn}
+                style={
+                  activeButton === 'alumno/plan-estudio'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
+              >
+                📚 Plan de Estudios
+              </Link>
+            </li>
+            <li>
+              <Link
                 to="/alumno/encuestas"
                 className={activeButton === 'alumno/encuestas' ? styles.activeBtn : styles.btn}
                 style={

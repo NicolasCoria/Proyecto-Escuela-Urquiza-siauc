@@ -5,6 +5,7 @@ import Profile from './Profile';
 import InscripcionesAlumno from './InscripcionesAlumno';
 import SolicitudesAlumno from './SolicitudesAlumno';
 import AlumnoFAQs from './FAQs';
+import PlanEstudio from './PlanEstudio';
 import { useStateContext } from '../../Components/Contexts';
 import DashboardAlumno from './Dashboard';
 
@@ -25,6 +26,7 @@ const AlumnoView = () => {
       <Route path="/inscripciones" element={<InscripcionesAlumno />} />
       <Route path="/solicitudes" element={<SolicitudesAlumno idAlumno={user?.id_alumno} />} />
       <Route path="/faqs" element={<AlumnoFAQs />} />
+      <Route path="/plan-estudio" element={<PlanEstudio />} />
     </Routes>
   );
 };
