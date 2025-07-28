@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CarreraController;
 use App\Http\Controllers\Api\InformeController;
 use App\Http\Controllers\Api\EncuestaController;
 use App\Http\Controllers\Api\GruposDestinatariosController;
+use App\Http\Controllers\Api\PlanEstudioController;
 use App\Http\Controllers\Solicitudes\SolicitudController;
 use App\Http\Controllers\Api\FaqController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/alumno/unidades-carrera', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesCarrera']);
     Route::get('/alumno/unidades-aprobadas', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesAprobadas']);
     
+    // Rutas para plan de estudios (CU-006)
+    Route::get('/alumno/plan-estudio', [PlanEstudioController::class, 'getPlanEstudioAlumno']);
+    Route::get('/alumno/plan-estudio/resumen', [PlanEstudioController::class, 'getResumenPlanEstudio']);
+    
     // Rutas para administrador - Informes
     Route::prefix('admin/informes')->group(function () {
         Route::get('/plantillas', [InformeController::class, 'getPlantillas']);
@@ -32,6 +37,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 // Rutas públicas para carreras
 Route::get('/carreras', [CarreraController::class, 'getAllCarreras']);
 Route::get('/carreras/{id}', [CarreraController::class, 'getCarreraById']);
+Route::get('/carreras/{id}/plan-estudio', [PlanEstudioController::class, 'getPlanEstudioCarrera']);
 
 Route::post('/alumnos/register', [AuthController::class, 'registerAlumno']);
 Route::post('/alumnos/login', [AuthController::class, 'loginAlumno']);

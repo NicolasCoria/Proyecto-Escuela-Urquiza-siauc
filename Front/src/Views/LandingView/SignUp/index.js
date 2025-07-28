@@ -52,6 +52,19 @@ const SignUp = () => {
     const fileInput = document.getElementById('fileInput');
     const file = fileInput.files[0];
 
+    // Validar que el email termine con el dominio educativo
+    const email = emailRef.current.value.trim();
+    if (!email.endsWith('@terciariourquiza.edu.ar')) {
+      setErrors({
+        name: null,
+        dni: null,
+        email: 'El email debe ser de dominio educativo (@terciariourquiza.edu.ar)',
+        password: null,
+        career: null
+      });
+      return;
+    }
+
     const payload = new FormData();
     payload.append('name', nameRef.current.value);
     payload.append('dni', dniRef.current.value);
@@ -64,7 +77,7 @@ const SignUp = () => {
       setIsLoading(true);
       setErrors({});
       try {
-        const { data } = await axiosClient.post('/signup', payload, {
+        const { data } = await axiosClient.post('/alumnos/register', payload, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -77,18 +90,29 @@ const SignUp = () => {
         navigate('/');
       } catch (err) {
         if (err.response && err.response.status === 422) {
-          const { errors: apiErrors } = err.response.data;
+          // Manejar errores de validación específicos del backend
+          if (err.response.data.error && err.response.data.field === 'email') {
+            setErrors({
+              name: null,
+              dni: null,
+              email: err.response.data.error,
+              password: null,
+              career: null
+            });
+          } else {
+            const { errors: apiErrors } = err.response.data;
 
-          setErrors({
-            name: apiErrors.name?.[0] || null,
-            dni: apiErrors.dni?.[0] || null,
-            email: apiErrors.email?.[0] || null,
-            password: apiErrors.password?.[0] || null,
-            career:
-              payload.career === ''
-                ? 'Seleccione una carrera válida'
-                : apiErrors.career?.[0] || null
-          });
+            setErrors({
+              name: apiErrors.name?.[0] || null,
+              dni: apiErrors.dni?.[0] || null,
+              email: apiErrors.email?.[0] || null,
+              password: apiErrors.password?.[0] || null,
+              career:
+                payload.career === ''
+                  ? 'Seleccione una carrera válida'
+                  : apiErrors.career?.[0] || null
+            });
+          }
         }
         openModal({
           description: 'Se produjo un error en el registro',

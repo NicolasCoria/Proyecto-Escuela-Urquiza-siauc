@@ -27,6 +27,14 @@ class AuthController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
+        // Validar que el email termine con el dominio educativo
+        if (!str_ends_with($validated['email'], '@terciariourquiza.edu.ar')) {
+            return response()->json([
+                'error' => 'El email debe ser de dominio educativo (@terciariourquiza.edu.ar)',
+                'field' => 'email'
+            ], 422);
+        }
+
         $alumno = new \App\Models\Alumno();
         $alumno->nombre = $validated['nombre'];
         $alumno->apellido = $validated['apellido'];
@@ -51,6 +59,14 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
+
+        // Validar que el email termine con el dominio educativo
+        if (!str_ends_with($validated['email'], '@terciariourquiza.edu.ar')) {
+            return response()->json([
+                'error' => 'El email debe ser de dominio educativo (@terciariourquiza.edu.ar)',
+                'field' => 'email'
+            ], 422);
+        }
 
         $startQuery = microtime(true);
         $alumno = \App\Models\Alumno::where('email', $validated['email'])->first();
