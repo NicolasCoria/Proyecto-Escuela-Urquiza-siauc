@@ -390,4 +390,57 @@ class GruposDestinatariosController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Obtener alumnos de grupos específicos
+     */
+    public function obtenerAlumnosDeGrupos(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'grupos' => 'required|array|min:1',
+                'grupos.*' => 'integer|exists:grupos_destinatarios,id_grupo'
+            ]);
+
+            // Obtener todos los alumnos de los grupos seleccionados
+            $alumnosIds = DB::table('grupo_destinatario_alumno')
+                ->whereIn('id_grupo', $validated['grupos'])
+                ->pluck('id_alumno')
+                ->unique()
+                ->toArray();
+
+            if (empty($alumnosIds)) {
+                return response()->json([
+                    'success' => true,
+                    'alumnos' => [],
+                    'total' => 0
+                ]);
+            }
+
+            // Obtener información completa de los alumnos
+            $alumnos = DB::table('alumno as a')
+                ->select([
+                    'a.id_alumno',
+                    'a.nombre',
+                    'a.apellido',
+                    'a.email'
+                ])
+                ->whereIn('a.id_alumno', $alumnosIds)
+                ->orderBy('a.apellido')
+                ->orderBy('a.nombre')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'alumnos' => $alumnos,
+                'total' => $alumnos->count()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener alumnos de grupos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

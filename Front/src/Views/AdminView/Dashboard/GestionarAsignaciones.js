@@ -177,7 +177,7 @@ const GestionarAsignaciones = () => {
         }
 
         const params = { grupos: selectedGrupos };
-        const res = await axiosClient.post('/grupos-destinatarios/filtrar-alumnos', params);
+        const res = await axiosClient.post('/grupos-destinatarios/obtener-alumnos', params);
         setAlumnos(res.data.alumnos || []);
       } else {
         // Modo normal: filtrar por carrera/año/materia
@@ -366,6 +366,9 @@ const GestionarAsignaciones = () => {
     selectedEncuesta &&
     alumnos.length > 0 &&
     (usarGrupos ? selectedGrupos.length > 0 : selectedCarrera);
+
+  // Determinar si mostrar el mensaje de error de carrera
+  const mostrarErrorCarrera = !usarGrupos && !selectedCarrera && selectedEncuesta;
 
   return (
     <div style={{ background: '#f9f9f9', padding: 24, borderRadius: 8, marginBottom: 32 }}>
@@ -837,21 +840,40 @@ const GestionarAsignaciones = () => {
               </div>
             </label>
           </div>
-          <button
-            onClick={handleFiltrarAlumnos}
-            disabled={selectedGrupos.length === 0 || loading}
-            style={{
-              marginBottom: 20,
-              backgroundColor: '#007bff',
-              color: 'white',
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer'
-            }}
-          >
-            Filtrar Alumnos por Grupos
-          </button>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: 20 }}>
+            <button
+              onClick={handleAsignar}
+              disabled={!puedeAsignar || loading}
+              style={{
+                backgroundColor: '#28a745',
+                color: 'white',
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                flex: 1
+              }}
+            >
+              {selectedAlumnos.length > 0
+                ? `📤 Enviar a ${selectedAlumnos.length} alumno(s)`
+                : '📤 Enviar Encuesta'}
+            </button>
+            <button
+              onClick={handleFiltrarAlumnos}
+              disabled={selectedGrupos.length === 0 || loading}
+              style={{
+                backgroundColor: '#007bff',
+                color: 'white',
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                flex: 1
+              }}
+            >
+              👥 Ver Alumnos
+            </button>
+          </div>
           {alumnos.length > 0 && (
             <div style={{ marginBottom: 20 }}>
               <strong>Alumnos de grupos seleccionados:</strong>
@@ -889,25 +911,14 @@ const GestionarAsignaciones = () => {
           )}
         </>
       )}
-      <button
-        onClick={handleAsignar}
-        disabled={!puedeAsignar || loading}
-        style={{
-          backgroundColor: '#28a745',
-          color: 'white',
-          padding: '10px 20px',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: loading ? 'not-allowed' : 'pointer'
-        }}
-      >
-        {selectedAlumnos.length > 0
-          ? `Asignar a ${selectedAlumnos.length} alumno(s)`
-          : 'Asignar a todos los filtrados'}
-      </button>
-      {!selectedCarrera && (
-        <div style={{ color: 'orange', marginTop: 10 }}>
-          Debes seleccionar una carrera para asignar esta encuesta.
+      {mostrarErrorCarrera && (
+        <div style={{ color: 'red', marginTop: 10, fontWeight: 'bold' }}>
+          ⚠️ Debes seleccionar una carrera para asignar esta encuesta usando filtros.
+        </div>
+      )}
+      {usarGrupos && selectedEncuesta && (
+        <div style={{ color: '#17a2b8', marginTop: 10, fontWeight: 'bold' }}>
+          ℹ️ Modo Grupos: Selecciona los grupos de destinatarios y luego envía la encuesta.
         </div>
       )}
       {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}

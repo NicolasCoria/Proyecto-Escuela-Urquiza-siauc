@@ -9,6 +9,9 @@ class AlumnoEncuesta extends Model
     protected $table = 'alumno_encuesta';
     public $incrementing = false;
     public $timestamps = false;
+    
+    // Configurar clave primaria compuesta
+    protected $primaryKey = null;
 
     protected $casts = [
         'id_alumno' => 'int',

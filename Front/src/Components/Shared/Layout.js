@@ -15,6 +15,7 @@ const Layout = ({ children }) => {
 
   // No mostrar Sidebar en rutas de admin
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const shouldShowSidebar = !isAdminRoute;
 
   console.log('user:', user);
   console.log('carrera:', carrera);
@@ -22,6 +23,7 @@ const Layout = ({ children }) => {
   console.log('sidebarThemes:', sidebarThemes);
   console.log('theme usado:', theme);
   console.log('isAdminRoute:', isAdminRoute);
+  console.log('shouldShowSidebar:', shouldShowSidebar);
 
   useEffect(() => {
     document.body.style.background = theme.soft;
@@ -40,8 +42,9 @@ const Layout = ({ children }) => {
         flexWrap: 'wrap'
       }}
     >
-      {!isAdminRoute && <Sidebar theme={theme} />}
+      {shouldShowSidebar && <Sidebar theme={theme} />}
       <main
+        className={!user ? 'no-sidebar' : ''}
         style={{
           flex: 1,
           padding: isAdminRoute ? '0' : '48px 0',
@@ -54,7 +57,7 @@ const Layout = ({ children }) => {
           flexDirection: isAdminRoute ? 'unset' : 'column',
           alignItems: isAdminRoute ? 'unset' : 'center',
           justifyContent: isAdminRoute ? 'unset' : 'center',
-          marginLeft: isAdminRoute ? '0' : '220px'
+          marginLeft: isAdminRoute || !user ? '0' : '240px'
         }}
       >
         <div
@@ -78,18 +81,24 @@ const Layout = ({ children }) => {
         @media (max-width: 900px) {
           main {
             padding: 16px 4px !important;
-            margin-left: 180px !important;
+            margin-left: 200px !important;
+          }
+          main.no-sidebar {
+            margin-left: 0 !important;
           }
         }
         @media (max-width: 600px) {
-          .${'sidebarBase'} {
-            min-width: 60px !important;
-            width: 60px !important;
-            padding-top: 8px !important;
+          .sidebarBase {
+            min-width: 70px !important;
+            width: 70px !important;
+            padding-top: 20px !important;
           }
           main {
             padding: 8px 2px !important;
-            margin-left: 60px !important;
+            margin-left: 70px !important;
+          }
+          main.no-sidebar {
+            margin-left: 0 !important;
           }
         }
       `}</style>

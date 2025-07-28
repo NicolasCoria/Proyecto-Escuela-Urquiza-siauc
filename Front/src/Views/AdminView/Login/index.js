@@ -95,6 +95,9 @@ const AdminLogin = () => {
       <div className={styles.loginContainer}>
         <div className={styles.loginCard}>
           <div className={styles.loginHeader}>
+            <div className={styles.logoContainer}>
+              <img src="/assets/images/logoTS.png" alt="Logo Escuela" className={styles.logo} />
+            </div>
             <h1 className={styles.loginTitle}>Panel de Administración</h1>
             <p className={styles.loginSubtitle}>Inicia sesión como administrador</p>
           </div>

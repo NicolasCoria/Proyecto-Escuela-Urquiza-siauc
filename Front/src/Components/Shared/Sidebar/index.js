@@ -7,6 +7,18 @@ import { useModalContext } from '../../Contexts';
 import Modal from '../Modal';
 import Spinner from '../Spinner';
 import sidebarThemes from './sidebarTheme';
+import {
+  FaUser,
+  FaEdit,
+  FaGraduationCap,
+  FaChartBar,
+  FaClipboardList,
+  FaQuestionCircle,
+  FaSignOutAlt,
+  FaSignInAlt,
+  FaHome,
+  FaGraduationCap as FaCarreras
+} from 'react-icons/fa';
 
 const getTheme = (user, carrera) => {
   if (!user) return sidebarThemes.guest;
@@ -102,7 +114,8 @@ const Sidebar = () => {
                 className={activeButton === 'login' ? styles.activeBtn : styles.btn}
                 style={{ color: theme.primary }}
               >
-                Login
+                <FaSignInAlt className={styles.icon} />
+                <span>Login</span>
               </Link>
             </li>
             <li>
@@ -111,7 +124,8 @@ const Sidebar = () => {
                 className={activeButton === 'home' ? styles.activeBtn : styles.btn}
                 style={{ color: theme.primary }}
               >
-                Home
+                <FaHome className={styles.icon} />
+                <span>Home</span>
               </Link>
             </li>
             <li>
@@ -120,7 +134,8 @@ const Sidebar = () => {
                 className={activeButton === 'carreras' ? styles.activeBtn : styles.btn}
                 style={{ color: theme.primary }}
               >
-                Carreras
+                <FaCarreras className={styles.icon} />
+                <span>Carreras</span>
               </Link>
             </li>
           </ul>
@@ -159,7 +174,8 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                👤 Perfil
+                <FaUser className={styles.icon} />
+                <span>Perfil</span>
               </Link>
             </li>
             <li>
@@ -172,7 +188,8 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                📝 Inscripción a UC
+                <FaEdit className={styles.icon} />
+                <span>Inscripción a UC</span>
               </Link>
             </li>
             <li>
@@ -185,7 +202,8 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                📚 Plan de Estudios
+                <FaGraduationCap className={styles.icon} />
+                <span>Plan de Estudios</span>
               </Link>
             </li>
             <li>
@@ -198,7 +216,8 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                📊 Encuestas Académicas
+                <FaChartBar className={styles.icon} />
+                <span>Encuestas Académicas</span>
               </Link>
             </li>
             <li>
@@ -211,7 +230,8 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                📋 Solicitudes
+                <FaClipboardList className={styles.icon} />
+                <span>Solicitudes</span>
               </Link>
             </li>
             <li>
@@ -224,7 +244,8 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                ❓ FAQs
+                <FaQuestionCircle className={styles.icon} />
+                <span>FAQs</span>
               </Link>
             </li>
           </ul>
@@ -243,7 +264,8 @@ const Sidebar = () => {
                     : { color: theme.primary }
                 }
               >
-                Salir
+                <FaSignOutAlt className={styles.icon} />
+                <span>Salir</span>
               </a>
             </li>
           </div>
