@@ -293,17 +293,17 @@
     gap: 15px;
     text-align: center;
   }
-  
+
   .userInfo {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .formatOptions {
     flex-direction: column;
   }
-  
+
   .plantillasGrid {
     grid-template-columns: 1fr;
   }
-} 
+}

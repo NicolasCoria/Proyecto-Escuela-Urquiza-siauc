@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Modal from '../../../Components/Shared/Modal';
 import Spinner from '../../../Components/Shared/Spinner';
 import axiosClient from '../../../Components/Shared/Axios';
-import { FaEyeSlash, FaEye } from 'react-icons/fa';
+import { FaEyeSlash, FaEye, FaEnvelope, FaLock, FaGraduationCap } from 'react-icons/fa';
 import { useStateContext, useModalContext } from '../../../Components/Contexts';
 
 const Login = () => {
@@ -137,15 +137,30 @@ const Login = () => {
       ) : null}
 
       <div className={styles.loginContainer}>
+        {/* Partículas flotantes */}
+        <div className={styles.particles}>
+          <div className={styles.particle}></div>
+          <div className={styles.particle}></div>
+          <div className={styles.particle}></div>
+          <div className={styles.particle}></div>
+          <div className={styles.particle}></div>
+        </div>
+
         <div className={styles.loginCard}>
           <div className={styles.loginHeader}>
+            <div className={styles.logoContainer}>
+              <img src="/assets/images/logoTS.png" alt="Logo Escuela" className={styles.logo} />
+            </div>
             <h1 className={styles.loginTitle}>Iniciar Sesión</h1>
             <p className={styles.loginSubtitle}>Accede a tu cuenta para continuar</p>
           </div>
 
           <form onSubmit={onSubmit} className={styles.formSection}>
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>Correo Electrónico</label>
+              <label className={styles.inputLabel}>
+                <FaEnvelope className={styles.inputIcon} />
+                Correo Electrónico
+              </label>
               <input
                 type="email"
                 className={`${styles.inputField} ${errors.email ? styles.error : ''}`}
@@ -157,7 +172,10 @@ const Login = () => {
             </div>
 
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>Contraseña</label>
+              <label className={styles.inputLabel}>
+                <FaLock className={styles.inputIcon} />
+                Contraseña
+              </label>
               <div className={styles.passwordContainer}>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -179,6 +197,7 @@ const Login = () => {
 
             <div className={styles.linksSection}>
               <Link to="/signup" className={styles.link}>
+                <FaGraduationCap className={styles.linkIcon} />
                 ¿No tenés una cuenta? Registrate
               </Link>
               <Link to="/recover-password" className={styles.link}>

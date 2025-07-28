@@ -58,6 +58,7 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/alumno/encuestas', [EncuestaController::class, 'encuestasAsignadas']); // Obtener encuestas asignadas al alumno
     Route::post('/alumno/encuestas/marcar-notificada', [EncuestaController::class, 'marcarNotificada']); // Marcar como notificada
+    Route::post('/encuestas/responder', [EncuestaController::class, 'responder']); // Guardar respuestas de alumno
     Route::get('solicitudes', [SolicitudController::class, 'index']);
     Route::post('solicitudes', [SolicitudController::class, 'store']);
     Route::post('solicitudes/{id}/marcar-visto', [SolicitudController::class, 'marcarEstadoVisto']);
@@ -71,6 +72,7 @@ Route::put('/grupos-destinatarios/{id}', [GruposDestinatariosController::class, 
 Route::delete('/grupos-destinatarios/{id}', [GruposDestinatariosController::class, 'destroy']); // Eliminar grupo
 Route::get('/grupos-destinatarios/datos/creacion', [GruposDestinatariosController::class, 'getDatosCreacion']); // Datos para crear
 Route::post('/grupos-destinatarios/filtrar-alumnos', [GruposDestinatariosController::class, 'filtrarAlumnos']); // Filtrar alumnos
+Route::post('/grupos-destinatarios/obtener-alumnos', [GruposDestinatariosController::class, 'obtenerAlumnosDeGrupos']); // Obtener alumnos de grupos
 
 // Rutas para encuestas académicas (CU-005)
 Route::get('/encuestas', [EncuestaController::class, 'index']); // Listar encuestas activas con preguntas y opciones
@@ -78,7 +80,6 @@ Route::get('/encuestas/{id}', [EncuestaController::class, 'show']); // Obtener u
 Route::post('/encuestas', [EncuestaController::class, 'store']); // Crear encuesta completa
 Route::put('/encuestas/{id}', [EncuestaController::class, 'update']); // Actualizar encuesta
 Route::delete('/encuestas/{id}', [EncuestaController::class, 'destroy']); // Eliminar encuesta
-Route::post('/encuestas/responder', [EncuestaController::class, 'responder']); // Guardar respuestas de alumno
 Route::get('/encuestas/{id}/estadisticas', [EncuestaController::class, 'estadisticas']); // Estadísticas de encuesta
 
 // Nuevas rutas para asignación de encuestas

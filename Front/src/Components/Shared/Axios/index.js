@@ -24,8 +24,11 @@ axiosClient.interceptors.response.use(
   },
   (error) => {
     const { response } = error;
+
     if (response && response.status === 401) {
       sessionStorage.removeItem('ACCESS_TOKEN');
+      sessionStorage.removeItem('role');
+      sessionStorage.removeItem('user');
     }
     throw error;
   }

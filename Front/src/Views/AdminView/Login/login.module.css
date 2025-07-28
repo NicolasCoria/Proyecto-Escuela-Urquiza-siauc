@@ -25,6 +25,28 @@
   margin-bottom: 2.5rem;
 }
 
+.logoContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  cursor: pointer;
+}
+
+.logo:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+  border-color: rgba(102, 126, 234, 0.4);
+}
+
 .loginTitle {
   font-size: 2.2rem;
   color: #2c3e50;
@@ -213,16 +235,16 @@
   .loginContainer {
     padding: 1rem;
   }
-  
+
   .loginCard {
     padding: 2rem;
     margin: 1rem;
   }
-  
+
   .loginTitle {
     font-size: 1.8rem;
   }
-  
+
   .submitButton {
     padding: 12px 20px;
     font-size: 1rem;
@@ -233,14 +255,14 @@
   .loginCard {
     padding: 1.5rem;
   }
-  
+
   .loginTitle {
     font-size: 1.6rem;
   }
-  
+
   .inputField,
   .passwordInput {
     padding: 10px 14px;
     font-size: 0.9rem;
   }
-} 
+}

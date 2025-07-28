@@ -300,10 +300,12 @@ class EncuestaController extends Controller
             Respuesta::insert($toInsert);
 
             // Marcar la encuesta como respondida
-            $asignacion->update([
-                'respondida' => true,
-                'fecha_respuesta' => now()
-            ]);
+            AlumnoEncuesta::where('id_alumno', $idAlumno)
+                ->where('id_encuesta', $validated['id_encuesta'])
+                ->update([
+                    'respondida' => true,
+                    'fecha_respuesta' => now()
+                ]);
 
             DB::commit();
 
@@ -491,6 +493,7 @@ class EncuestaController extends Controller
                     'id_encuesta' => $alumnoEncuesta->encuesta->id_encuesta,
                     'titulo' => $alumnoEncuesta->encuesta->titulo,
                     'descripcion' => $alumnoEncuesta->encuesta->descripcion,
+                    'activa' => $alumnoEncuesta->encuesta->activa,
                     'fecha_inicio' => $alumnoEncuesta->encuesta->fecha_inicio,
                     'fecha_fin' => $alumnoEncuesta->encuesta->fecha_fin,
                     'preguntas' => $alumnoEncuesta->encuesta->preguntas,
