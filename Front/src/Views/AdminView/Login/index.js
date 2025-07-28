@@ -8,7 +8,7 @@ import { FaEyeSlash, FaEye } from 'react-icons/fa';
 import { useStateContext, useModalContext } from '../../../Components/Contexts';
 
 const AdminLogin = () => {
-  const { openModal, modalState } = useModalContext();
+  const { modalState, closeModal } = useModalContext();
   const { setUser, setTokenAndRole } = useStateContext();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +35,15 @@ const AdminLogin = () => {
       return;
     }
 
+    // Validar que el email termine con el dominio educativo
+    if (!email.endsWith('@terciariourquiza.edu.ar')) {
+      setErrors({
+        email: 'El email debe ser de dominio educativo (@terciariourquiza.edu.ar)',
+        password: null
+      });
+      return;
+    }
+
     setIsLoading(true);
     setErrors({});
 
@@ -51,16 +60,13 @@ const AdminLogin = () => {
       // Ocultar spinner inmediatamente
       setIsLoading(false);
 
+      // Limpiar cualquier modal abierto
+      closeModal();
+
       // Navegar inmediatamente
       navigate('/admin/dashboard');
 
-      // Mostrar modal de éxito después de un breve delay
-      setTimeout(() => {
-        openModal({
-          description: 'Sesión de administrador iniciada correctamente',
-          chooseModal: false
-        });
-      }, 500);
+      // No mostrar modal de éxito para mantener consistencia con login de alumnos
     } catch (err) {
       console.error('Login error:', err);
 

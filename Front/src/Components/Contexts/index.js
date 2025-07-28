@@ -239,11 +239,51 @@ export const ModalProvider = ({ children }) => {
     onClick: null
   });
 
+  // Limpiar modal cuando cambia la ruta
+  useEffect(() => {
+    const handleRouteChange = () => {
+      if (modalState.isOpen) {
+        setModalState({
+          isOpen: false,
+          description: '',
+          title: '',
+          confirmBtn: '',
+          denyBtn: '',
+          noButton: false,
+          chooseModal: false,
+          onClick: null
+        });
+      }
+    };
+
+    // Escuchar cambios en la URL
+    window.addEventListener('popstate', handleRouteChange);
+
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+    };
+  }, [modalState.isOpen]);
+
   const openModal = (modalConfig) => {
+    // Limpiar estado anterior antes de abrir nuevo modal
     setModalState({
-      isOpen: true,
-      ...modalConfig
+      isOpen: false,
+      description: '',
+      title: '',
+      confirmBtn: '',
+      denyBtn: '',
+      noButton: false,
+      chooseModal: false,
+      onClick: null
     });
+
+    // Pequeño delay para asegurar que el estado anterior se limpie
+    setTimeout(() => {
+      setModalState({
+        isOpen: true,
+        ...modalConfig
+      });
+    }, 50);
   };
 
   const closeModal = () => {

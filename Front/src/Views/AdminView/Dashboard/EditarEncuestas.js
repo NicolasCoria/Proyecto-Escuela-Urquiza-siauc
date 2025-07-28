@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../../../Components/Shared/Axios';
 import Spinner from '../../../Components/Shared/Spinner';
+import styles from './dashboard.module.css';
 
 const EditarEncuestas = () => {
   const [encuestas, setEncuestas] = useState([]);
@@ -186,71 +187,52 @@ const EditarEncuestas = () => {
       <h3>Editar Encuestas Existentes</h3>
 
       {error && (
-        <div
-          style={{
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
-            padding: '10px',
-            borderRadius: '4px',
-            marginBottom: '20px'
-          }}
-        >
-          ❌ {error}
-        </div>
+        <div className={`${styles.statusMessage} ${styles['statusMessage.error']}`}>❌ {error}</div>
       )}
 
       {success && (
-        <div
-          style={{
-            backgroundColor: '#d4edda',
-            color: '#155724',
-            padding: '10px',
-            borderRadius: '4px',
-            marginBottom: '20px'
-          }}
-        >
+        <div className={`${styles.statusMessage} ${styles['statusMessage.success']}`}>
           ✅ {success}
         </div>
       )}
 
       {!editando ? (
         <div>
-          <div style={{ marginBottom: 20 }}>
+          <div className={styles.selectGroup}>
             <label>
               <strong>Seleccionar Encuesta para Editar:</strong>
-              <br />
-              {loadingEncuestas ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    padding: '20px',
-                    minHeight: '100px'
-                  }}
-                >
-                  <Spinner />
-                </div>
-              ) : (
-                <select
-                  value={selectedEncuesta?.id_encuesta || ''}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleSeleccionarEncuesta(parseInt(e.target.value));
-                    } else {
-                      setSelectedEncuesta(null);
-                    }
-                  }}
-                  style={{ width: '100%', marginTop: 5 }}
-                >
-                  <option value="">Selecciona una encuesta</option>
-                  {encuestas.map((encuesta) => (
-                    <option key={encuesta.id_encuesta} value={encuesta.id_encuesta}>
-                      {encuesta.titulo} - {encuesta.activa ? 'Activa' : 'Inactiva'}
-                    </option>
-                  ))}
-                </select>
-              )}
             </label>
+            {loadingEncuestas ? (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  padding: '20px',
+                  minHeight: '100px'
+                }}
+              >
+                <Spinner />
+              </div>
+            ) : (
+              <select
+                value={selectedEncuesta?.id_encuesta || ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    handleSeleccionarEncuesta(parseInt(e.target.value));
+                  } else {
+                    setSelectedEncuesta(null);
+                  }
+                }}
+                className={styles.select}
+              >
+                <option value="">Selecciona una encuesta</option>
+                {encuestas.map((encuesta) => (
+                  <option key={encuesta.id_encuesta} value={encuesta.id_encuesta}>
+                    {encuesta.titulo} - {encuesta.activa ? 'Activa' : 'Inactiva'}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {loadingEncuesta ? (
@@ -284,30 +266,12 @@ const EditarEncuestas = () => {
                 <p>
                   <strong>Preguntas:</strong> {selectedEncuesta.preguntas?.length || 0}
                 </p>
-                <button
-                  onClick={() => setEditando(true)}
-                  style={{
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    marginRight: '10px'
-                  }}
-                >
+                <button onClick={() => setEditando(true)} className={styles.actionButton}>
                   ✏️ Editar
                 </button>
                 <button
                   onClick={handleEliminar}
-                  style={{
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
+                  className={`${styles.actionButton} ${styles['actionButton.danger']}`}
                 >
                   🗑️ Eliminar
                 </button>
@@ -319,62 +283,58 @@ const EditarEncuestas = () => {
         <div>
           <div style={{ marginBottom: 20 }}>
             <h4>Editando: {selectedEncuesta?.titulo}</h4>
-            <div style={{ marginBottom: 12 }}>
+            <div className={styles.selectGroup}>
               <label>
-                Título:
-                <br />
-                <input
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                  required
-                  style={{ width: '100%' }}
-                />
+                <strong>Título:</strong>
               </label>
+              <input
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                required
+                className={styles.select}
+              />
             </div>
-            <div style={{ marginBottom: 12 }}>
+            <div className={styles.selectGroup}>
               <label>
-                Descripción:
-                <br />
-                <textarea
-                  value={descripcion}
-                  onChange={(e) => setDescripcion(e.target.value)}
-                  style={{ width: '100%' }}
-                />
+                <strong>Descripción:</strong>
               </label>
+              <textarea
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                className={styles.textarea}
+              />
             </div>
-            <div style={{ marginBottom: 12 }}>
+            <div className={styles.selectGroup}>
               <label>
-                Fecha inicio:
-                <br />
-                <input
-                  type="date"
-                  value={fechaInicio}
-                  onChange={(e) => setFechaInicio(e.target.value)}
-                  style={{ width: '100%' }}
-                />
+                <strong>Fecha inicio:</strong>
               </label>
+              <input
+                type="date"
+                value={fechaInicio}
+                onChange={(e) => setFechaInicio(e.target.value)}
+                className={styles.select}
+              />
             </div>
-            <div style={{ marginBottom: 12 }}>
+            <div className={styles.selectGroup}>
               <label>
-                Fecha fin:
-                <br />
-                <input
-                  type="date"
-                  value={fechaFin}
-                  onChange={(e) => setFechaFin(e.target.value)}
-                  style={{ width: '100%' }}
-                />
+                <strong>Fecha fin:</strong>
               </label>
+              <input
+                type="date"
+                value={fechaFin}
+                onChange={(e) => setFechaFin(e.target.value)}
+                className={styles.select}
+              />
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <label>
-                Activa:
+            <div className={styles.selectGroup}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input
                   type="checkbox"
                   checked={activa}
                   onChange={(e) => setActiva(e.target.checked)}
-                  style={{ marginLeft: 8 }}
+                  style={{ width: '16px', height: '16px' }}
                 />
+                <strong>Activa</strong>
               </label>
             </div>
           </div>
@@ -399,7 +359,7 @@ const EditarEncuestas = () => {
                   onChange={(e) => handlePreguntaChange(idx, 'texto', e.target.value)}
                   placeholder="Texto de la pregunta"
                   required
-                  style={{ width: '100%' }}
+                  className={styles.select}
                 />
               </div>
               <div style={{ marginBottom: 8 }}>
@@ -408,7 +368,8 @@ const EditarEncuestas = () => {
                   <select
                     value={pregunta.tipo}
                     onChange={(e) => handlePreguntaChange(idx, 'tipo', e.target.value)}
-                    style={{ marginLeft: 8 }}
+                    className={styles.select}
+                    style={{ marginLeft: 8, width: 'auto' }}
                   >
                     <option value="opcion_unica">Opción única</option>
                     <option value="opcion_multiple">Opción múltiple</option>
@@ -420,21 +381,23 @@ const EditarEncuestas = () => {
                 {pregunta.opciones.map((opcion, idxOpcion) => (
                   <div
                     key={idxOpcion}
-                    style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}
+                    style={{ display: 'flex', alignItems: 'center', marginBottom: 4, gap: 8 }}
                   >
                     <input
                       value={opcion.texto}
                       onChange={(e) => handleOpcionChange(idx, idxOpcion, 'texto', e.target.value)}
                       placeholder={`Opción ${idxOpcion + 1}`}
                       required
-                      style={{ marginRight: 8 }}
+                      className={styles.select}
+                      style={{ flex: 1 }}
                     />
                     <input
                       type="number"
                       value={opcion.valor}
                       onChange={(e) => handleOpcionChange(idx, idxOpcion, 'valor', e.target.value)}
                       placeholder="Valor (opcional)"
-                      style={{ width: 80, marginRight: 8 }}
+                      className={styles.select}
+                      style={{ width: 100 }}
                     />
                     <button
                       type="button"
@@ -458,27 +421,17 @@ const EditarEncuestas = () => {
           <button
             onClick={handleGuardar}
             disabled={loading}
-            style={{
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              marginRight: '10px'
-            }}
+            className={`${styles.actionButton} ${styles['actionButton.success']}`}
+            style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
           >
             {loading ? 'Guardando...' : '💾 Guardar Cambios'}
           </button>
           <button
             onClick={handleCancelar}
             disabled={loading}
+            className={styles.actionButton}
             style={{
               backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '4px',
               cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >

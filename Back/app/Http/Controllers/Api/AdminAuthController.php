@@ -19,6 +19,14 @@ class AdminAuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Validar que el email termine con el dominio educativo
+        if (!str_ends_with($validated['email'], '@terciariourquiza.edu.ar')) {
+            return response()->json([
+                'error' => 'El email debe ser de dominio educativo (@terciariourquiza.edu.ar)',
+                'field' => 'email'
+            ], 422);
+        }
+
         $admin = Administrador::where('email', $validated['email'])->first();
         
         if (!$admin || !Hash::check($validated['password'], $admin->password)) {
@@ -46,6 +54,14 @@ class AdminAuthController extends Controller
             'email' => 'required|email|unique:administrador,email',
             'password' => 'required|string|min:6',
         ]);
+
+        // Validar que el email termine con el dominio educativo
+        if (!str_ends_with($validated['email'], '@terciariourquiza.edu.ar')) {
+            return response()->json([
+                'error' => 'El email debe ser de dominio educativo (@terciariourquiza.edu.ar)',
+                'field' => 'email'
+            ], 422);
+        }
 
         $admin = new Administrador();
         $admin->nombre = $validated['nombre'];

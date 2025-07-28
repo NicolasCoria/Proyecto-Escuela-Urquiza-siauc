@@ -13,6 +13,7 @@ import Login from '../Views/LandingView/Login';
 import AdminLogin from '../Views/AdminView/Login';
 import AdminDashboard from '../Views/AdminView/Dashboard';
 import AdminInformes from '../Views/AdminView/Informes';
+import AdminProfile from '../Views/AdminView/Profile';
 import AdminLayout from '../Components/Shared/AdminLayout';
 import Layout from '../Components/Shared/Layout';
 import SolicitudesAdmin from '../Views/AdminView/Solicitudes';
@@ -58,10 +59,12 @@ const RoutesLanding = () => {
             </ProtectedRoute>
           }
         >
+          <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="informes" element={<AdminInformes />} />
           <Route path="solicitudes" element={<SolicitudesAdmin />} />
           <Route path="faqs" element={<AdminFAQs />} />
+          <Route path="profile" element={<AdminProfile />} />
         </Route>
 
         <Route path="*" element={<Error404 />} />

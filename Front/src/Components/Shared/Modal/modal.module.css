@@ -19,18 +19,24 @@
   width: 71%;
   max-width: 370px;
   margin: 0 20px;
-  box-shadow: 3px 3px 10px;
-  border-radius: 10px;
-  background-color: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  animation: modalSlideIn 0.3s ease-out;
 }
 
 .icon {
   position: relative;
   bottom: 25px;
-  border-radius: 30px;
+  border-radius: 50%;
   font-size: 60px;
-  background-color: #fff;
-  color: rgb(212, 30, 30);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  padding: 15px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  border: 3px solid #fff;
 }
 
 .logoContainer {
@@ -40,18 +46,22 @@
 }
 
 .title {
-  padding-bottom: 10px;
+  padding-bottom: 15px;
   text-align: center;
   font-weight: 700;
-  font-size: 1.4rem;
-  border-bottom: 2px solid;
+  font-size: 1.5rem;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 15px;
 }
 
 .subTitle {
-  margin: 10px 5px;
+  margin: 15px 5px;
   text-align: center;
-  font-size: 1.2rem;
-  font-style: italic;
+  font-size: 1.1rem;
+  color: #4a5568;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .containerSelfClose {
@@ -134,7 +144,8 @@
 .btnsContainer {
   display: flex;
   justify-content: space-between;
-  margin-top: 30px;
+  gap: 15px;
+  margin-top: 25px;
 }
 
 .btnsContainerConfirm {
@@ -170,5 +181,16 @@
   }
   100% {
     opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axiosClient from '../../../Components/Shared/Axios';
+import styles from './dashboard.module.css';
 
 const defaultPregunta = () => ({
   texto: '',
@@ -96,76 +97,62 @@ const EncuestaForm = ({ onSuccess }) => {
       style={{ marginBottom: 32, background: '#f9f9f9', padding: 24, borderRadius: 8 }}
     >
       <h3>Cargar nueva encuesta académica</h3>
-      <div style={{ marginBottom: 12 }}>
+      <div className={styles.selectGroup}>
         <label>
-          Título:
-          <br />
-          <input
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            required
-            style={{ width: '100%' }}
-          />
+          <strong>Título:</strong>
         </label>
+        <input
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          required
+          className={styles.select}
+        />
       </div>
-      <div style={{ marginBottom: 12 }}>
+      <div className={styles.selectGroup}>
         <label>
-          Descripción:
-          <br />
-          <textarea
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            style={{ width: '100%' }}
-          />
+          <strong>Descripción:</strong>
         </label>
+        <textarea
+          value={descripcion}
+          onChange={(e) => setDescripcion(e.target.value)}
+          className={styles.textarea}
+        />
       </div>
-      <div style={{ marginBottom: 12 }}>
+      <div className={styles.selectGroup}>
         <label>
-          Fecha inicio:
-          <br />
-          <input
-            type="date"
-            value={fechaInicio}
-            onChange={(e) => setFechaInicio(e.target.value)}
-            style={{ width: '100%' }}
-          />
+          <strong>Fecha inicio:</strong>
         </label>
+        <input
+          type="date"
+          value={fechaInicio}
+          onChange={(e) => setFechaInicio(e.target.value)}
+          className={styles.select}
+        />
       </div>
-      <div style={{ marginBottom: 12 }}>
+      <div className={styles.selectGroup}>
         <label>
-          Fecha fin:
-          <br />
-          <input
-            type="date"
-            value={fechaFin}
-            onChange={(e) => setFechaFin(e.target.value)}
-            style={{ width: '100%' }}
-          />
+          <strong>Fecha fin:</strong>
         </label>
+        <input
+          type="date"
+          value={fechaFin}
+          onChange={(e) => setFechaFin(e.target.value)}
+          className={styles.select}
+        />
       </div>
-      <div style={{ marginBottom: 12 }}>
-        <label>
-          Activa:
+      <div className={styles.selectGroup}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input
             type="checkbox"
             checked={activa}
             onChange={(e) => setActiva(e.target.checked)}
-            style={{ marginLeft: 8 }}
+            style={{ width: '16px', height: '16px' }}
           />
+          <strong>Activa</strong>
         </label>
       </div>
 
-      <div
-        style={{
-          backgroundColor: '#e3f2fd',
-          color: '#1976d2',
-          padding: '12px',
-          borderRadius: '6px',
-          marginBottom: '16px',
-          fontSize: '14px',
-          border: '1px solid #bbdefb'
-        }}
-      >
+      <div className={styles.info}>
         🌐 <strong>Encuesta Global:</strong> Esta encuesta se creará como global y podrás asignarla
         a carreras específicas desde &quot;Gestionar Asignaciones&quot;.
       </div>
@@ -190,7 +177,7 @@ const EncuestaForm = ({ onSuccess }) => {
               onChange={(e) => handlePreguntaChange(idx, 'texto', e.target.value)}
               placeholder="Texto de la pregunta"
               required
-              style={{ width: '100%' }}
+              className={styles.select}
             />
           </div>
           <div style={{ marginBottom: 8 }}>
@@ -199,7 +186,8 @@ const EncuestaForm = ({ onSuccess }) => {
               <select
                 value={pregunta.tipo}
                 onChange={(e) => handlePreguntaChange(idx, 'tipo', e.target.value)}
-                style={{ marginLeft: 8 }}
+                className={styles.select}
+                style={{ marginLeft: 8, width: 'auto' }}
               >
                 <option value="opcion_unica">Opción única</option>
                 <option value="opcion_multiple">Opción múltiple</option>
@@ -213,7 +201,8 @@ const EncuestaForm = ({ onSuccess }) => {
                 type="number"
                 value={pregunta.orden}
                 onChange={(e) => handlePreguntaChange(idx, 'orden', e.target.value)}
-                style={{ width: 60, marginLeft: 8 }}
+                className={styles.select}
+                style={{ width: 80, marginLeft: 8 }}
                 min={0}
               />
             </label>
@@ -223,21 +212,23 @@ const EncuestaForm = ({ onSuccess }) => {
             {pregunta.opciones.map((opcion, idxOpcion) => (
               <div
                 key={idxOpcion}
-                style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}
+                style={{ display: 'flex', alignItems: 'center', marginBottom: 4, gap: 8 }}
               >
                 <input
                   value={opcion.texto}
                   onChange={(e) => handleOpcionChange(idx, idxOpcion, 'texto', e.target.value)}
                   placeholder={`Opción ${idxOpcion + 1}`}
                   required
-                  style={{ marginRight: 8 }}
+                  className={styles.select}
+                  style={{ flex: 1 }}
                 />
                 <input
                   type="number"
                   value={opcion.valor}
                   onChange={(e) => handleOpcionChange(idx, idxOpcion, 'valor', e.target.value)}
                   placeholder="Valor (opcional)"
-                  style={{ width: 80, marginRight: 8 }}
+                  className={styles.select}
+                  style={{ width: 100 }}
                 />
                 {pregunta.opciones.length > 2 && (
                   <button
@@ -256,15 +247,24 @@ const EncuestaForm = ({ onSuccess }) => {
           </div>
         </div>
       ))}
-      <button type="button" onClick={addPregunta} style={{ marginBottom: 16 }}>
-        Agregar pregunta
-      </button>
-      <br />
-      <button type="submit" disabled={loading} style={{ color: 'green', marginTop: 8 }}>
-        {loading ? 'Guardando...' : 'Guardar Encuesta'}
-      </button>
-      {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
-      {success && <div style={{ color: 'green', marginTop: 8 }}>{success}</div>}
+      <div className={styles.buttonGroup}>
+        <button
+          type="button"
+          onClick={addPregunta}
+          className={`${styles.button} ${styles['button.secondary']}`}
+        >
+          Agregar pregunta
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className={`${styles.button} ${styles['button.primary']}`}
+        >
+          {loading ? 'Guardando...' : 'Guardar Encuesta'}
+        </button>
+      </div>
+      {error && <div className={styles.error}>{error}</div>}
+      {success && <div className={styles.success}>{success}</div>}
     </form>
   );
 };

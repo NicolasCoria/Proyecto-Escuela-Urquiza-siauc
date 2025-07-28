@@ -69,16 +69,26 @@ const Sidebar = () => {
     e.preventDefault();
     const clickLogout = async () => {
       setIsLoading(true);
+
+      // Limpiar sesión inmediatamente para mejor UX
+      setUser(null);
+      setTokenAndRole(null, null);
+      sessionStorage.removeItem('hasShownNotificationModal');
+
+      // Navegar inmediatamente
+      navigate('/');
+
+      // Hacer logout en el backend en background (sin esperar)
       try {
         await axiosClient.post('/logout');
-        setUser(null);
-        setTokenAndRole(null, null);
-        sessionStorage.removeItem('hasShownNotificationModal');
-        navigate('/');
       } catch (error) {
-        console.error('Logout failed:', error);
+        console.error('Logout backend failed:', error);
+        // No importa si falla, ya limpiamos la sesión local
       }
+
+      setIsLoading(false);
     };
+
     openModal({
       title: 'Cerrar Sesión',
       description: '¿Está seguro que desea cerrar sesión?',
@@ -87,7 +97,6 @@ const Sidebar = () => {
       chooseModal: true,
       onClick: clickLogout
     });
-    setIsLoading(false);
   };
 
   useEffect(() => {

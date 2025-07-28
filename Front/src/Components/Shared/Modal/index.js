@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './modal.module.css';
 import Button from '../Button';
-import { BiErrorAlt } from 'react-icons/bi';
+import { BiErrorAlt, BiLogOut } from 'react-icons/bi';
 import { useModalContext } from '../../Contexts';
 
 const Modal = () => {
@@ -36,12 +36,22 @@ const Modal = () => {
     };
   }, [isOpen, chooseModal, confirmModal, closeModal]);
 
+  // No mostrar modal si no hay contenido válido
+  if (!isOpen || (!title && !description)) {
+    return null;
+  }
+
   return isOpen ? (
     chooseModal ? (
       <div className={styles.container}>
         <div className={styles.subContainer}>
           <div className={styles.logoContainer}>
-            <BiErrorAlt className={styles.icon} />
+            {title.toLowerCase().includes('cerrar sesión') ||
+            title.toLowerCase().includes('logout') ? (
+              <BiLogOut className={styles.icon} />
+            ) : (
+              <BiErrorAlt className={styles.icon} />
+            )}
           </div>
           <div className={styles.title}>{title.toUpperCase()}</div>
           <div className={styles.subTitle}>{description}</div>
@@ -55,7 +65,12 @@ const Modal = () => {
       <div className={styles.container}>
         <div className={styles.subContainer}>
           <div className={styles.logoContainer}>
-            <BiErrorAlt className={styles.icon} />
+            {title.toLowerCase().includes('cerrar sesión') ||
+            title.toLowerCase().includes('logout') ? (
+              <BiLogOut className={styles.icon} />
+            ) : (
+              <BiErrorAlt className={styles.icon} />
+            )}
           </div>
           <div className={styles.title}>{title.toUpperCase()}</div>
           <div className={styles.subTitle}>{description}</div>

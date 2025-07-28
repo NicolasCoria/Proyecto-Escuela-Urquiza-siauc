@@ -8,7 +8,7 @@ import { FaEyeSlash, FaEye, FaEnvelope, FaLock, FaGraduationCap } from 'react-ic
 import { useStateContext, useModalContext } from '../../../Components/Contexts';
 
 const Login = () => {
-  const { openModal, modalState } = useModalContext();
+  const { modalState, closeModal } = useModalContext();
   const {
     setUser,
     setTokenAndRole,
@@ -70,6 +70,9 @@ const Login = () => {
       // Ocultar spinner inmediatamente
       setIsLoading(false);
 
+      // Limpiar cualquier modal abierto
+      closeModal();
+
       // Navegar inmediatamente
       navigate('/alumno');
 
@@ -90,13 +93,8 @@ const Login = () => {
           console.error('Error cargando datos adicionales:', err);
         });
 
-      // Mostrar modal de éxito después de un breve delay
-      setTimeout(() => {
-        openModal({
-          description: 'Sesión iniciada correctamente',
-          chooseModal: false
-        });
-      }, 500);
+      // No mostrar modal de éxito para evitar conflictos
+      // El login exitoso es suficiente feedback
     } catch (err) {
       console.error('Login error:', err);
 

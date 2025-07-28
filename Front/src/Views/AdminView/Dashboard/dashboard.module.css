@@ -286,6 +286,236 @@
   margin-bottom: 4px;
 }
 
+/* Estilos para elementos de selección del dashboard */
+.selectGroup {
+  margin-bottom: 32px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.selectGroup label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.selectGroup select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.selectGroup select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.selectGroup select:hover {
+  border-color: #cbd5e0;
+}
+
+.selectGroup .required {
+  color: #e53e3e;
+}
+
+.selectGroup .optional {
+  color: #718096;
+}
+
+.selectGroup .info {
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #1976d2;
+}
+
+.selectGroup .warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #856404;
+}
+
+.selectGroup .error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #721c24;
+}
+
+.selectGroup .success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #155724;
+}
+
+/* Estilos para radio buttons */
+.radioGroup {
+  display: flex;
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.radioOption:hover {
+  border-color: #667eea;
+  background-color: #f7fafc;
+}
+
+.radioOption input[type="radio"] {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: #667eea;
+}
+
+.radioOption.selected {
+  border-color: #667eea;
+  background-color: #f0f4ff;
+}
+
+/* Estilos para botones */
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button.primary {
+  background-color: #667eea;
+  color: white;
+}
+
+.button.primary:hover {
+  background-color: #5a67d8;
+}
+
+.button.secondary {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.button.secondary:hover {
+  background-color: #cbd5e0;
+}
+
+.button.danger {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.button.danger:hover {
+  background-color: #c53030;
+}
+
+.button.success {
+  background-color: #38a169;
+  color: white;
+}
+
+.button.success:hover {
+  background-color: #2f855a;
+}
+
+/* Estilos para botones de acción */
+.actionButton {
+  background-color: #667eea;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+  margin-right: 10px;
+}
+
+.actionButton:hover {
+  background-color: #5a67d8;
+}
+
+.actionButton.danger {
+  background-color: #dc3545;
+}
+
+.actionButton.danger:hover {
+  background-color: #c53030;
+}
+
+.actionButton.success {
+  background-color: #28a745;
+}
+
+.actionButton.success:hover {
+  background-color: #2f855a;
+}
+
+/* Estilos para mensajes de estado */
+.statusMessage {
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.statusMessage.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.statusMessage.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .headerContent {
@@ -305,5 +535,14 @@
 
   .plantillasGrid {
     grid-template-columns: 1fr;
+  }
+
+  .radioGroup {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .buttonGroup {
+    flex-direction: column;
   }
 }

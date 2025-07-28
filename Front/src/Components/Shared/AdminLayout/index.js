@@ -26,14 +26,19 @@ const AdminLayout = () => {
     e.preventDefault();
     const clickLogout = async () => {
       setIsLoading(true);
+      // Limpiar sesión inmediatamente para mejor UX
+      setUser(null);
+      setTokenAndRole(null, null);
+      // Navegar inmediatamente
+      navigate('/admin/login');
+      // Hacer logout en el backend en background (sin esperar)
       try {
         await axiosClient.post('/logout');
-        setUser(null);
-        setTokenAndRole(null, null);
-        navigate('/admin/login');
       } catch (error) {
-        console.error('Logout failed:', error);
+        console.error('Logout backend failed:', error);
+        // No importa si falla, ya limpiamos la sesión local
       }
+      setIsLoading(false);
     };
     openModal({
       title: 'Cerrar Sesión',
@@ -43,7 +48,6 @@ const AdminLayout = () => {
       chooseModal: true,
       onClick: clickLogout
     });
-    setIsLoading(false);
   };
 
   React.useEffect(() => {
