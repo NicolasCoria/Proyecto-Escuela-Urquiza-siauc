@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import axiosClient from '../../Components/Shared/Axios';
 import EncuestaForm from './EncuestaForm';
 import Spinner from '../../Components/Shared/Spinner';
-import styles from './alumnoView.module.css';
 
 const EncuestasAlumno = () => {
   const [encuestas, setEncuestas] = useState([]);
@@ -167,8 +166,8 @@ const EncuestasAlumno = () => {
   }
 
   return (
-    <div className={styles.encuestasContainer}>
-      <h2 className={styles.encuestasTitle}>Encuestas Académicas</h2>
+    <div className="encuestasContainer">
+      <h2 className="encuestasTitle">Encuestas Académicas</h2>
 
       <div className={styles.encuestasGrid}>
         {ordenarEncuestas([...encuestas]).map((encuesta) => {
@@ -178,15 +177,15 @@ const EncuestasAlumno = () => {
           return (
             <div
               key={encuesta.id_encuesta}
-              className={`${styles.encuestaCard} ${encuesta.respondida ? styles.respondida : ''}`}
+              className={`encuestaCard ${encuesta.respondida ? 'respondida' : ''}`}
             >
-              <div className={styles.encuestaHeader}>
-                <div className={styles.encuestaContent}>
-                  <h3 className={styles.encuestaTitle}>{encuesta.titulo}</h3>
+              <div className="encuestaHeader">
+                <div className="encuestaContent">
+                  <h3 className="encuestaTitle">{encuesta.titulo}</h3>
                   {encuesta.descripcion && (
-                    <p className={styles.encuestaDescription}>{encuesta.descripcion}</p>
+                    <p className="encuestaDescription">{encuesta.descripcion}</p>
                   )}
-                  <div className={styles.encuestaInfo}>
+                  <div className="encuestaInfo">
                     <p>
                       <strong>Asignada:</strong> {formatearFecha(encuesta.fecha_asignacion)}
                     </p>
@@ -198,28 +197,20 @@ const EncuestasAlumno = () => {
                     )}
                   </div>
                 </div>
-                <div className={styles.encuestaStatus}>
+                <div className="encuestaStatus">
                   {encuesta.respondida ? (
-                    <span className={`${styles.statusBadge} ${styles.statusRespondida}`}>
-                      ✅ Respondida
-                    </span>
+                    <span className="statusBadge statusRespondida">✅ Respondida</span>
                   ) : vencida ? (
-                    <span className={`${styles.statusBadge} ${styles.statusVencida}`}>
-                      ⏰ Vencida
-                    </span>
+                    <span className="statusBadge statusVencida">⏰ Vencida</span>
                   ) : !disponible ? (
-                    <span className={`${styles.statusBadge} ${styles.statusNoDisponible}`}>
-                      🔒 No disponible
-                    </span>
+                    <span className="statusBadge statusNoDisponible">🔒 No disponible</span>
                   ) : (
-                    <span className={`${styles.statusBadge} ${styles.statusPendiente}`}>
-                      ⏳ Pendiente
-                    </span>
+                    <span className="statusBadge statusPendiente">⏳ Pendiente</span>
                   )}
                 </div>
               </div>
 
-              <div className={styles.encuestaBody}>
+              <div className="encuestaBody">
                 {!encuesta.respondida && disponible && !vencida && (
                   <EncuestaForm
                     encuesta={encuesta}
@@ -237,18 +228,18 @@ const EncuestasAlumno = () => {
                 )}
 
                 {!encuesta.respondida && vencida && (
-                  <div className={styles.vencidaMessage}>
-                    <div className={styles.vencidaTitle}>⏰ Encuesta vencida</div>
-                    <div className={styles.vencidaDescription}>
+                  <div className="vencidaMessage">
+                    <div className="vencidaTitle">⏰ Encuesta vencida</div>
+                    <div className="vencidaDescription">
                       El período para responder esta encuesta ha finalizado.
                     </div>
                   </div>
                 )}
 
                 {!encuesta.respondida && !disponible && !vencida && (
-                  <div className={styles.noDisponibleMessage}>
-                    <div className={styles.noDisponibleTitle}>🔒 Encuesta no disponible</div>
-                    <div className={styles.noDisponibleDescription}>
+                  <div className="noDisponibleMessage">
+                    <div className="noDisponibleTitle">🔒 Encuesta no disponible</div>
+                    <div className="noDisponibleDescription">
                       Esta encuesta aún no está disponible para responder o ya la respondiste.
                     </div>
                   </div>
