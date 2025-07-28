@@ -89,7 +89,7 @@ const Carreras = () => {
           </p>
           <p>
             Son títulos oficiales emitidos por el Ministerio de Educación de la Provincia de
-            <strong>Santa Fe</strong> pero con <strong>validez nacional</strong>.
+            <strong> Santa Fe</strong> pero con <strong>validez nacional</strong>.
           </p>
         </div>
       </div>
