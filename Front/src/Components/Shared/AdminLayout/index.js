@@ -6,7 +6,15 @@ import { useModalContext } from '../../Contexts';
 import Modal from '../Modal';
 import Spinner from '../Spinner';
 import axiosClient from '../Axios';
-import { FaChartBar, FaSignOutAlt, FaUser, FaEnvelopeOpenText, FaPoll } from 'react-icons/fa';
+import {
+  FaChartBar,
+  FaSignOutAlt,
+  FaUser,
+  FaEnvelopeOpenText,
+  FaPoll,
+  FaCalendarAlt,
+  FaEnvelope
+} from 'react-icons/fa';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -157,6 +165,28 @@ const AdminLayout = () => {
                 >
                   <FaEnvelopeOpenText className={styles.navIcon} />
                   <span>Solicitudes</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/admin/comunicaciones"
+                  className={`${styles.navItem} ${
+                    activeButton === '/admin/comunicaciones' ? styles.active : ''
+                  }`}
+                >
+                  <FaEnvelope className={styles.navIcon} />
+                  <span>Comunicaciones</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/admin/periodos-inscripcion"
+                  className={`${styles.navItem} ${
+                    activeButton === '/admin/periodos-inscripcion' ? styles.active : ''
+                  }`}
+                >
+                  <FaCalendarAlt className={styles.navIcon} />
+                  <span>Períodos de Inscripción</span>
                 </Link>
               </li>
               <li>

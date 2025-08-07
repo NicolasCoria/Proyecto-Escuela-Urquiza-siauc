@@ -17,7 +17,8 @@ import {
   FaSignOutAlt,
   FaSignInAlt,
   FaHome,
-  FaGraduationCap as FaCarreras
+  FaGraduationCap as FaCarreras,
+  FaEnvelope
 } from 'react-icons/fa';
 
 const getTheme = (user, carrera) => {
@@ -213,6 +214,20 @@ const Sidebar = () => {
               >
                 <FaGraduationCap className={styles.icon} />
                 <span>Plan de Estudios</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/alumno/comunicaciones"
+                className={activeButton === 'alumno/comunicaciones' ? styles.activeBtn : styles.btn}
+                style={
+                  activeButton === 'alumno/comunicaciones'
+                    ? { backgroundColor: theme.primary, color: '#fff' }
+                    : { color: theme.primary }
+                }
+              >
+                <FaEnvelope className={styles.icon} />
+                <span>Comunicaciones</span>
               </Link>
             </li>
             <li>

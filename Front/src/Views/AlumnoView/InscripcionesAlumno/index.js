@@ -13,21 +13,30 @@ const InscripcionesAlumno = () => {
   const [error, setError] = useState('');
   const [unidadesInscriptas, setUnidadesInscriptas] = useState([]);
   const [loadingUnidades, setLoadingUnidades] = useState(true);
+  const [periodoInfo, setPeriodoInfo] = useState(null);
 
-  // Cargar unidades en las que ya está inscripto
+  // Cargar unidades en las que ya está inscripto y verificar período
   useEffect(() => {
-    const cargarUnidadesInscriptas = async () => {
+    const cargarDatos = async () => {
       try {
-        const response = await axiosClient.get('/alumno/unidades-inscriptas');
-        if (response.data.success) {
-          setUnidadesInscriptas(response.data.unidades);
+        // Cargar unidades inscriptas
+        const responseInscriptas = await axiosClient.get('/alumno/unidades-inscriptas');
+        if (responseInscriptas.data.success) {
+          setUnidadesInscriptas(responseInscriptas.data.unidades);
         }
+
+        // Verificar período de inscripción
+        const responsePeriodo = await axiosClient.get('/alumno/verificar-periodo-inscripcion');
+        setPeriodoInfo(responsePeriodo.data);
       } catch (err) {
-        console.error('Error cargando unidades inscriptas:', err);
+        console.error('Error cargando datos:', err);
+        if (err.response?.status === 403) {
+          setPeriodoInfo(err.response.data);
+        }
       }
     };
 
-    cargarUnidadesInscriptas();
+    cargarDatos();
   }, []);
 
   // Verificar cuando las unidades disponibles están cargadas
@@ -142,8 +151,36 @@ const InscripcionesAlumno = () => {
       {/* Mensaje de error */}
       {error && <div className={styles.errorMessage}>{error}</div>}
 
+      {/* Información del período de inscripción */}
+      {periodoInfo && !periodoInfo.inscripcion_habilitada && (
+        <div className={styles.periodoInfo}>
+          <h3>📅 Período de Inscripción</h3>
+          <p>{periodoInfo.message}</p>
+          {periodoInfo.periodo_info?.proximo_periodo && (
+            <div className={styles.proximoPeriodo}>
+              <h4>Próximo período:</h4>
+              <p>
+                <strong>{periodoInfo.periodo_info.proximo_periodo.nombre}</strong>
+              </p>
+              <p>
+                Inicio:{' '}
+                {new Date(periodoInfo.periodo_info.proximo_periodo.fecha_inicio).toLocaleString(
+                  'es-AR'
+                )}
+              </p>
+              <p>
+                Fin:{' '}
+                {new Date(periodoInfo.periodo_info.proximo_periodo.fecha_fin).toLocaleString(
+                  'es-AR'
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Formulario de inscripción */}
-      {!success && !loading && (
+      {!success && !loading && periodoInfo?.inscripcion_habilitada && (
         <>
           <div className={styles.formContainer}>
             {loadingUnidades ? (

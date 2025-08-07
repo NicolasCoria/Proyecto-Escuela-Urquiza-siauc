@@ -48,6 +48,15 @@ class InscripcionUnidadCurricularController extends Controller
             return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
         }
 
+        // Verificar si hay un período de inscripción activo
+        $periodoActivo = $this->verificarPeriodoInscripcion($id_alumno);
+        if (!$periodoActivo['activo']) {
+            return response()->json([
+                'error' => 'No hay períodos de inscripción activos en este momento',
+                'periodo_info' => $periodoActivo['info']
+            ], 403);
+        }
+
         // Obtener la carrera del alumno
         $alumnoCarrera = \App\Models\AlumnoCarrera::where('id_alumno', $id_alumno)->first();
         if (!$alumnoCarrera) {
@@ -98,6 +107,64 @@ class InscripcionUnidadCurricularController extends Controller
         }
 
         return response()->json(['unidades_disponibles' => $disponibles]);
+    }
+
+    // Verificar si hay un período de inscripción activo para el alumno
+    private function verificarPeriodoInscripcion($id_alumno)
+    {
+        // Obtener carrera y grado del alumno
+        $alumnoCarrera = \App\Models\AlumnoCarrera::where('id_alumno', $id_alumno)->first();
+        $alumnoGrado = \App\Models\AlumnoGrado::where('id_alumno', $id_alumno)->first();
+
+        $id_carrera = $alumnoCarrera ? $alumnoCarrera->id_carrera : null;
+        $id_grado = $alumnoGrado ? $alumnoGrado->id_grado : null;
+
+        // Buscar períodos activos que apliquen para este alumno
+        $periodosActivos = \App\Models\PeriodoInscripcion::where('activo', true)
+            ->where('fecha_inicio', '<=', now())
+            ->where('fecha_fin', '>=', now())
+            ->where(function($query) use ($id_carrera, $id_grado) {
+                $query->where(function($q) use ($id_carrera) {
+                    $q->whereNull('id_carrera')->orWhere('id_carrera', $id_carrera);
+                })->where(function($q) use ($id_grado) {
+                    $q->whereNull('id_grado')->orWhere('id_grado', $id_grado);
+                });
+            })
+            ->get();
+
+        if ($periodosActivos->isEmpty()) {
+            // Buscar el próximo período para mostrar información
+            $proximoPeriodo = \App\Models\PeriodoInscripcion::where('activo', true)
+                ->where('fecha_inicio', '>', now())
+                ->where(function($query) use ($id_carrera, $id_grado) {
+                    $query->where(function($q) use ($id_carrera) {
+                        $q->whereNull('id_carrera')->orWhere('id_carrera', $id_carrera);
+                    })->where(function($q) use ($id_grado) {
+                        $q->whereNull('id_grado')->orWhere('id_grado', $id_grado);
+                    });
+                })
+                ->orderBy('fecha_inicio', 'asc')
+                ->first();
+
+            return [
+                'activo' => false,
+                'info' => [
+                    'mensaje' => 'No hay períodos de inscripción activos',
+                    'proximo_periodo' => $proximoPeriodo ? [
+                        'nombre' => $proximoPeriodo->nombre_periodo,
+                        'fecha_inicio' => $proximoPeriodo->fecha_inicio,
+                        'fecha_fin' => $proximoPeriodo->fecha_fin
+                    ] : null
+                ]
+            ];
+        }
+
+        return [
+            'activo' => true,
+            'info' => [
+                'periodos_activos' => $periodosActivos
+            ]
+        ];
     }
 
     // Inscribir al alumno autenticado en varias unidades curriculares
