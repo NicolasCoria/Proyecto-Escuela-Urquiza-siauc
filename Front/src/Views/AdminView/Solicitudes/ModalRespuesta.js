@@ -51,8 +51,9 @@ const ModalRespuesta = ({ solicitud, onClose, onSuccess }) => {
         <div className={styles.infoBlock}>
           <h4>Información del Alumno</h4>
           <p>
-            <strong>Nombre:</strong> {solicitud.alumno?.nombre || 'N/A'}
-            {solicitud.alumno?.apellido || ''}
+            <strong>Nombre:</strong>{' '}
+            {`${solicitud.alumno?.nombre || ''} ${solicitud.alumno?.apellido || ''}`.trim() ||
+              'N/A'}
           </p>
           <p>
             <strong>DNI:</strong> {solicitud.alumno?.DNI || 'N/A'}
