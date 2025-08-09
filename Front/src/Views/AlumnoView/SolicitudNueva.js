@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../Components/Shared/Axios';
+import styles from './solicitudes.module.css';
 
 const categorias = [
   { value: 'general', label: 'General' },
@@ -25,8 +26,8 @@ const SolicitudNueva = ({ idAlumno }) => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Función para generar el asunto automático según la categoría
   const generarAsuntoAutomatico = (categoria, tipoCertificado) => {
     switch (categoria) {
       case 'certificado': {
@@ -42,12 +43,8 @@ const SolicitudNueva = ({ idAlumno }) => {
     }
   };
 
-  // Función para verificar si el asunto debe ser editable
-  const esAsuntoEditable = (categoria) => {
-    return categoria === 'general';
-  };
+  const esAsuntoEditable = (categoria) => categoria === 'general';
 
-  // Actualizar asunto cuando cambia la categoría o tipo de certificado
   useEffect(() => {
     if (form.categoria && form.categoria !== 'general') {
       const asuntoAutomatico = generarAsuntoAutomatico(form.categoria, form.tipo_certificado);
@@ -64,16 +61,18 @@ const SolicitudNueva = ({ idAlumno }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     setError('');
     setSuccess('');
 
-    // Validar que si es certificado, tenga tipo seleccionado
     if (form.categoria === 'certificado' && !form.tipo_certificado) {
       setError('Debe seleccionar el tipo de certificado');
       return;
     }
 
     try {
+      setIsSubmitting(true);
       await axios.post('/solicitudes', form);
       setSuccess('Solicitud enviada correctamente');
       setForm({
@@ -85,89 +84,121 @@ const SolicitudNueva = ({ idAlumno }) => {
       });
     } catch (err) {
       setError(err.response?.data?.message || 'Error al enviar la solicitud');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div>
-      <h2>Nueva Solicitud</h2>
+    <div className={`${styles.formCard} ${styles.cardPadding}`}>
+      <h2 style={{ marginTop: 0, marginBottom: 16 }}>Nueva Solicitud</h2>
+      {error && <div className={`${styles.alert} ${styles.alertError}`}>{error}</div>}
+      {success && <div className={`${styles.alert} ${styles.alertSuccess}`}>{success}</div>}
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Categoría:</label>
-          <select name="categoria" value={form.categoria} onChange={handleChange} required>
-            <option value="">Seleccione una categoría</option>
-            {categorias.map((cat) => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Select adicional para tipos de certificado */}
-        {form.categoria === 'certificado' && (
-          <div>
-            <label>Tipo de Certificado:</label>
+        <div className={styles.formGrid}>
+          <div className={styles.formRow}>
+            <label className={styles.label}>Categoría</label>
             <select
-              name="tipo_certificado"
-              value={form.tipo_certificado}
+              name="categoria"
+              value={form.categoria}
               onChange={handleChange}
               required
+              className={styles.select}
+              disabled={isSubmitting}
             >
-              <option value="">Seleccione el tipo de certificado</option>
-              {tiposCertificado.map((tipo) => (
-                <option key={tipo.value} value={tipo.value}>
-                  {tipo.label}
+              <option value="">Seleccione una categoría</option>
+              {categorias.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
                 </option>
               ))}
             </select>
           </div>
-        )}
 
-        <div>
-          <label>Asunto:</label>
-          <input
-            type="text"
-            name="asunto"
-            value={form.asunto}
-            onChange={handleChange}
-            maxLength={255}
-            required
-            disabled={!esAsuntoEditable(form.categoria)}
-            style={{
-              backgroundColor: esAsuntoEditable(form.categoria) ? 'white' : '#f5f5f5',
-              color: esAsuntoEditable(form.categoria) ? 'black' : '#666'
-            }}
-          />
-          {!esAsuntoEditable(form.categoria) && (
-            <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>
-              El asunto se genera automáticamente según la categoría seleccionada
-            </small>
+          {form.categoria === 'certificado' && (
+            <div className={styles.formRow}>
+              <label className={styles.label}>Tipo de Certificado</label>
+              <select
+                name="tipo_certificado"
+                value={form.tipo_certificado}
+                onChange={handleChange}
+                required
+                className={styles.select}
+                disabled={isSubmitting}
+              >
+                <option value="">Seleccione el tipo de certificado</option>
+                {tiposCertificado.map((tipo) => (
+                  <option key={tipo.value} value={tipo.value}>
+                    {tipo.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
+
+          <div className={styles.formRow}>
+            <label className={styles.label}>Asunto</label>
+            <input
+              type="text"
+              name="asunto"
+              value={form.asunto}
+              onChange={handleChange}
+              maxLength={255}
+              required
+              disabled={!esAsuntoEditable(form.categoria) || isSubmitting}
+              className={styles.input}
+              style={{
+                backgroundColor: esAsuntoEditable(form.categoria) ? '#fff' : '#f9fafb',
+                color: esAsuntoEditable(form.categoria) ? '#111827' : '#6b7280'
+              }}
+            />
+            {!esAsuntoEditable(form.categoria) && (
+              <small className={styles.helperText}>
+                El asunto se genera automáticamente según la categoría seleccionada
+              </small>
+            )}
+          </div>
+
+          <div className={styles.formRow}>
+            <label className={styles.label}>Mensaje</label>
+            <textarea
+              name="mensaje"
+              value={form.mensaje}
+              onChange={handleChange}
+              required
+              rows={4}
+              className={styles.textarea}
+              disabled={isSubmitting}
+            />
+          </div>
         </div>
 
-        <div>
-          <label>Mensaje:</label>
-          <textarea
-            name="mensaje"
-            value={form.mensaje}
-            onChange={handleChange}
-            required
-            rows={4}
-            style={{
-              resize: 'vertical',
-              minHeight: '80px',
-              maxHeight: '200px',
-              width: '100%',
-              maxWidth: '400px'
-            }}
-          />
+        <div className={styles.actions} style={{ marginTop: 12 }}>
+          <button
+            type="submit"
+            className={`${styles.button} ${styles.primaryButton}`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Enviando…' : 'Enviar Solicitud'}
+          </button>
+          <button
+            type="button"
+            className={`${styles.button} ${styles.secondaryButton}`}
+            onClick={() =>
+              setForm({
+                id_alumno: idAlumno || '',
+                categoria: '',
+                tipo_certificado: '',
+                asunto: '',
+                mensaje: ''
+              })
+            }
+            disabled={isSubmitting}
+          >
+            Limpiar
+          </button>
         </div>
-
-        <button type="submit">Enviar Solicitud</button>
       </form>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      {success && <div style={{ color: 'green' }}>{success}</div>}
     </div>
   );
 };

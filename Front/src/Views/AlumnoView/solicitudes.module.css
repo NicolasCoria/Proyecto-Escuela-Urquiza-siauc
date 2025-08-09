@@ -1,0 +1,262 @@
+/* Contenedor principal */
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.subtitle {
+  color: #666;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  border: none;
+}
+
+/* Tarjetas */
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cardPadding {
+  padding: 20px;
+}
+
+/* Formulario */
+.formCard {
+  composes: card;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.select,
+.input,
+.textarea {
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  box-sizing: border-box;
+  display: block;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.helperText {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.primaryButton {
+  background: #2563eb;
+  color: #fff;
+}
+
+.primaryButton:hover {
+  background: #1d4ed8;
+}
+
+.secondaryButton {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+/* Alerta */
+.alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #fbbf24;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.alertButton {
+  background: #f59e0b;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.alertButton:hover {
+  background: #d97706;
+}
+
+.alertError {
+  border-color: #fca5a5;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.alertSuccess {
+  border-color: #86efac;
+  background: #dcfce7;
+  color: #065f46;
+}
+
+/* Lista de solicitudes */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.item {
+  composes: card;
+}
+
+.itemInner {
+  composes: cardPadding;
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.itemTitle {
+  font-weight: 700;
+  color: #111827;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badgePendiente { background: #fef3c7; color: #92400e; }
+.badgeAprobado  { background: #dcfce7; color: #065f46; }
+.badgeRechazado { background: #fee2e2; color: #991b1b; }
+.badgeInfo      { background: #e0e7ff; color: #3730a3; }
+
+.itemBody {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+
+.itemField {
+  color: #374151;
+}
+
+.itemField b {
+  color: #111827;
+}
+
+/* Paginación */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.pageButton {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  color: #6b7280;
+}
+
+/* Empty/Loading cards */
+.emptyCard,
+.loadingCard,
+.errorCard {
+  composes: card cardPadding;
+  text-align: center;
+}
+
+/* Responsive */
+@media (min-width: 992px) {
+  .content {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 24px;
+    align-items: start;
+  }
+}
+
+@media (max-width: 480px) {
+  .itemBody {
+    grid-template-columns: 1fr;
+  }
+} 
