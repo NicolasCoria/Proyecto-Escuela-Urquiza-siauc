@@ -34,7 +34,7 @@ const Sidebar = () => {
   const [activeButton, setActiveButton] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { user, setUser, setTokenAndRole, carrera } = useStateContext();
+  const { user, setUser, setTokenAndRole, carrera, resetAlumnoState } = useStateContext();
   const { openModal } = useModalContext();
   const theme = getTheme(user, carrera);
 
@@ -63,7 +63,7 @@ const Sidebar = () => {
   console.log('Sidebar DEBUG -> logoAlt:', logoAlt);
 
   const toggleMenu = () => {
-    setIsOpen(!isOpen);
+    setIsOpen((prev) => !prev);
   };
 
   const onLogout = (e) => {
@@ -73,6 +73,7 @@ const Sidebar = () => {
 
       // Limpiar sesión inmediatamente para mejor UX
       setUser(null);
+      resetAlumnoState();
       setTokenAndRole(null, null);
       sessionStorage.removeItem('hasShownNotificationModal');
 
@@ -167,12 +168,16 @@ const Sidebar = () => {
           style={{ maxWidth: '100%', height: 'auto' }}
         />
         <div className={styles.title}>Escuela Superior de Comercio N°49</div>
-        <div className={styles.menuButton} onClick={toggleMenu}>
-          <div className={isOpen ? styles.x1 : styles.bar}></div>
-          <div className={isOpen ? styles.x2 : styles.bar}></div>
-          <div className={isOpen ? '' : styles.bar}></div>
-        </div>
-        <nav className={isOpen ? `${styles.activeMenu} ${styles.activeMenuStudents}` : styles.menu}>
+        <div
+          className={styles.menuButton}
+          onClick={toggleMenu}
+          aria-label="Abrir menú"
+          role="button"
+        />
+        <nav
+          className={isOpen ? `${styles.activeMenu} ${styles.activeMenuStudents}` : styles.menu}
+          aria-hidden={!isOpen}
+        >
           <ul className={styles.rutes}>
             <li>
               <Link

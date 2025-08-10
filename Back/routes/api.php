@@ -24,6 +24,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/alumno/unidades-carrera', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesCarrera']);
     Route::get('/alumno/unidades-aprobadas', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesAprobadas']);
     Route::get('/alumno/verificar-periodo-inscripcion', [\App\Http\Controllers\Api\PeriodoInscripcionController::class, 'verificarPeriodoActivo']);
+    Route::get('/alumno/bootstrap', [\App\Http\Controllers\Api\AlumnoController::class, 'bootstrapAlumno']);
     
     // Rutas para plan de estudios (CU-006)
     Route::get('/alumno/plan-estudio', [PlanEstudioController::class, 'getPlanEstudioAlumno']);

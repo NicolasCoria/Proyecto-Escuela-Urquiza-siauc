@@ -8,6 +8,7 @@ use App\Models\Administrador;
 use App\Models\Alumno;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 
 class SolicitudController extends Controller
 {
@@ -17,11 +18,18 @@ class SolicitudController extends Controller
         $user = $request->user();
 
         if ($user instanceof Administrador) {
-            return response()->json(Solicitud::with('alumno')->get());
+            $solicitudes = Cache::remember('solicitudes:admin:list', 60, function () {
+                return Solicitud::with('alumno')->get();
+            });
+            return response()->json($solicitudes);
         }
 
         if ($user instanceof Alumno) {
-            return response()->json(Solicitud::where('id_alumno', $user->id_alumno)->with('alumno')->get());
+            $cacheKey = 'solicitudes:alumno:' . $user->id_alumno;
+            $solicitudes = Cache::remember($cacheKey, 60, function () use ($user) {
+                return Solicitud::where('id_alumno', $user->id_alumno)->with('alumno')->get();
+            });
+            return response()->json($solicitudes);
         }
 
         return response()->json(['message' => 'No autorizado'], 403);

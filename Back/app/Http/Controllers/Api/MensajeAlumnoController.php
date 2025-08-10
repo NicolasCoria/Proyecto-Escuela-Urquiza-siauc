@@ -9,6 +9,7 @@ use App\Models\Mensaje;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class MensajeAlumnoController extends Controller
 {
@@ -18,8 +19,8 @@ class MensajeAlumnoController extends Controller
     public function index()
     {
         try {
+            $start = microtime(true);
             $user = Auth::user();
-            Log::info('MensajeAlumnoController - Usuario autenticado:', ['user' => $user]);
             
             if (!$user) {
                 Log::error('MensajeAlumnoController - No hay usuario autenticado');
@@ -27,7 +28,6 @@ class MensajeAlumnoController extends Controller
             }
 
             $id_alumno = $user->id_alumno ?? $user->id ?? null;
-            Log::info('MensajeAlumnoController - ID Alumno:', ['id_alumno' => $id_alumno]);
             
             if (!$id_alumno) {
                 Log::error('MensajeAlumnoController - No se pudo determinar el ID del alumno');
@@ -36,26 +36,33 @@ class MensajeAlumnoController extends Controller
 
             // Verificar si las tablas existen
             try {
-                $mensajes = DestinatarioMensaje::with(['mensaje.admin_creador'])
-                    ->where('id_alumno', $id_alumno)
-                    ->orderBy('created_at', 'desc')
-                    ->get();
-                
-                Log::info('MensajeAlumnoController - Mensajes encontrados:', ['count' => $mensajes->count()]);
-                
-                $mensajesFormateados = $mensajes->map(function($destinatario) {
-                    return [
-                        'id_mensaje' => $destinatario->mensaje->id_mensaje,
-                        'titulo' => $destinatario->mensaje->titulo,
-                        'contenido' => $destinatario->mensaje->contenido,
-                        'prioridad' => $destinatario->mensaje->prioridad,
-                        'admin_creador' => $destinatario->mensaje->admin_creador->nombre . ' ' . $destinatario->mensaje->admin_creador->apellido,
-                        'fecha_envio' => $destinatario->mensaje->created_at->format('d/m/Y H:i'),
-                        'leido' => $destinatario->leido,
-                        'fecha_lectura' => $destinatario->fecha_lectura ? $destinatario->fecha_lectura->format('d/m/Y H:i') : null,
-                        'tiempo_desde_lectura' => $destinatario->getTiempoDesdeLectura()
-                    ];
+                $cacheKey = "alumno:{$id_alumno}:mensajes";
+                $mensajesFormateados = Cache::remember($cacheKey, 60, function () use ($id_alumno) {
+                    $mensajes = DestinatarioMensaje::with(['mensaje.admin_creador'])
+                        ->where('id_alumno', $id_alumno)
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+
+                    return $mensajes->map(function ($destinatario) {
+                        return [
+                            'id_mensaje' => $destinatario->mensaje->id_mensaje,
+                            'titulo' => $destinatario->mensaje->titulo,
+                            'contenido' => $destinatario->mensaje->contenido,
+                            'prioridad' => $destinatario->mensaje->prioridad,
+                            'admin_creador' => $destinatario->mensaje->admin_creador->nombre . ' ' . $destinatario->mensaje->admin_creador->apellido,
+                            'fecha_envio' => $destinatario->mensaje->created_at->format('d/m/Y H:i'),
+                            'leido' => $destinatario->leido,
+                            'fecha_lectura' => $destinatario->fecha_lectura ? $destinatario->fecha_lectura->format('d/m/Y H:i') : null,
+                            'tiempo_desde_lectura' => $destinatario->getTiempoDesdeLectura()
+                        ];
+                    });
                 });
+
+                Log::info('MensajeAlumnoController@index', [
+                    'id_alumno' => $id_alumno,
+                    'count' => $mensajesFormateados->count(),
+                    'duration_ms' => round((microtime(true) - $start) * 1000, 2)
+                ]);
 
                 return response()->json([
                     'success' => true,
@@ -210,6 +217,7 @@ class MensajeAlumnoController extends Controller
     public function estadisticas()
     {
         try {
+            $start = microtime(true);
             $user = Auth::user();
             if (!$user) {
                 return response()->json(['error' => 'No autenticado'], 401);
@@ -220,23 +228,23 @@ class MensajeAlumnoController extends Controller
                 return response()->json(['error' => 'No se pudo determinar el alumno'], 400);
             }
 
-            $totalMensajes = DestinatarioMensaje::where('id_alumno', $id_alumno)->count();
-            $mensajesLeidos = DestinatarioMensaje::where('id_alumno', $id_alumno)
-                ->where('leido', true)
-                ->count();
-            $mensajesNoLeidos = $totalMensajes - $mensajesLeidos;
+            $cacheKey = "alumno:{$id_alumno}:mensajes_estadisticas";
+            $stats = Cache::remember($cacheKey, 60, function () use ($id_alumno) {
+                $totalMensajes = DestinatarioMensaje::where('id_alumno', $id_alumno)->count();
+                $mensajesLeidos = DestinatarioMensaje::where('id_alumno', $id_alumno)
+                    ->where('leido', true)
+                    ->count();
+                $mensajesNoLeidos = $totalMensajes - $mensajesLeidos;
 
-            // Mensajes por prioridad
-            $mensajesPorPrioridad = DestinatarioMensaje::join('mensajes', 'destinatarios_mensaje.id_mensaje', '=', 'mensajes.id_mensaje')
-                ->where('destinatarios_mensaje.id_alumno', $id_alumno)
-                ->selectRaw('mensajes.prioridad, COUNT(*) as cantidad')
-                ->groupBy('mensajes.prioridad')
-                ->get()
-                ->keyBy('prioridad');
+                // Mensajes por prioridad
+                $mensajesPorPrioridad = DestinatarioMensaje::join('mensajes', 'destinatarios_mensaje.id_mensaje', '=', 'mensajes.id_mensaje')
+                    ->where('destinatarios_mensaje.id_alumno', $id_alumno)
+                    ->selectRaw('mensajes.prioridad, COUNT(*) as cantidad')
+                    ->groupBy('mensajes.prioridad')
+                    ->get()
+                    ->keyBy('prioridad');
 
-            return response()->json([
-                'success' => true,
-                'estadisticas' => [
+                return [
                     'total_mensajes' => $totalMensajes,
                     'mensajes_leidos' => $mensajesLeidos,
                     'mensajes_no_leidos' => $mensajesNoLeidos,
@@ -246,7 +254,17 @@ class MensajeAlumnoController extends Controller
                         'media' => $mensajesPorPrioridad->get('media', (object)['cantidad' => 0])->cantidad,
                         'baja' => $mensajesPorPrioridad->get('baja', (object)['cantidad' => 0])->cantidad,
                     ]
-                ]
+                ];
+            });
+
+            Log::info('MensajeAlumnoController@estadisticas', [
+                'id_alumno' => $id_alumno,
+                'duration_ms' => round((microtime(true) - $start) * 1000, 2)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'estadisticas' => $stats
             ]);
 
         } catch (\Exception $e) {

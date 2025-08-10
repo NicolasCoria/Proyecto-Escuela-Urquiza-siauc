@@ -39,17 +39,28 @@ class UnidadCurricular extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'horas_sem' => 'int',
-		'horas_anual' => 'int'
+		'HorasSem' => 'int',
+		'HorasAnual' => 'int'
 	];
 
 	protected $fillable = [
-		'unidad_curricular',
-		'tipo',
-		'horas_sem',
-		'horas_anual',
-		'formato'
+		'Unidad_Curricular',
+		'Tipo',
+		'HorasSem',
+		'HorasAnual',
+		'Formato'
 	];
+
+	// Accessor para mantener compatibilidad con código existente
+	public function getUnidadCurricularAttribute()
+	{
+		return $this->attributes['Unidad_Curricular'] ?? null;
+	}
+
+	public function getNombreAttribute()
+	{
+		return $this->attributes['Unidad_Curricular'] ?? null;
+	}
 
 	public function alumno_ucs()
 	{

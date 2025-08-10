@@ -118,6 +118,31 @@ export const ContextProvider = ({ children }) => {
     validateToken();
   }, []);
 
+  // Cargar datos académicos vía endpoint único (bootstrap) cuando hay token de alumno
+  useEffect(() => {
+    const fetchAlumnoData = async () => {
+      try {
+        if (!token || role !== 'alumno') return;
+        const { data } = await axiosClient.get('/alumno/bootstrap');
+        if (data?.success) {
+          if (data.alumno) {
+            setUser(data.alumno);
+            sessionStorage.setItem('user', JSON.stringify(data.alumno));
+          }
+          if (data.carrera) setCarreraPersist(data.carrera);
+          setUnidadesCarreraPersist(data.unidades_carrera || []);
+          setUnidadesAprobadasPersist(data.unidades_aprobadas || []);
+          setUnidadesInscriptasPersist(data.unidades_inscriptas || []);
+          setUnidadesDisponiblesPersist(data.unidades_disponibles || []);
+        }
+      } catch (e) {
+        console.error('Error cargando bootstrap del alumno:', e);
+      }
+    };
+
+    fetchAlumnoData();
+  }, [token, role]);
+
   const setTokenAndRole = (token, role) => {
     setToken(token);
     setRole(role);
@@ -194,6 +219,15 @@ export const ContextProvider = ({ children }) => {
     setNotification(newNotifications);
   };
 
+  // Limpia inmediatamente todos los datos académicos del alumno en memoria y sessionStorage
+  const resetAlumnoState = () => {
+    setCarreraPersist(null);
+    setUnidadesDisponiblesPersist([]);
+    setUnidadesCarreraPersist([]);
+    setUnidadesAprobadasPersist([]);
+    setUnidadesInscriptasPersist([]);
+  };
+
   return (
     <StateContext.Provider
       value={{
@@ -215,7 +249,8 @@ export const ContextProvider = ({ children }) => {
         setUnidadesAprobadas: setUnidadesAprobadasPersist,
         unidadesInscriptas,
         setUnidadesInscriptas: setUnidadesInscriptasPersist,
-        isValidating
+        isValidating,
+        resetAlumnoState
       }}
     >
       {children}

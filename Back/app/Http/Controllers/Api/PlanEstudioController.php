@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Alumno;
 use App\Models\Carrera;
 use App\Models\PlanEstudio;
+use Illuminate\Support\Facades\Cache;
 
 class PlanEstudioController extends Controller
 {
@@ -30,7 +31,9 @@ class PlanEstudioController extends Controller
             }
 
             // Obtener el plan de estudios completo de la carrera usando la estructura existente
-            $planEstudio = DB::table('carrera_uc as cu')
+            $cacheKey = "carrera:{$carrera->id_carrera}:plan_estudio";
+            $planEstudio = Cache::remember($cacheKey, 300, function () use ($carrera) {
+                return DB::table('carrera_uc as cu')
                 ->join('unidad_curricular as uc', 'cu.id_uc', '=', 'uc.id_uc')
                 ->join('grado_uc as gu', 'uc.id_uc', '=', 'gu.id_uc')
                 ->join('grado as g', 'gu.id_grado', '=', 'g.id_grado')
@@ -47,6 +50,7 @@ class PlanEstudioController extends Controller
                 ->orderBy('g.grado', 'asc')
                 ->orderBy('uc.id_uc', 'asc')
                 ->get();
+            });
 
             // Organizar por años
             $planOrganizado = [];
@@ -104,7 +108,9 @@ class PlanEstudioController extends Controller
             }
 
             // Obtener el plan de estudios de la carrera usando la estructura existente
-            $planEstudio = DB::table('carrera_uc as cu')
+            $cacheKey = "carrera:{$idCarrera}:plan_estudio";
+            $planEstudio = Cache::remember($cacheKey, 300, function () use ($idCarrera) {
+                return DB::table('carrera_uc as cu')
                 ->join('unidad_curricular as uc', 'cu.id_uc', '=', 'uc.id_uc')
                 ->join('grado_uc as gu', 'uc.id_uc', '=', 'gu.id_uc')
                 ->join('grado as g', 'gu.id_grado', '=', 'g.id_grado')
@@ -121,6 +127,7 @@ class PlanEstudioController extends Controller
                 ->orderBy('g.grado', 'asc')
                 ->orderBy('uc.id_uc', 'asc')
                 ->get();
+            });
 
             // Organizar por años
             $planOrganizado = [];
@@ -180,7 +187,9 @@ class PlanEstudioController extends Controller
             }
 
             // Obtener solo el conteo de materias por año
-            $resumen = DB::table('carrera_uc as cu')
+            $cacheKey = "carrera:{$carrera->id_carrera}:plan_resumen";
+            $resumen = Cache::remember($cacheKey, 300, function () use ($carrera) {
+                return DB::table('carrera_uc as cu')
                 ->join('unidad_curricular as uc', 'cu.id_uc', '=', 'uc.id_uc')
                 ->join('grado_uc as gu', 'uc.id_uc', '=', 'gu.id_uc')
                 ->join('grado as g', 'gu.id_grado', '=', 'g.id_grado')
@@ -189,6 +198,7 @@ class PlanEstudioController extends Controller
                 ->groupBy('g.grado')
                 ->orderBy('g.grado', 'asc')
                 ->get();
+            });
 
             $totalMaterias = $resumen->sum('total_materias');
 

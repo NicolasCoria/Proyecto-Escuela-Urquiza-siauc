@@ -9,6 +9,7 @@ use App\Models\Carrera;
 use App\Models\Grado;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class PeriodoInscripcionController extends Controller
 {
@@ -130,18 +131,21 @@ class PeriodoInscripcionController extends Controller
         $id_carrera = $alumnoCarrera ? $alumnoCarrera->id_carrera : null;
         $id_grado = $alumnoGrado ? $alumnoGrado->id_grado : null;
 
-        // Buscar períodos activos que apliquen para este alumno
-        $periodosActivos = PeriodoInscripcion::where('activo', true)
-            ->where('fecha_inicio', '<=', Carbon::now())
-            ->where('fecha_fin', '>=', Carbon::now())
-            ->where(function($query) use ($id_carrera, $id_grado) {
-                $query->where(function($q) use ($id_carrera) {
-                    $q->whereNull('id_carrera')->orWhere('id_carrera', $id_carrera);
-                })->where(function($q) use ($id_grado) {
-                    $q->whereNull('id_grado')->orWhere('id_grado', $id_grado);
-                });
-            })
-            ->get();
+        // Buscar períodos activos que apliquen para este alumno (cache 60s)
+        $cacheKey = "alumno:{$id_alumno}:periodos_activos";
+        $periodosActivos = Cache::remember($cacheKey, 60, function () use ($id_carrera, $id_grado) {
+            return PeriodoInscripcion::where('activo', true)
+                ->where('fecha_inicio', '<=', Carbon::now())
+                ->where('fecha_fin', '>=', Carbon::now())
+                ->where(function($query) use ($id_carrera, $id_grado) {
+                    $query->where(function($q) use ($id_carrera) {
+                        $q->whereNull('id_carrera')->orWhere('id_carrera', $id_carrera);
+                    })->where(function($q) use ($id_grado) {
+                        $q->whereNull('id_grado')->orWhere('id_grado', $id_grado);
+                    });
+                })
+                ->get();
+        });
 
         if ($periodosActivos->isEmpty()) {
             return response()->json([
