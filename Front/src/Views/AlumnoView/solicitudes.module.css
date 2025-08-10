@@ -47,7 +47,10 @@
 
 /* Formulario */
 .formCard {
-  composes: card;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .formGrid {
@@ -167,11 +170,14 @@
 }
 
 .item {
-  composes: card;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .itemInner {
-  composes: cardPadding;
+  padding: 20px;
 }
 
 .itemHeader {
@@ -241,7 +247,6 @@
 .emptyCard,
 .loadingCard,
 .errorCard {
-  composes: card cardPadding;
   text-align: center;
 }
 
