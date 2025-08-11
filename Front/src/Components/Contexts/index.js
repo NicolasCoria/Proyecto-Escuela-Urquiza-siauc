@@ -27,21 +27,37 @@ export const ContextProvider = ({ children }) => {
     const storedCarrera = sessionStorage.getItem('carrera');
     return storedCarrera ? JSON.parse(storedCarrera) : null;
   });
-  const [unidadesDisponibles, setUnidadesDisponibles] = useState(() => {
-    const storedUC = sessionStorage.getItem('unidadesDisponibles');
-    return storedUC ? JSON.parse(storedUC) : [];
-  });
   const [unidadesCarrera, setUnidadesCarrera] = useState(() => {
     const stored = sessionStorage.getItem('unidadesCarrera');
     return stored ? JSON.parse(stored) : [];
+  });
+  const [unidadesCarreraPorAno, setUnidadesCarreraPorAno] = useState(() => {
+    const stored = sessionStorage.getItem('unidadesCarreraPorAno');
+    return stored ? JSON.parse(stored) : {};
   });
   const [unidadesAprobadas, setUnidadesAprobadas] = useState(() => {
     const stored = sessionStorage.getItem('unidadesAprobadas');
     return stored ? JSON.parse(stored) : [];
   });
+  const [unidadesAprobadasPorAno, setUnidadesAprobadasPorAno] = useState(() => {
+    const stored = sessionStorage.getItem('unidadesAprobadasPorAno');
+    return stored ? JSON.parse(stored) : {};
+  });
   const [unidadesInscriptas, setUnidadesInscriptas] = useState(() => {
     const stored = sessionStorage.getItem('unidadesInscriptas');
     return stored ? JSON.parse(stored) : [];
+  });
+  const [unidadesInscriptasPorAno, setUnidadesInscriptasPorAno] = useState(() => {
+    const stored = sessionStorage.getItem('unidadesInscriptasPorAno');
+    return stored ? JSON.parse(stored) : {};
+  });
+  const [unidadesDisponibles, setUnidadesDisponibles] = useState(() => {
+    const storedUC = sessionStorage.getItem('unidadesDisponibles');
+    return storedUC ? JSON.parse(storedUC) : [];
+  });
+  const [unidadesDisponiblesPorAno, setUnidadesDisponiblesPorAno] = useState(() => {
+    const stored = sessionStorage.getItem('unidadesDisponiblesPorAno');
+    return stored ? JSON.parse(stored) : {};
   });
   const [isValidating, setIsValidating] = useState(false);
 
@@ -131,9 +147,13 @@ export const ContextProvider = ({ children }) => {
           }
           if (data.carrera) setCarreraPersist(data.carrera);
           setUnidadesCarreraPersist(data.unidades_carrera || []);
+          setUnidadesCarreraPorAnoPersist(data.unidades_carrera_por_ano || {});
           setUnidadesAprobadasPersist(data.unidades_aprobadas || []);
+          setUnidadesAprobadasPorAnoPersist(data.unidades_aprobadas_por_ano || {});
           setUnidadesInscriptasPersist(data.unidades_inscriptas || []);
+          setUnidadesInscriptasPorAnoPersist(data.unidades_inscriptas_por_ano || {});
           setUnidadesDisponiblesPersist(data.unidades_disponibles || []);
+          setUnidadesDisponiblesPorAnoPersist(data.unidades_disponibles_por_ano || {});
         }
       } catch (e) {
         console.error('Error cargando bootstrap del alumno:', e);
@@ -194,6 +214,17 @@ export const ContextProvider = ({ children }) => {
       sessionStorage.removeItem('unidadesCarrera');
     }
   };
+
+  const setUnidadesCarreraPorAnoPersist = (ucList) => {
+    const safeUcList = ucList || {};
+    setUnidadesCarreraPorAno(safeUcList);
+    if (safeUcList) {
+      sessionStorage.setItem('unidadesCarreraPorAno', JSON.stringify(safeUcList));
+    } else {
+      sessionStorage.removeItem('unidadesCarreraPorAno');
+    }
+  };
+
   const setUnidadesAprobadasPersist = (ucList) => {
     // Asegurar que ucList sea un array
     const safeUcList = Array.isArray(ucList) ? ucList : [];
@@ -204,6 +235,17 @@ export const ContextProvider = ({ children }) => {
       sessionStorage.removeItem('unidadesAprobadas');
     }
   };
+
+  const setUnidadesAprobadasPorAnoPersist = (ucList) => {
+    const safeUcList = ucList || {};
+    setUnidadesAprobadasPorAno(safeUcList);
+    if (safeUcList) {
+      sessionStorage.setItem('unidadesAprobadasPorAno', JSON.stringify(safeUcList));
+    } else {
+      sessionStorage.removeItem('unidadesAprobadasPorAno');
+    }
+  };
+
   const setUnidadesInscriptasPersist = (ucList) => {
     // Asegurar que ucList sea un array
     const safeUcList = Array.isArray(ucList) ? ucList : [];
@@ -215,6 +257,26 @@ export const ContextProvider = ({ children }) => {
     }
   };
 
+  const setUnidadesInscriptasPorAnoPersist = (ucList) => {
+    const safeUcList = ucList || {};
+    setUnidadesInscriptasPorAno(safeUcList);
+    if (safeUcList) {
+      sessionStorage.setItem('unidadesInscriptasPorAno', JSON.stringify(safeUcList));
+    } else {
+      sessionStorage.removeItem('unidadesInscriptasPorAno');
+    }
+  };
+
+  const setUnidadesDisponiblesPorAnoPersist = (ucList) => {
+    const safeUcList = ucList || {};
+    setUnidadesDisponiblesPorAno(safeUcList);
+    if (safeUcList) {
+      sessionStorage.setItem('unidadesDisponiblesPorAno', JSON.stringify(safeUcList));
+    } else {
+      sessionStorage.removeItem('unidadesDisponiblesPorAno');
+    }
+  };
+
   const updateNotification = (newNotifications) => {
     setNotification(newNotifications);
   };
@@ -223,9 +285,13 @@ export const ContextProvider = ({ children }) => {
   const resetAlumnoState = () => {
     setCarreraPersist(null);
     setUnidadesDisponiblesPersist([]);
+    setUnidadesDisponiblesPorAnoPersist({});
     setUnidadesCarreraPersist([]);
+    setUnidadesCarreraPorAnoPersist({});
     setUnidadesAprobadasPersist([]);
+    setUnidadesAprobadasPorAnoPersist({});
     setUnidadesInscriptasPersist([]);
+    setUnidadesInscriptasPorAnoPersist({});
   };
 
   return (
@@ -243,12 +309,20 @@ export const ContextProvider = ({ children }) => {
         setCarrera: setCarreraPersist,
         unidadesDisponibles,
         setUnidadesDisponibles: setUnidadesDisponiblesPersist,
+        unidadesDisponiblesPorAno,
+        setUnidadesDisponiblesPorAno: setUnidadesDisponiblesPorAnoPersist,
         unidadesCarrera,
         setUnidadesCarrera: setUnidadesCarreraPersist,
+        unidadesCarreraPorAno,
+        setUnidadesCarreraPorAno: setUnidadesCarreraPorAnoPersist,
         unidadesAprobadas,
         setUnidadesAprobadas: setUnidadesAprobadasPersist,
+        unidadesAprobadasPorAno,
+        setUnidadesAprobadasPorAno: setUnidadesAprobadasPorAnoPersist,
         unidadesInscriptas,
         setUnidadesInscriptas: setUnidadesInscriptasPersist,
+        unidadesInscriptasPorAno,
+        setUnidadesInscriptasPorAno: setUnidadesInscriptasPorAnoPersist,
         isValidating,
         resetAlumnoState
       }}

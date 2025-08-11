@@ -3,9 +3,10 @@ import Skeleton from '../../../Components/Shared/Skeleton';
 import { useStateContext } from '../../../Components/Contexts';
 import axiosClient from '../../../Components/Shared/Axios';
 import styles from './inscripciones.module.css';
+import Button from '../../../Components/Shared/Button';
 
 const InscripcionesAlumno = () => {
-  const { carrera, unidadesDisponibles } = useStateContext();
+  const { carrera, unidadesDisponibles, unidadesDisponiblesPorAno } = useStateContext();
   const [seleccionadas, setSeleccionadas] = useState([]);
   const [inscripciones, setInscripciones] = useState([]);
   const [success, setSuccess] = useState(false);
@@ -14,6 +15,41 @@ const InscripcionesAlumno = () => {
   const [unidadesInscriptas, setUnidadesInscriptas] = useState([]);
   const [loadingUnidades, setLoadingUnidades] = useState(true);
   const [periodoInfo, setPeriodoInfo] = useState(null);
+
+  // Función para generar estilos dinámicos basados en la carrera
+  // Los colores se basan en sidebarTheme.js para mantener consistencia visual
+  const getCarreraStyles = () => {
+    if (!carrera) return {};
+
+    const carreraId = carrera.id || carrera.id_carrera;
+
+    // Colores específicos para cada carrera (basados en sidebarTheme.js)
+    const carreraColors = {
+      1: {
+        // AF - Azul (Análisis Funcional)
+        background: 'linear-gradient(135deg, #e3f2fd 0%, #1976d2 100%)',
+        primary: '#1976d2',
+        secondary: '#1565c0',
+        accent: '#0d47a1'
+      },
+      2: {
+        // DS - Verde (Desarrollo de Software)
+        background: 'linear-gradient(135deg, #e8f5e9 0%, #43a047 100%)',
+        primary: '#43a047',
+        secondary: '#388e3c',
+        accent: '#1b5e20'
+      },
+      3: {
+        // ITI - Rojo (Infraestructura de TI)
+        background: 'linear-gradient(135deg, #ffebee 0%, #e53935 100%)',
+        primary: '#e53935',
+        secondary: '#b71c1c',
+        accent: '#ff7043'
+      }
+    };
+
+    return carreraColors[carreraId] || {};
+  };
 
   // Cargar unidades en las que ya está inscripto y verificar período
   useEffect(() => {
@@ -135,6 +171,117 @@ const InscripcionesAlumno = () => {
     return unidadesInscriptas.includes(id_uc);
   };
 
+  // Verificar si una unidad ya está aprobada
+  const isUnidadAprobada = (id_uc) => {
+    // Aquí necesitarías una lógica para verificar si la unidad está aprobada
+    // Esto podría requerir una llamada a la API o una lógica de estado local
+    // Por ahora, simulamos que una unidad está aprobada si ya está inscripta
+    return isUnidadInscripta(id_uc);
+  };
+
+  // IDs seleccionables (excluye las ya inscriptas/disabled)
+  const selectableIds = (unidadesDisponibles || [])
+    .filter((uc) => !isUnidadInscripta(uc.id_uc))
+    .map((uc) => uc.id_uc);
+
+  const selectedSelectableCount = seleccionadas.filter((id) => selectableIds.includes(id)).length;
+  const isAllSelected =
+    selectableIds.length > 0 && selectedSelectableCount === selectableIds.length;
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      // Desmarcar todas las seleccionables
+      setSeleccionadas((prev) => prev.filter((id) => !selectableIds.includes(id)));
+    } else {
+      // Marcar todas las seleccionables, preservando otras selecciones no relacionadas
+      setSeleccionadas((prev) =>
+        Array.from(new Set([...prev.filter((id) => !selectableIds.includes(id)), ...selectableIds]))
+      );
+    }
+  };
+
+  // Función para renderizar UCs agrupadas por año
+  const renderUCsPorAno = () => {
+    if (!unidadesDisponiblesPorAno || Object.keys(unidadesDisponiblesPorAno).length === 0) {
+      return (
+        <div className={styles.emptyState}>
+          <p>No hay unidades curriculares disponibles para inscripción en este momento.</p>
+        </div>
+      );
+    }
+
+    const carreraStyles = getCarreraStyles();
+
+    return (
+      <div>
+        {Object.keys(unidadesDisponiblesPorAno)
+          .sort((a, b) => parseInt(a) - parseInt(b))
+          .map((ano) => (
+            <div key={ano} className={styles.anoGroup}>
+              <h4
+                className={styles.anoTitle}
+                style={{
+                  background:
+                    carreraStyles.background || 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                  color: carreraStyles.primary ? '#1a1a1a' : '#2c3e50'
+                }}
+              >
+                {ano === '1'
+                  ? 'Primer Año'
+                  : ano === '2'
+                    ? 'Segundo Año'
+                    : ano === '3'
+                      ? 'Tercer Año'
+                      : ano === '4'
+                        ? 'Cuarto Año'
+                        : `${ano}° Año`}
+              </h4>
+              <ul className={styles.unidadesList}>
+                {unidadesDisponiblesPorAno[ano].map((uc) => {
+                  const isInscripta = isUnidadInscripta(uc.id_uc);
+                  const isAprobada = isUnidadAprobada(uc.id_uc);
+
+                  return (
+                    <li key={uc.id_uc} className={styles.unidadItem}>
+                      <label
+                        className={`${styles.unidadLabel} ${isInscripta && isAprobada ? styles.disabled : ''}`}
+                      >
+                        <div className={styles.modernCheckbox}>
+                          <input
+                            type="checkbox"
+                            checked={seleccionadas.includes(uc.id_uc)}
+                            onChange={() => handleSelect(uc.id_uc)}
+                            disabled={isInscripta && isAprobada}
+                          />
+                          <span className={styles.checkmark}></span>
+                        </div>
+                        <span
+                          className={`${styles.unidadName} ${isInscripta && isAprobada ? styles.disabled : ''}`}
+                        >
+                          {uc.unidad_curricular || uc.Unidad_Curricular}
+                        </span>
+
+                        {/* Estado de la UC */}
+                        {isInscripta && isAprobada && (
+                          <span className={styles.inscriptoBadge}>✅ Aprobada</span>
+                        )}
+                        {isInscripta && !isAprobada && (
+                          <span className={styles.reinscribibleBadge}>🔄 Reinscribible</span>
+                        )}
+                        {!isInscripta && (
+                          <span className={styles.disponibleBadge}>📚 Disponible</span>
+                        )}
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+      </div>
+    );
+  };
+
   return (
     <main className={styles.container}>
       <h2 className={styles.title}>Inscripción a Unidades Curriculares</h2>
@@ -194,33 +341,17 @@ const InscripcionesAlumno = () => {
             ) : (
               <>
                 <h3 className={styles.formTitle}>Unidades Disponibles:</h3>
-                <ul className={styles.unidadesList}>
-                  {unidadesDisponibles.map((uc) => (
-                    <li key={uc.id_uc} className={styles.unidadItem}>
-                      <label
-                        className={`${styles.unidadLabel} ${isUnidadInscripta(uc.id_uc) ? styles.disabled : ''}`}
-                      >
-                        <input
-                          type="checkbox"
-                          className={styles.unidadCheckbox}
-                          checked={seleccionadas.includes(uc.id_uc)}
-                          onChange={() => handleSelect(uc.id_uc)}
-                          disabled={isUnidadInscripta(uc.id_uc)}
-                        />
-                        <span
-                          className={`${styles.unidadName} ${isUnidadInscripta(uc.id_uc) ? styles.disabled : ''}`}
-                        >
-                          {uc.unidad_curricular || uc.Unidad_Curricular}
-                        </span>
-                        {isUnidadInscripta(uc.id_uc) && (
-                          <span className={styles.inscriptoBadge}>✅ Inscripto</span>
-                        )}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
+                {renderUCsPorAno()}
               </>
             )}
+          </div>
+
+          <div className={styles.actionsRow}>
+            <Button
+              text={isAllSelected ? 'Deseleccionar todas' : 'Seleccionar todas'}
+              onClick={handleSelectAll}
+              type="edit"
+            />
           </div>
 
           {seleccionadas.length > 0 && (

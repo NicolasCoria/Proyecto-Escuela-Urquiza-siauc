@@ -4,18 +4,148 @@ import styles from './dashboard.module.css';
 import { useStateContext } from '../../../Components/Contexts';
 
 const DashboardAlumno = () => {
-  const { user, carrera, unidadesCarrera, unidadesAprobadas, unidadesInscriptas } =
-    useStateContext();
+  const {
+    user,
+    carrera,
+    unidadesCarreraPorAno,
+    unidadesAprobadasPorAno,
+    unidadesInscriptasPorAno
+  } = useStateContext();
   const navigate = useNavigate();
 
   // Progreso académico
-  const total = unidadesCarrera?.length || 0;
-  const aprobadas = unidadesAprobadas?.length || 0;
+  const total = Object.values(unidadesCarreraPorAno || {}).reduce(
+    (sum, ucs) => sum + ucs.length,
+    0
+  );
+  const aprobadas = Object.values(unidadesAprobadasPorAno || {}).reduce(
+    (sum, ucs) => sum + ucs.length,
+    0
+  );
   const progreso = total ? Math.round((aprobadas / total) * 100) : 0;
 
-  // Verificar que unidadesInscriptas sea un array
-  const unidadesInscriptasArray = Array.isArray(unidadesInscriptas) ? unidadesInscriptas : [];
-  const unidadesAprobadasArray = Array.isArray(unidadesAprobadas) ? unidadesAprobadas : [];
+  // Función para renderizar UCs agrupadas por año
+  const renderUCsPorAno = (ucsPorAno, titulo) => {
+    if (!ucsPorAno || Object.keys(ucsPorAno).length === 0) {
+      return <div>No hay {titulo.toLowerCase()} aún.</div>;
+    }
+
+    return (
+      <div>
+        {Object.keys(ucsPorAno)
+          .sort((a, b) => parseInt(a) - parseInt(b))
+          .map((ano) => (
+            <div key={ano} style={{ marginBottom: '16px' }}>
+              <h4
+                style={{
+                  margin: '0 0 8px 0',
+                  color: '#1976d2',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  borderBottom: '1px solid #e0e0e0',
+                  paddingBottom: '4px'
+                }}
+              >
+                {ano === '1'
+                  ? 'Primer Año'
+                  : ano === '2'
+                    ? 'Segundo Año'
+                    : ano === '3'
+                      ? 'Tercer Año'
+                      : ano === '4'
+                        ? 'Cuarto Año'
+                        : `${ano}° Año`}
+              </h4>
+              <ul style={{ margin: '0 0 0 16px', padding: '0' }}>
+                {ucsPorAno[ano].map((uc) => {
+                  const fechaInscripcion = uc.fecha_inscripcion;
+                  const estaAprobada = uc.esta_aprobada;
+                  const puedeReinscribirse = uc.puede_reinscribirse;
+
+                  return (
+                    <li
+                      key={uc.id_uc || uc.id}
+                      style={{
+                        marginBottom: '8px',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <span style={{ flex: 1 }}>
+                        {uc.Unidad_Curricular ||
+                          uc.unidad_curricular ||
+                          uc.nombre ||
+                          'Unidad Curricular'}
+                      </span>
+
+                      {/* Estado de aprobación */}
+                      {estaAprobada ? (
+                        <span
+                          style={{
+                            backgroundColor: '#4caf50',
+                            color: 'white',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          ✅ Aprobada
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            backgroundColor: '#ff9800',
+                            color: 'white',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          📚 Cursando
+                        </span>
+                      )}
+
+                      {/* Fecha de inscripción */}
+                      {fechaInscripcion && (
+                        <span
+                          style={{
+                            color: '#666',
+                            fontSize: '11px',
+                            fontStyle: 'italic'
+                          }}
+                        >
+                          Inscripto: {new Date(fechaInscripcion).toLocaleDateString('es-ES')}
+                        </span>
+                      )}
+
+                      {/* Indicador de reinscripción */}
+                      {puedeReinscribirse && (
+                        <span
+                          style={{
+                            backgroundColor: '#2196f3',
+                            color: 'white',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          🔄 Reinscribible
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+      </div>
+    );
+  };
 
   return (
     <div className={styles.dashboardContainer}>
@@ -73,33 +203,13 @@ const DashboardAlumno = () => {
         {/* UCs inscriptas */}
         <section className={styles.dashboardCard}>
           <h3>UCs inscriptas</h3>
-          {unidadesInscriptasArray.length === 0 ? (
-            <div>No hay inscripciones activas.</div>
-          ) : (
-            <ul>
-              {unidadesInscriptasArray.map((uc) => (
-                <li key={uc.id_uc || uc.id}>
-                  {uc.Unidad_Curricular || uc.unidad_curricular || uc.nombre || 'Unidad Curricular'}
-                </li>
-              ))}
-            </ul>
-          )}
+          {renderUCsPorAno(unidadesInscriptasPorAno, 'Unidades Curriculares Inscriptas')}
         </section>
 
         {/* UCs aprobadas */}
         <section className={styles.dashboardCard}>
           <h3>UCs aprobadas</h3>
-          {unidadesAprobadasArray.length === 0 ? (
-            <div>No hay unidades curriculares aprobadas aún.</div>
-          ) : (
-            <ul>
-              {unidadesAprobadasArray.map((uc) => (
-                <li key={uc.id_uc || uc.id}>
-                  {uc.Unidad_Curricular || uc.unidad_curricular || uc.nombre || 'Unidad Curricular'}
-                </li>
-              ))}
-            </ul>
-          )}
+          {renderUCsPorAno(unidadesAprobadasPorAno, 'Unidades Curriculares Aprobadas')}
         </section>
       </div>
     </div>

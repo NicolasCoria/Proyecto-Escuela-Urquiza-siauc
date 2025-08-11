@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * 
  * @property int $id_carrera
  * @property int $id_uc
+ * @property int|null $ano
  * 
  * @property Carrera $carrera
  * @property UnidadCurricular $unidad_curricular
@@ -27,7 +28,14 @@ class CarreraUc extends Model
 
 	protected $casts = [
 		'id_carrera' => 'int',
-		'id_uc' => 'int'
+		'id_uc' => 'int',
+		'ano' => 'int'
+	];
+
+	protected $fillable = [
+		'id_carrera',
+		'id_uc',
+		'ano'
 	];
 
 	public function carrera()

@@ -93,16 +93,73 @@
   font-weight: 600;
 }
 
+.anoGroup {
+  margin-bottom: 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.anoTitle {
+  margin: 0;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-bottom: 1px solid #e0e0e0;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.anoTitle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.anoTitle > * {
+  position: relative;
+  z-index: 2;
+}
+
+.actionsRow {
+  margin-bottom: 12px;
+}
+
 .unidadesList {
   list-style: none;
   padding: 0;
   margin: 0;
+  background: #fff;
+}
+
+.unidadesList .unidadItem:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.unidadesList .unidadItem:first-child {
+  margin-top: 0;
 }
 
 .unidadItem {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   border-bottom: 1px solid #eee;
   padding-bottom: 8px;
+  padding-top: 4px;
 }
 
 .unidadItem:last-child {
@@ -113,36 +170,163 @@
 .unidadLabel {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   cursor: pointer;
-  padding: 8px 0;
-  transition: background-color 0.2s;
-  border-radius: 6px;
+  padding: 12px 16px;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  min-height: 44px;
+  position: relative;
 }
 
 .unidadLabel:hover:not(.disabled) {
-  background-color: #f5f5f5;
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
 
 .unidadLabel.disabled {
   cursor: not-allowed;
+  opacity: 0.7;
+  background-color: #f8f9fa;
 }
 
-.unidadCheckbox {
-  width: 18px;
-  height: 18px;
+/* Checkbox moderno personalizado */
+.modernCheckbox {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 0;
+  flex-shrink: 0;
+}
+
+.modernCheckbox input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.modernCheckbox .checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  transition: all 0.2s ease;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.unidadCheckbox:disabled {
+.modernCheckbox:hover .checkmark {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.1);
+  transform: scale(1.05);
+}
+
+.modernCheckbox input:checked ~ .checkmark {
+  background: #1976d2;
+  border-color: #1976d2;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+}
+
+.modernCheckbox input:checked ~ .checkmark:after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 3px;
+  width: 8px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.modernCheckbox input:disabled ~ .checkmark {
+  background: #f5f5f5;
+  border-color: #ddd;
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.6;
+}
+
+.modernCheckbox input:disabled:checked ~ .checkmark {
+  background: #ccc;
+  border-color: #ccc;
+}
+
+/* Alternativa: Checkbox tipo toggle switch */
+.toggleCheckbox {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  margin-right: 12px;
+}
+
+.toggleCheckbox input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggleCheckbox .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.toggleCheckbox .slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggleCheckbox input:checked + .slider {
+  background-color: #1976d2;
+}
+
+.toggleCheckbox input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.toggleCheckbox input:disabled + .slider {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.toggleCheckbox input:disabled + .slider:before {
+  background-color: #ddd;
 }
 
 .unidadName {
   flex: 1;
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #333;
+  padding: 4px 0;
 }
 
 .unidadName.disabled {
@@ -151,13 +335,55 @@
 }
 
 .inscriptoBadge {
-  background: #4caf50;
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
   color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 11px;
-  font-weight: 500;
-  margin-left: auto;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  flex-shrink: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.reinscribibleBadge {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  flex-shrink: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  animation: pulse 2s infinite;
+}
+
+.disponibleBadge {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+  flex-shrink: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .submitButton {

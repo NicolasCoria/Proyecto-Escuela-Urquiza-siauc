@@ -78,27 +78,80 @@ class AlumnoController extends Controller
             ? CarreraUc::where('id_carrera', $id_carrera)->pluck('id_uc')->toArray()
             : [];
         $unidades_carrera = !empty($uc_carrera_ids)
-            ? UnidadCurricular::whereIn('id_uc', $uc_carrera_ids)->get()
+            ? CarreraUc::where('id_carrera', $id_carrera)
+                ->join('unidad_curricular', 'carrera_uc.id_uc', '=', 'unidad_curricular.id_uc')
+                ->select('unidad_curricular.*', 'carrera_uc.ano')
+                ->orderBy('carrera_uc.ano')
+                ->orderBy('unidad_curricular.unidad_curricular')
+                ->get()
             : collect();
 
-        // UC aprobadas (nota >= 6)
-        $notas_aprobadas = Nota::where('id_alumno', $id_alumno)->where('nota', '>=', 6)->pluck('id_uc')->unique()->toArray();
+        // UC aprobadas con umbral según formato
+        // Materia: >= 8, Taller: >= 6, Laboratorio/Proyecto: >= 7, default: >= 6
+        $notas_aprobadas = Nota::where('nota.id_alumno', $id_alumno)
+            ->join('unidad_curricular', 'nota.id_uc', '=', 'unidad_curricular.id_uc')
+            ->whereRaw("nota.nota >= CASE 
+                WHEN unidad_curricular.Formato = 'Materia' THEN 8 
+                WHEN unidad_curricular.Formato = 'Taller' THEN 6 
+                WHEN unidad_curricular.Formato IN ('Laboratorio','Proyecto') THEN 7 
+                ELSE 6 END")
+            ->pluck('nota.id_uc')
+            ->unique()
+            ->toArray();
         $unidades_aprobadas = !empty($notas_aprobadas)
-            ? UnidadCurricular::whereIn('id_uc', $notas_aprobadas)->get()
+            ? CarreraUc::where('id_carrera', $id_carrera)
+                ->whereIn('carrera_uc.id_uc', $notas_aprobadas)
+                ->join('unidad_curricular', 'carrera_uc.id_uc', '=', 'unidad_curricular.id_uc')
+                ->select('unidad_curricular.*', 'carrera_uc.ano')
+                ->orderBy('carrera_uc.ano')
+                ->orderBy('unidad_curricular.unidad_curricular')
+                ->get()
             : collect();
 
-        // UC inscriptas
+        // UC inscriptas con fecha de inscripción y estado de aprobación
         $inscripto_ids = AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
         $unidades_inscriptas = !empty($inscripto_ids)
-            ? UnidadCurricular::whereIn('id_uc', $inscripto_ids)->get()
+            ? CarreraUc::where('carrera_uc.id_carrera', $id_carrera)
+                ->whereIn('carrera_uc.id_uc', $inscripto_ids)
+                ->join('unidad_curricular', 'carrera_uc.id_uc', '=', 'unidad_curricular.id_uc')
+                ->join('inscripcion', function($join) use ($id_alumno) {
+                    $join->on('carrera_uc.id_uc', '=', 'inscripcion.id_uc')
+                         ->where('inscripcion.id_alumno', '=', $id_alumno);
+                })
+                ->select(
+                    'unidad_curricular.*', 
+                    'carrera_uc.ano',
+                    'inscripcion.FechaHora as fecha_inscripcion',
+                    'inscripcion.id_inscripcion'
+                )
+                ->orderBy('carrera_uc.ano')
+                ->orderBy('unidad_curricular.unidad_curricular')
+                ->get()
             : collect();
 
+        // Marcar UCs inscriptas como aprobadas o no aprobadas
+        $unidades_inscriptas = $unidades_inscriptas->map(function($uc) use ($notas_aprobadas) {
+            $uc->esta_aprobada = in_array($uc->id_uc, $notas_aprobadas);
+            $uc->puede_reinscribirse = !$uc->esta_aprobada; // Solo si no está aprobada
+            return $uc;
+        });
+
         // UC disponibles (mismo criterio optimizado que en AuthController)
-        $todas_uc = UnidadCurricular::whereIn('id_uc', $uc_carrera_ids)->get()->keyBy('id_uc');
+        $todas_uc = CarreraUc::where('id_carrera', $id_carrera)
+            ->join('unidad_curricular', 'carrera_uc.id_uc', '=', 'unidad_curricular.id_uc')
+            ->select('unidad_curricular.*', 'carrera_uc.ano')
+            ->get()
+            ->keyBy('id_uc');
         $correlatividades = \App\Models\Correlatividad::whereIn('id_uc', $uc_carrera_ids)->get()->groupBy('id_uc');
-        $notas_map = Nota::where('id_alumno', $id_alumno)
-            ->whereIn('id_uc', $uc_carrera_ids)
-            ->where('nota', '>=', 6)
+        $notas_map = Nota::where('nota.id_alumno', $id_alumno)
+            ->whereIn('nota.id_uc', $uc_carrera_ids)
+            ->join('unidad_curricular', 'nota.id_uc', '=', 'unidad_curricular.id_uc')
+            ->whereRaw("nota.nota >= CASE 
+                WHEN unidad_curricular.Formato = 'Materia' THEN 8 
+                WHEN unidad_curricular.Formato = 'Taller' THEN 6 
+                WHEN unidad_curricular.Formato IN ('Laboratorio','Proyecto') THEN 7 
+                ELSE 6 END")
+            ->select('nota.*')
             ->get()
             ->keyBy('id_uc');
 
@@ -112,14 +165,24 @@ class AlumnoController extends Controller
             if ($ok) $unidades_disponibles[] = $uc;
         }
 
+        // Agrupar UCs por año para el frontend
+        $unidades_carrera_por_ano = $unidades_carrera->groupBy('ano');
+        $unidades_aprobadas_por_ano = $unidades_aprobadas->groupBy('ano');
+        $unidades_inscriptas_por_ano = $unidades_inscriptas->groupBy('ano');
+        $unidades_disponibles_por_ano = collect($unidades_disponibles)->groupBy('ano');
+
         $response = [
             'success' => true,
             'alumno' => $alumno,
             'carrera' => $carrera,
             'unidades_carrera' => $unidades_carrera,
+            'unidades_carrera_por_ano' => $unidades_carrera_por_ano,
             'unidades_aprobadas' => $unidades_aprobadas,
+            'unidades_aprobadas_por_ano' => $unidades_aprobadas_por_ano,
             'unidades_inscriptas' => $unidades_inscriptas,
+            'unidades_inscriptas_por_ano' => $unidades_inscriptas_por_ano,
             'unidades_disponibles' => $unidades_disponibles,
+            'unidades_disponibles_por_ano' => $unidades_disponibles_por_ano,
         ];
 
         \Log::info('API alumno/bootstrap', [

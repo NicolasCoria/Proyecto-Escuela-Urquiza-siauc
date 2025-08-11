@@ -81,7 +81,7 @@ class InscripcionUnidadCurricularController extends Controller
         $inscripto_ids = AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
 
         // Unidades curriculares de la carrera del alumno (desde carrera_uc)
-        $uc_carrera = \App\Models\CarreraUc::where('id_carrera', $id_carrera)->pluck('id_uc')->toArray();
+        $uc_carrera = \App\Models\CarreraUc::where('carrera_uc.id_carrera', $id_carrera)->pluck('id_uc')->toArray();
 
         // Obtener las unidades curriculares de la carrera
         $todas_uc = UnidadCurricular::whereIn('id_uc', $uc_carrera)->get()->keyBy('id_uc');
@@ -89,10 +89,17 @@ class InscripcionUnidadCurricularController extends Controller
         // Traer todas las correlatividades de las UCs de la carrera agrupadas por id_uc
         $correlatividades = Correlatividad::whereIn('id_uc', $uc_carrera)->get()->groupBy('id_uc');
 
-        // Traer todas las notas aprobadas del alumno para UCs de la carrera y mapear por id_uc
-        $notas_aprobadas = Nota::where('id_alumno', $id_alumno)
-            ->whereIn('id_uc', $uc_carrera)
-            ->where('nota', '>=', 6)
+        // Traer todas las notas aprobadas del alumno para UCs de la carrera según formato (umbral dinámico)
+        // Materia: >= 8, Taller: >= 6, Laboratorio/Proyecto: >= 7, default: >= 6
+        $notas_aprobadas = Nota::where('nota.id_alumno', $id_alumno)
+            ->whereIn('nota.id_uc', $uc_carrera)
+            ->join('unidad_curricular', 'nota.id_uc', '=', 'unidad_curricular.id_uc')
+            ->whereRaw("nota.nota >= CASE 
+                WHEN unidad_curricular.Formato = 'Materia' THEN 8 
+                WHEN unidad_curricular.Formato = 'Taller' THEN 6 
+                WHEN unidad_curricular.Formato IN ('Laboratorio','Proyecto') THEN 7 
+                ELSE 6 END")
+            ->select('nota.*')
             ->get()
             ->keyBy('id_uc');
 
@@ -219,19 +226,67 @@ class InscripcionUnidadCurricularController extends Controller
         // Verificar si ya está inscripto en alguna de las unidades
         $yaInscripto = AlumnoUc::where('id_alumno', $id_alumno)
             ->whereIn('id_uc', $validated['unidades'])
-            ->pluck('id_uc')
-            ->toArray();
+            ->get()
+            ->keyBy('id_uc');
 
         if (!empty($yaInscripto)) {
-            $unidadesNombres = UnidadCurricular::whereIn('id_uc', $yaInscripto)
-                ->pluck('unidad_curricular')
-                ->toArray();
+            // Verificar si puede reinscribirse (solo si no está aprobada)
+            $unidadesReinscripcion = [];
+            $unidadesDuplicadas = [];
             
-            return response()->json([
-                'error' => 'Ya estás inscripto en las siguientes unidades curriculares: ' . implode(', ', $unidadesNombres),
-                'unidades_duplicadas' => $yaInscripto,
-                'unidades_nombres' => $unidadesNombres
-            ], 400);
+            foreach ($yaInscripto as $id_uc => $alumnoUc) {
+                // Verificar si está aprobada según el formato de la UC
+                $uc = UnidadCurricular::find($id_uc);
+                $nota = Nota::where('id_alumno', $id_alumno)
+                    ->where('id_uc', $id_uc)
+                    ->first();
+                
+                $notaMinima = 6; // Default
+                if ($uc && $uc->Formato) {
+                    switch ($uc->Formato) {
+                        case 'Materia': $notaMinima = 8; break;
+                        case 'Taller': $notaMinima = 6; break;
+                        case 'Laboratorio':
+                        case 'Proyecto': $notaMinima = 7; break;
+                    }
+                }
+                
+                $estaAprobada = $nota && $nota->nota >= $notaMinima;
+                
+                if ($estaAprobada) {
+                    $unidadesDuplicadas[] = $id_uc;
+                } else {
+                    $unidadesReinscripcion[] = $id_uc;
+                }
+            }
+            
+            // Si hay UCs ya aprobadas, no permitir reinscripción
+            if (!empty($unidadesDuplicadas)) {
+                $unidadesNombres = UnidadCurricular::whereIn('id_uc', $unidadesDuplicadas)
+                    ->pluck('unidad_curricular')
+                    ->toArray();
+                
+                return response()->json([
+                    'error' => 'Ya tienes aprobadas las siguientes unidades curriculares: ' . implode(', ', $unidadesNombres),
+                    'unidades_duplicadas' => $unidadesDuplicadas,
+                    'unidades_nombres' => $unidadesNombres
+                ], 400);
+            }
+            
+            // Si hay UCs para reinscripción, mostrar información
+            if (!empty($unidadesReinscripcion)) {
+                $unidadesNombres = UnidadCurricular::whereIn('id_uc', $unidadesReinscripcion)
+                    ->pluck('unidad_curricular')
+                    ->toArray();
+                
+                return response()->json([
+                    'warning' => 'Reinscripción en UCs no aprobadas',
+                    'message' => 'Te vas a reinscribir en las siguientes unidades curriculares: ' . implode(', ', $unidadesNombres),
+                    'unidades_reinscripcion' => $unidadesReinscripcion,
+                    'unidades_nombres' => $unidadesNombres,
+                    'allow_reinscription' => true
+                ], 200);
+            }
         }
 
         // Buscar carrera y grado del alumno consultando las relaciones
@@ -255,29 +310,64 @@ class InscripcionUnidadCurricularController extends Controller
         $fechaHora = now();
         $inscripciones = [];
         foreach ($validated['unidades'] as $id_uc) {
-            // Registrar en alumno_uc (registro de unidades curriculares del alumno)
-            \App\Models\AlumnoUc::create([
-                'id_alumno' => $id_alumno,
-                'id_uc' => $id_uc
-            ]);
+            // Verificar si ya está inscripto para reinscripción
+            $yaInscripto = AlumnoUc::where('id_alumno', $id_alumno)
+                ->where('id_uc', $id_uc)
+                ->first();
             
-            // Registrar en inscripcion (registro de la inscripción con fecha, carrera, grado)
-            $maxId = \App\Models\Inscripcion::max('id_inscripcion') ?? 0;
-            $id_inscripcion = $maxId + 1;
-            $insc = \App\Models\Inscripcion::create([
-                'id_inscripcion' => $id_inscripcion,
-                'FechaHora' => $fechaHora,
-                'id_alumno' => $id_alumno,
-                'id_uc' => $id_uc,
-                'id_carrera' => $id_carrera,
-                'id_grado' => $id_grado
-            ]);
-            $inscripciones[] = $insc;
+            if ($yaInscripto) {
+                // Es una reinscripción, actualizar la fecha en la tabla inscripcion
+                $inscripcionExistente = Inscripcion::where('id_alumno', $id_alumno)
+                    ->where('id_uc', $id_uc)
+                    ->orderBy('FechaHora', 'desc')
+                    ->first();
+                
+                if ($inscripcionExistente) {
+                    $inscripcionExistente->update(['FechaHora' => $fechaHora]);
+                    $inscripciones[] = $inscripcionExistente;
+                }
+            } else {
+                // Nueva inscripción
+                \App\Models\AlumnoUc::create([
+                    'id_alumno' => $id_alumno,
+                    'id_uc' => $id_uc
+                ]);
+                
+                // Registrar en inscripcion (registro de la inscripción con fecha, carrera, grado)
+                $maxId = \App\Models\Inscripcion::max('id_inscripcion') ?? 0;
+                $id_inscripcion = $maxId + 1;
+                $insc = \App\Models\Inscripcion::create([
+                    'id_inscripcion' => $id_inscripcion,
+                    'FechaHora' => $fechaHora,
+                    'id_alumno' => $id_alumno,
+                    'id_uc' => $id_uc,
+                    'id_carrera' => $id_carrera,
+                    'id_grado' => $id_grado
+                ]);
+                $inscripciones[] = $insc;
+            }
         }
+        
+        $mensaje = count($inscripciones) > 1 ? 'Inscripciones' : 'Inscripción';
+        $mensaje .= ' exitosa';
+        
+        // Verificar si hay reinscripciones
+        $reinscripciones = collect($inscripciones)->filter(function($insc) use ($id_alumno) {
+            $yaInscripto = AlumnoUc::where('id_alumno', $id_alumno)
+                ->where('id_uc', $insc->id_uc)
+                ->first();
+            return $yaInscripto && $yaInscripto->created_at != $insc->FechaHora;
+        });
+        
+        if ($reinscripciones->count() > 0) {
+            $mensaje .= ' (incluye ' . $reinscripciones->count() . ' reinscripción(es))';
+        }
+        
         return response()->json([
             'success' => true,
             'inscripciones' => $inscripciones,
-            'message' => 'Inscripción exitosa en ' . count($inscripciones) . ' unidad(es) curricular(es)'
+            'reinscripciones' => $reinscripciones->count(),
+            'message' => $mensaje . ' en ' . count($inscripciones) . ' unidad(es) curricular(es)'
         ]);
     }
 
@@ -370,11 +460,19 @@ class InscripcionUnidadCurricularController extends Controller
             return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
         }
 
-        // Buscar todas las notas >= 6 del alumno (cache 60s)
+        // Buscar todas las UCs aprobadas del alumno (umbral según formato) - cache 60s
         $cacheKeyAprob = "alumno:{$id_alumno}:unidades_aprobadas";
         $unidades = Cache::remember($cacheKeyAprob, 60, function () use ($id_alumno) {
-            $notas = \App\Models\Nota::where('id_alumno', $id_alumno)->where('nota', '>=', 6)->get();
-            $uc_ids = $notas->pluck('id_uc')->unique()->toArray();
+            $uc_ids = \App\Models\Nota::where('nota.id_alumno', $id_alumno)
+                ->join('unidad_curricular', 'nota.id_uc', '=', 'unidad_curricular.id_uc')
+                ->whereRaw("nota.nota >= CASE 
+                    WHEN unidad_curricular.Formato = 'Materia' THEN 8 
+                    WHEN unidad_curricular.Formato = 'Taller' THEN 6 
+                    WHEN unidad_curricular.Formato IN ('Laboratorio','Proyecto') THEN 7 
+                    ELSE 6 END")
+                ->pluck('nota.id_uc')
+                ->unique()
+                ->toArray();
             return \App\Models\UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
         });
 

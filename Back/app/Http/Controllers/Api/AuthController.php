@@ -178,10 +178,16 @@ class AuthController extends Controller
         // Traer todas las correlatividades de las UCs de la carrera
         $correlatividades = \App\Models\Correlatividad::whereIn('id_uc', $uc_carrera)->get()->groupBy('id_uc');
         
-        // Traer todas las notas del alumno de las UCs de la carrera
-        $notas = \App\Models\Nota::where('id_alumno', $id_alumno)
-            ->whereIn('id_uc', $uc_carrera)
-            ->where('nota', '>=', 6)
+        // Traer notas aprobadas según formato de la UC (umbral dinámico)
+        $notas = \App\Models\Nota::where('nota.id_alumno', $id_alumno)
+            ->whereIn('nota.id_uc', $uc_carrera)
+            ->join('unidad_curricular', 'nota.id_uc', '=', 'unidad_curricular.id_uc')
+            ->whereRaw("nota.nota >= CASE 
+                WHEN unidad_curricular.Formato = 'Materia' THEN 8 
+                WHEN unidad_curricular.Formato = 'Taller' THEN 6 
+                WHEN unidad_curricular.Formato IN ('Laboratorio','Proyecto') THEN 7 
+                ELSE 6 END")
+            ->select('nota.*')
             ->get()
             ->keyBy('id_uc');
 
