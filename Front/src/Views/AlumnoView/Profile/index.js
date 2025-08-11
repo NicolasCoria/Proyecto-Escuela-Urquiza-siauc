@@ -7,9 +7,32 @@ import { useModalContext, useStateContext } from '../../../Components/Contexts';
 
 const Profile = () => {
   const { modalState, closeModal } = useModalContext();
-  const { user, carrera, unidadesCarrera, unidadesAprobadas, unidadesInscriptas } =
+  const { user, carrera, unidadesCarrera, unidadesAprobadas, unidadesInscriptasPorAno } =
     useStateContext();
   const [isLoading] = useState(false);
+
+  // Función para determinar el estado de una UC inscripta
+  const determinarEstadoUC = (fechaInscripcion, estaAprobada) => {
+    if (estaAprobada) {
+      return { estado: 'aprobada', esReinscribible: false };
+    }
+
+    if (!fechaInscripcion) {
+      return { estado: 'cursando', esReinscribible: false };
+    }
+
+    const fechaInsc = new Date(fechaInscripcion);
+    const fechaActual = new Date();
+    const diferenciaMeses =
+      (fechaActual.getTime() - fechaInsc.getTime()) / (1000 * 60 * 60 * 24 * 30.44); // Aproximadamente un mes
+
+    // Si pasó más de 12 meses (1 año) y no está aprobada, es reinscribible
+    if (diferenciaMeses > 12) {
+      return { estado: 'reinscribible', esReinscribible: true };
+    } else {
+      return { estado: 'cursando', esReinscribible: false };
+    }
+  };
 
   // Si no hay usuario logueado, puedes redirigir o mostrar un mensaje
   if (!user) {
@@ -29,8 +52,8 @@ const Profile = () => {
     isArray: Array.isArray(unidadesAprobadas)
   });
 
-  // Verificar que unidadesInscriptas sea un array
-  const unidadesInscriptasArray = Array.isArray(unidadesInscriptas) ? unidadesInscriptas : [];
+  // Convertir unidadesInscriptasPorAno a array plano para el perfil
+  const unidadesInscriptasArray = Object.values(unidadesInscriptasPorAno || {}).flat();
 
   return (
     <>
@@ -146,18 +169,61 @@ const Profile = () => {
             <div className={styles.dashboardCard}>
               <h3>Inscripciones activas</h3>
               {unidadesInscriptasArray.length === 0 ? (
-                <div>No hay inscripciones activas.</div>
+                <div
+                  style={{
+                    color: '#666',
+                    fontStyle: 'italic',
+                    textAlign: 'center',
+                    padding: '20px'
+                  }}
+                >
+                  No hay inscripciones activas.
+                </div>
               ) : (
-                <ul className={styles.inscripcionesList}>
-                  {unidadesInscriptasArray.map((uc) => (
-                    <li key={uc.id_uc || uc.id}>
-                      {uc.Unidad_Curricular ||
-                        uc.unidad_curricular ||
-                        uc.nombre ||
-                        'Unidad Curricular'}
-                    </li>
-                  ))}
-                </ul>
+                <div className={styles.inscripcionesContainer}>
+                  <p style={{ fontSize: '14px', color: '#666', margin: '8px 0' }}>
+                    Total inscripciones: {unidadesInscriptasArray.length}
+                  </p>
+                  <div className={styles.inscripcionesGrid}>
+                    {unidadesInscriptasArray.map((uc) => {
+                      const fechaInscripcion = uc.fecha_inscripcion;
+                      const estaAprobada = uc.esta_aprobada;
+                      const estadoUC = determinarEstadoUC(fechaInscripcion, estaAprobada);
+
+                      return (
+                        <div key={uc.id_uc || uc.id} className={styles.inscripcionCard}>
+                          <div className={styles.inscripcionHeader}>
+                            <h4 className={styles.inscripcionNombre}>
+                              {uc.Unidad_Curricular ||
+                                uc.unidad_curricular ||
+                                uc.nombre ||
+                                'Unidad Curricular'}
+                            </h4>
+                            <div className={styles.inscripcionEstados}>
+                              {estadoUC.estado === 'aprobada' && (
+                                <span className={styles.estadoAprobada}>✅ Aprobada</span>
+                              )}
+                              {estadoUC.estado === 'cursando' && (
+                                <span className={styles.estadoCursando}>📚 Cursando</span>
+                              )}
+                              {estadoUC.estado === 'reinscribible' && (
+                                <span className={styles.estadoReinscribible}>🔄 Reinscribible</span>
+                              )}
+                            </div>
+                          </div>
+                          {fechaInscripcion && (
+                            <div className={styles.inscripcionFecha}>
+                              <span>📅 Fecha:</span>
+                              <strong>
+                                {new Date(fechaInscripcion).toLocaleDateString('es-ES')}
+                              </strong>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
           </div>

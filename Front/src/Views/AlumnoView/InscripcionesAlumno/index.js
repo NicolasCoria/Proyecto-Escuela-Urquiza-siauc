@@ -6,7 +6,13 @@ import styles from './inscripciones.module.css';
 import Button from '../../../Components/Shared/Button';
 
 const InscripcionesAlumno = () => {
-  const { carrera, unidadesDisponibles, unidadesDisponiblesPorAno } = useStateContext();
+  const {
+    carrera,
+    unidadesDisponibles,
+    unidadesDisponiblesPorAno,
+    unidadesAprobadas,
+    unidadesInscriptasPorAno
+  } = useStateContext();
   const [seleccionadas, setSeleccionadas] = useState([]);
   const [inscripciones, setInscripciones] = useState([]);
   const [success, setSuccess] = useState(false);
@@ -168,15 +174,56 @@ const InscripcionesAlumno = () => {
 
   // Verificar si una unidad ya está inscripta
   const isUnidadInscripta = (id_uc) => {
-    return unidadesInscriptas.includes(id_uc);
+    // Verificar en el array de unidadesInscriptas (objetos) si esta UC está incluida
+    return unidadesInscriptas.some((uc) => (uc.id_uc || uc.id) === id_uc);
   };
 
   // Verificar si una unidad ya está aprobada
   const isUnidadAprobada = (id_uc) => {
-    // Aquí necesitarías una lógica para verificar si la unidad está aprobada
-    // Esto podría requerir una llamada a la API o una lógica de estado local
-    // Por ahora, simulamos que una unidad está aprobada si ya está inscripta
-    return isUnidadInscripta(id_uc);
+    // Verificar en el array de unidades aprobadas si esta UC está incluida
+    return unidadesAprobadas && unidadesAprobadas.some((uc) => (uc.id_uc || uc.id) === id_uc);
+  };
+
+  // Función para determinar si una UC es reinscribible
+  const isUnidadReinscribible = (id_uc) => {
+    // Si está aprobada, no es reinscribible
+    if (isUnidadAprobada(id_uc)) {
+      return false;
+    }
+
+    // Buscar la fecha de inscripción en todas las UCs inscriptas
+    let fechaInscripcion = null;
+
+    // Buscar en unidadesInscriptasPorAno
+    if (unidadesInscriptasPorAno) {
+      Object.values(unidadesInscriptasPorAno).forEach((ucsAno) => {
+        const uc = ucsAno.find((u) => (u.id_uc || u.id) === id_uc);
+        if (uc && uc.fecha_inscripcion) {
+          fechaInscripcion = uc.fecha_inscripcion;
+        }
+      });
+    }
+
+    // Si no se encontró en unidadesInscriptasPorAno, buscar en unidadesInscriptas
+    if (!fechaInscripcion && unidadesInscriptas) {
+      const uc = unidadesInscriptas.find((u) => (u.id_uc || u.id) === id_uc);
+      if (uc && uc.fecha_inscripcion) {
+        fechaInscripcion = uc.fecha_inscripcion;
+      }
+    }
+
+    // Si no hay fecha de inscripción, no es reinscribible
+    if (!fechaInscripcion) {
+      return false;
+    }
+
+    // Verificar si pasó más de 12 meses usando la misma lógica que el Dashboard
+    const fechaInsc = new Date(fechaInscripcion);
+    const fechaActual = new Date();
+    const diferenciaMeses =
+      (fechaActual.getTime() - fechaInsc.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+
+    return diferenciaMeses > 12;
   };
 
   // IDs seleccionables (excluye las ya inscriptas/disabled)
@@ -240,6 +287,7 @@ const InscripcionesAlumno = () => {
                 {unidadesDisponiblesPorAno[ano].map((uc) => {
                   const isInscripta = isUnidadInscripta(uc.id_uc);
                   const isAprobada = isUnidadAprobada(uc.id_uc);
+                  const isReinscribible = isUnidadReinscribible(uc.id_uc);
 
                   return (
                     <li key={uc.id_uc} className={styles.unidadItem}>
@@ -261,15 +309,9 @@ const InscripcionesAlumno = () => {
                           {uc.unidad_curricular || uc.Unidad_Curricular}
                         </span>
 
-                        {/* Estado de la UC */}
-                        {isInscripta && isAprobada && (
-                          <span className={styles.inscriptoBadge}>✅ Aprobada</span>
-                        )}
-                        {isInscripta && !isAprobada && (
-                          <span className={styles.reinscribibleBadge}>🔄 Reinscribible</span>
-                        )}
-                        {!isInscripta && (
-                          <span className={styles.disponibleBadge}>📚 Disponible</span>
+                        {/* Solo mostrar etiqueta si es reinscribible */}
+                        {isReinscribible && (
+                          <span className={styles.reinscribibleBadge}>🔄 Reinscripción</span>
                         )}
                       </label>
                     </li>

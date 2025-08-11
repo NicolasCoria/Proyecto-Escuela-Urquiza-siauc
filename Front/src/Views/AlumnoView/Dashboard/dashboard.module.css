@@ -58,6 +58,103 @@
   box-shadow: 0 4px 16px #0002;
 }
 
+/* Estilos para la tabla de UCs inscriptas */
+.ucTable {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.ucTableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ucTableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.ucTableRow:hover {
+  background-color: #f8f9fa;
+}
+
+.ucTableRow:last-child {
+  border-bottom: none;
+}
+
+.ucTableCol {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.ucTableHeader .ucTableCol {
+  justify-content: center;
+  text-align: center;
+}
+
+.fechaInscripcion {
+  color: #666;
+  font-weight: 500;
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.estadoContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.estadoAprobada {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+.estadoCursando {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+}
+
+.estadoReinscribible {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+}
+
 @media (max-width: 900px) {
   .dashboardGrid {
     flex-direction: column;
@@ -65,5 +162,53 @@
   }
   .dashboardCard {
     min-width: unset;
+  }
+  
+  /* Responsive para la tabla */
+  .ucTableHeader,
+  .ucTableRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .ucTableHeader .ucTableCol {
+    display: none;
+  }
+  
+  .ucTableRow .ucTableCol:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #1976d2;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+  
+  .ucTableRow .ucTableCol:nth-child(1):before {
+    content: "Unidad Curricular:";
+  }
+  
+  .ucTableRow .ucTableCol:nth-child(2):before {
+    content: "Fecha:";
+  }
+  
+  .ucTableRow .ucTableCol:nth-child(3):before {
+    content: "Estado:";
+  }
+  
+  .estadoContainer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboardContainer {
+    padding: 1rem;
+  }
+  
+  .ucTableCol {
+    padding: 10px 12px;
   }
 }

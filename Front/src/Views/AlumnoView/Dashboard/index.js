@@ -13,6 +13,29 @@ const DashboardAlumno = () => {
   } = useStateContext();
   const navigate = useNavigate();
 
+  // Función para determinar el estado de una UC inscripta
+  const determinarEstadoUC = (fechaInscripcion, estaAprobada) => {
+    if (estaAprobada) {
+      return { estado: 'aprobada', esReinscribible: false };
+    }
+
+    if (!fechaInscripcion) {
+      return { estado: 'cursando', esReinscribible: false };
+    }
+
+    const fechaInsc = new Date(fechaInscripcion);
+    const fechaActual = new Date();
+    const diferenciaMeses =
+      (fechaActual.getTime() - fechaInsc.getTime()) / (1000 * 60 * 60 * 24 * 30.44); // Aproximadamente un mes
+
+    // Si pasó más de 12 meses (1 año) y no está aprobada, es reinscribible
+    if (diferenciaMeses > 12) {
+      return { estado: 'reinscribible', esReinscribible: true };
+    } else {
+      return { estado: 'cursando', esReinscribible: false };
+    }
+  };
+
   // Progreso académico
   const total = Object.values(unidadesCarreraPorAno || {}).reduce(
     (sum, ucs) => sum + ucs.length,
@@ -35,15 +58,15 @@ const DashboardAlumno = () => {
         {Object.keys(ucsPorAno)
           .sort((a, b) => parseInt(a) - parseInt(b))
           .map((ano) => (
-            <div key={ano} style={{ marginBottom: '16px' }}>
+            <div key={ano} style={{ marginBottom: '20px' }}>
               <h4
                 style={{
-                  margin: '0 0 8px 0',
+                  margin: '0 0 12px 0',
                   color: '#1976d2',
                   fontSize: '14px',
                   fontWeight: '600',
-                  borderBottom: '1px solid #e0e0e0',
-                  paddingBottom: '4px'
+                  borderBottom: '2px solid #1976d2',
+                  paddingBottom: '6px'
                 }}
               >
                 {ano === '1'
@@ -56,13 +79,60 @@ const DashboardAlumno = () => {
                         ? 'Cuarto Año'
                         : `${ano}° Año`}
               </h4>
-              <ul style={{ margin: '0 0 0 16px', padding: '0' }}>
-                {ucsPorAno[ano].map((uc) => {
-                  const fechaInscripcion = uc.fecha_inscripcion;
-                  const estaAprobada = uc.esta_aprobada;
-                  const puedeReinscribirse = uc.puede_reinscribirse;
 
-                  return (
+              {/* Tabla de UCs para UCs inscriptas */}
+              {titulo.includes('Inscriptas') ? (
+                <div className={styles.ucTable}>
+                  <div className={styles.ucTableHeader}>
+                    <div className={styles.ucTableCol}>Unidad Curricular</div>
+                    <div className={styles.ucTableCol}>Fecha</div>
+                    <div className={styles.ucTableCol}>Estado</div>
+                  </div>
+                  {ucsPorAno[ano].map((uc) => {
+                    const fechaInscripcion = uc.fecha_inscripcion;
+                    const estaAprobada = uc.esta_aprobada;
+                    const estadoUC = determinarEstadoUC(fechaInscripcion, estaAprobada);
+
+                    return (
+                      <div key={uc.id_uc || uc.id} className={styles.ucTableRow}>
+                        <div className={styles.ucTableCol}>
+                          {uc.Unidad_Curricular ||
+                            uc.unidad_curricular ||
+                            uc.nombre ||
+                            'Unidad Curricular'}
+                        </div>
+                        <div className={styles.ucTableCol}>
+                          {fechaInscripcion ? (
+                            <span className={styles.fechaInscripcion}>
+                              {new Date(fechaInscripcion).toLocaleDateString('es-ES')}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#999', fontStyle: 'italic' }}>
+                              No disponible
+                            </span>
+                          )}
+                        </div>
+                        <div className={styles.ucTableCol}>
+                          <div className={styles.estadoContainer}>
+                            {estadoUC.estado === 'aprobada' && (
+                              <span className={styles.estadoAprobada}>✅ Aprobada</span>
+                            )}
+                            {estadoUC.estado === 'cursando' && (
+                              <span className={styles.estadoCursando}>📚 Cursando</span>
+                            )}
+                            {estadoUC.estado === 'reinscribible' && (
+                              <span className={styles.estadoReinscribible}>🔄 Reinscribible</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Lista simple para UCs aprobadas */
+                <ul style={{ margin: '0 0 0 16px', padding: '0' }}>
+                  {ucsPorAno[ano].map((uc) => (
                     <li
                       key={uc.id_uc || uc.id}
                       style={{
@@ -79,68 +149,22 @@ const DashboardAlumno = () => {
                           uc.nombre ||
                           'Unidad Curricular'}
                       </span>
-
-                      {/* Estado de aprobación */}
-                      {estaAprobada ? (
-                        <span
-                          style={{
-                            backgroundColor: '#4caf50',
-                            color: 'white',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            fontSize: '11px',
-                            fontWeight: '500'
-                          }}
-                        >
-                          ✅ Aprobada
-                        </span>
-                      ) : (
-                        <span
-                          style={{
-                            backgroundColor: '#ff9800',
-                            color: 'white',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            fontSize: '11px',
-                            fontWeight: '500'
-                          }}
-                        >
-                          📚 Cursando
-                        </span>
-                      )}
-
-                      {/* Fecha de inscripción */}
-                      {fechaInscripcion && (
-                        <span
-                          style={{
-                            color: '#666',
-                            fontSize: '11px',
-                            fontStyle: 'italic'
-                          }}
-                        >
-                          Inscripto: {new Date(fechaInscripcion).toLocaleDateString('es-ES')}
-                        </span>
-                      )}
-
-                      {/* Indicador de reinscripción */}
-                      {puedeReinscribirse && (
-                        <span
-                          style={{
-                            backgroundColor: '#2196f3',
-                            color: 'white',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            fontSize: '11px',
-                            fontWeight: '500'
-                          }}
-                        >
-                          🔄 Reinscribible
-                        </span>
-                      )}
+                      <span
+                        style={{
+                          backgroundColor: '#4caf50',
+                          color: 'white',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        ✅ Aprobada
+                      </span>
                     </li>
-                  );
-                })}
-              </ul>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
       </div>

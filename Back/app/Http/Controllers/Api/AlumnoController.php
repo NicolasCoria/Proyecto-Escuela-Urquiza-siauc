@@ -12,6 +12,7 @@ use App\Models\CarreraUc;
 use App\Models\UnidadCurricular;
 use App\Models\Nota;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class AlumnoController extends Controller
 {
@@ -157,12 +158,47 @@ class AlumnoController extends Controller
 
         $unidades_disponibles = [];
         foreach ($todas_uc as $uc_id => $uc) {
-            if (in_array($uc_id, $inscripto_ids)) continue;
+            // Si ya está inscripto, verificar si puede reinscribirse
+            if (in_array($uc_id, $inscripto_ids)) {
+                // Verificar si está aprobada
+                if ($notas_map->has($uc_id)) {
+                    continue; // ya aprobada, no disponible
+                }
+                
+                // Verificar si pasó más de un año desde la inscripción
+                $inscripcion = \App\Models\Inscripcion::where('id_alumno', $id_alumno)
+                    ->where('id_uc', $uc_id)
+                    ->orderBy('FechaHora', 'desc')
+                    ->first();
+                
+                if ($inscripcion) {
+                    $fechaInscripcion = new \Carbon\Carbon($inscripcion->FechaHora);
+                    $fechaActual = \Carbon\Carbon::now();
+                    $mesesTranscurridos = $fechaInscripcion->diffInMonths($fechaActual);
+                    
+                    // Si no pasó más de 12 meses, no está disponible para reinscripción
+                    if ($mesesTranscurridos <= 12) {
+                        continue;
+                    }
+                    // Si pasó más de 12 meses y no está aprobada, está disponible para reinscripción
+                }
+            }
+
             $corr = $correlatividades->get($uc_id, collect())->pluck('correlativa')->filter();
-            if ($corr->isEmpty()) { $unidades_disponibles[] = $uc; continue; }
+            if ($corr->isEmpty()) { 
+                $unidades_disponibles[] = $uc; 
+                continue; 
+            }
             $ok = true;
-            foreach ($corr as $c) { if (!$notas_map->has($c)) { $ok = false; break; } }
-            if ($ok) $unidades_disponibles[] = $uc;
+            foreach ($corr as $c) { 
+                if (!$notas_map->has($c)) { 
+                    $ok = false; 
+                    break; 
+                } 
+            }
+            if ($ok) {
+                $unidades_disponibles[] = $uc;
+            }
         }
 
         // Agrupar UCs por año para el frontend

@@ -15,6 +15,7 @@ use App\Models\Alumno;
 use App\Models\Carrera;
 use App\Models\Grado;
 use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 
 class InscripcionUnidadCurricularController extends Controller
 {
@@ -108,12 +109,35 @@ class InscripcionUnidadCurricularController extends Controller
             $todas_uc,
             $inscripto_ids,
             $correlatividades,
-            $notas_aprobadas
+            $notas_aprobadas,
+            $id_alumno
         ) {
             $result = [];
             foreach ($todas_uc as $uc_id => $uc) {
+                // Si ya está inscripto, verificar si puede reinscribirse
                 if (in_array($uc_id, $inscripto_ids)) {
-                    continue; // ya inscripto
+                    // Verificar si está aprobada
+                    if ($notas_aprobadas->has($uc_id)) {
+                        continue; // ya aprobada, no disponible
+                    }
+                    
+                    // Verificar si pasó más de un año desde la inscripción
+                    $inscripcion = \App\Models\Inscripcion::where('id_alumno', $id_alumno)
+                        ->where('id_uc', $uc_id)
+                        ->orderBy('FechaHora', 'desc')
+                        ->first();
+                    
+                    if ($inscripcion) {
+                        $fechaInscripcion = new \Carbon\Carbon($inscripcion->FechaHora);
+                        $fechaActual = \Carbon\Carbon::now();
+                        $mesesTranscurridos = $fechaInscripcion->diffInMonths($fechaActual);
+                        
+                        // Si no pasó más de 12 meses, no está disponible para reinscripción
+                        if ($mesesTranscurridos <= 12) {
+                            continue;
+                        }
+                        // Si pasó más de 12 meses y no está aprobada, está disponible para reinscripción
+                    }
                 }
 
                 $correlativas = $correlatividades->get($uc_id, collect())->pluck('correlativa')->filter();
