@@ -15,6 +15,7 @@ const DashboardAlumno = () => {
 
   // Verificar que unidadesInscriptas sea un array
   const unidadesInscriptasArray = Array.isArray(unidadesInscriptas) ? unidadesInscriptas : [];
+  const unidadesAprobadasArray = Array.isArray(unidadesAprobadas) ? unidadesAprobadas : [];
 
   return (
     <div className={styles.dashboardContainer}>
@@ -25,21 +26,23 @@ const DashboardAlumno = () => {
         </button>
       </div>
       <div className={styles.dashboardGrid}>
-        {/* Inscripciones activas */}
+        {/* Datos del alumno */}
         <section className={styles.dashboardCard}>
-          <h3>Inscripciones activas</h3>
-          {unidadesInscriptasArray.length === 0 ? (
-            <div>No hay inscripciones activas.</div>
-          ) : (
-            <ul>
-              {unidadesInscriptasArray.map((uc) => (
-                <li key={uc.id_uc || uc.id}>
-                  {uc.Unidad_Curricular || uc.unidad_curricular || uc.nombre || 'Unidad Curricular'}
-                </li>
-              ))}
-            </ul>
-          )}
+          <h3>Datos del alumno</h3>
+          <div>
+            <b>Nombre:</b> {user?.nombre} {user?.apellido}
+          </div>
+          <div>
+            <b>Carrera:</b> {carrera?.carrera || carrera?.nombre}
+          </div>
+          <div>
+            <b>Legajo:</b> {user?.legajo || user?.id_alumno}
+          </div>
+          <div>
+            <b>Email:</b> {user?.email}
+          </div>
         </section>
+
         {/* Progreso académico */}
         <section className={styles.dashboardCard}>
           <h3>Progreso académico</h3>
@@ -64,33 +67,39 @@ const DashboardAlumno = () => {
             </>
           )}
         </section>
-        {/* Próximos exámenes */}
-        <section className={styles.dashboardCard}>
-          <h3>Próximos exámenes</h3>
-          <div>Próximamente: listado de exámenes próximos.</div>
-        </section>
       </div>
+
       <div className={styles.dashboardGrid}>
-        {/* Notificaciones */}
+        {/* UCs inscriptas */}
         <section className={styles.dashboardCard}>
-          <h3>Notificaciones</h3>
-          <div>Próximamente: notificaciones importantes.</div>
+          <h3>UCs inscriptas</h3>
+          {unidadesInscriptasArray.length === 0 ? (
+            <div>No hay inscripciones activas.</div>
+          ) : (
+            <ul>
+              {unidadesInscriptasArray.map((uc) => (
+                <li key={uc.id_uc || uc.id}>
+                  {uc.Unidad_Curricular || uc.unidad_curricular || uc.nombre || 'Unidad Curricular'}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
-        {/* Datos rápidos de perfil */}
+
+        {/* UCs aprobadas */}
         <section className={styles.dashboardCard}>
-          <h3>Datos rápidos de perfil</h3>
-          <div>
-            <b>Nombre:</b> {user?.nombre} {user?.apellido}
-          </div>
-          <div>
-            <b>Carrera:</b> {carrera?.carrera || carrera?.nombre}
-          </div>
-          <div>
-            <b>Legajo:</b> {user?.legajo || user?.id_alumno}
-          </div>
-          <div>
-            <b>Email:</b> {user?.email}
-          </div>
+          <h3>UCs aprobadas</h3>
+          {unidadesAprobadasArray.length === 0 ? (
+            <div>No hay unidades curriculares aprobadas aún.</div>
+          ) : (
+            <ul>
+              {unidadesAprobadasArray.map((uc) => (
+                <li key={uc.id_uc || uc.id}>
+                  {uc.Unidad_Curricular || uc.unidad_curricular || uc.nombre || 'Unidad Curricular'}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
     </div>

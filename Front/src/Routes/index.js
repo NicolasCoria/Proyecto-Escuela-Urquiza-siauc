@@ -18,6 +18,8 @@ import AdminLayout from '../Components/Shared/AdminLayout';
 import Layout from '../Components/Shared/Layout';
 import SolicitudesAdmin from '../Views/AdminView/Solicitudes';
 import AdminFAQs from '../Views/AdminView/FAQs';
+import PeriodosInscripcion from '../Views/AdminView/PeriodosInscripcion';
+import Comunicaciones from '../Views/AdminView/Comunicaciones';
 import ProtectedRoute from '../Components/Shared/ProtectedRoute';
 
 const RoutesLanding = () => {
@@ -64,6 +66,8 @@ const RoutesLanding = () => {
           <Route path="informes" element={<AdminInformes />} />
           <Route path="solicitudes" element={<SolicitudesAdmin />} />
           <Route path="faqs" element={<AdminFAQs />} />
+          <Route path="periodos-inscripcion" element={<PeriodosInscripcion />} />
+          <Route path="comunicaciones" element={<Comunicaciones />} />
           <Route path="profile" element={<AdminProfile />} />
         </Route>
 

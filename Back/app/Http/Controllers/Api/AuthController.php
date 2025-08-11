@@ -148,6 +148,7 @@ class AuthController extends Controller
      */
     public function getUnidadesDisponibles(Request $request)
     {
+        $start = microtime(true);
         $user = $request->user();
         if (!$user) {
             return response()->json(['error' => 'No autenticado'], 401);
@@ -206,7 +207,13 @@ class AuthController extends Controller
         }
 
         $endTotal = microtime(true);
-        \Log::info('Tiempo carga UCs disponibles: ' . ($endTotal - $startTotal) . ' segundos');
+        \Log::info('Tiempo carga UCs disponibles (AuthController): ' . ($endTotal - $startTotal) . ' segundos', [
+            'id_alumno' => $id_alumno,
+            'carrera' => $id_carrera,
+            'total_uc' => count($todas_uc),
+            'disponibles' => count($unidades_disponibles),
+            'duration_ms' => round((microtime(true) - $start) * 1000, 2)
+        ]);
 
         return response()->json([
             'unidades_disponibles' => $unidades_disponibles

@@ -21,6 +21,14 @@ const Profile = () => {
   const aprobadas = unidadesAprobadas?.length || 0;
   const progreso = total ? Math.round((aprobadas / total) * 100) : 0;
 
+  // Debug: ver qué datos tenemos
+  console.log('Debug UC Aprobadas:', {
+    unidadesAprobadas,
+    length: unidadesAprobadas?.length,
+    type: typeof unidadesAprobadas,
+    isArray: Array.isArray(unidadesAprobadas)
+  });
+
   // Verificar que unidadesInscriptas sea un array
   const unidadesInscriptasArray = Array.isArray(unidadesInscriptas) ? unidadesInscriptas : [];
 
@@ -79,6 +87,58 @@ const Profile = () => {
                   <div className={styles.progressFill} style={{ width: `${progreso}%` }}></div>
                 </div>
                 <p className={styles.progressPercentage}>{progreso}% completado</p>
+                {/* Lista de UC aprobadas - Versión mejorada */}
+                <div style={{ marginTop: 16, padding: '12px 0', borderTop: '1px solid #eee' }}>
+                  <strong style={{ color: '#333', fontSize: '16px' }}>
+                    Unidades Curriculares Aprobadas:
+                  </strong>
+                  {!unidadesAprobadas ? (
+                    <p style={{ fontStyle: 'italic', color: '#666', margin: '8px 0' }}>
+                      Cargando unidades aprobadas...
+                    </p>
+                  ) : unidadesAprobadas.length === 0 ? (
+                    <p style={{ fontStyle: 'italic', color: '#666', margin: '8px 0' }}>
+                      No hay unidades curriculares aprobadas aún.
+                    </p>
+                  ) : (
+                    <div>
+                      <p style={{ fontSize: '14px', color: '#666', margin: '8px 0' }}>
+                        Total aprobadas: {unidadesAprobadas.length}
+                      </p>
+                      <ul
+                        style={{
+                          margin: '8px 0',
+                          padding: '0 0 0 20px',
+                          listStyle: 'disc',
+                          maxHeight: '200px',
+                          overflowY: 'auto'
+                        }}
+                      >
+                        {unidadesAprobadas.map((uc, index) => {
+                          const nombre =
+                            uc?.unidad_curricular ||
+                            uc?.Unidad_Curricular ||
+                            uc?.nombre ||
+                            `UC ${index + 1}`;
+                          return (
+                            <li
+                              key={uc?.id_uc || uc?.id || index}
+                              style={{
+                                fontSize: '14px',
+                                margin: '4px 0',
+                                color: '#333',
+                                lineHeight: '1.4'
+                              }}
+                            >
+                              {nombre}
+                              {uc?.codigo && <span style={{ color: '#666' }}> ({uc.codigo})</span>}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

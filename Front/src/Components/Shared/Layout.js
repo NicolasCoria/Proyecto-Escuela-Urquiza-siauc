@@ -57,7 +57,7 @@ const Layout = ({ children }) => {
           flexDirection: isAdminRoute ? 'unset' : 'column',
           alignItems: isAdminRoute ? 'unset' : 'center',
           justifyContent: isAdminRoute ? 'unset' : 'center',
-          marginLeft: isAdminRoute || !user ? '0' : '240px'
+          marginLeft: isAdminRoute || !user ? '0' : 'var(--sidebar-width, 240px)'
         }}
       >
         <div
@@ -81,7 +81,7 @@ const Layout = ({ children }) => {
         @media (max-width: 900px) {
           main {
             padding: 16px 4px !important;
-            margin-left: 200px !important;
+            margin-left: var(--sidebar-width, 200px) !important;
           }
           main.no-sidebar {
             margin-left: 0 !important;
@@ -95,10 +95,16 @@ const Layout = ({ children }) => {
           }
           main {
             padding: 8px 2px !important;
-            margin-left: 70px !important;
+            margin-left: var(--sidebar-width, 70px) !important;
           }
           main.no-sidebar {
             margin-left: 0 !important;
+          }
+          /* Contenedor central más estrecho para evitar texto cortado */
+          main > div {
+            padding: 16px 12px !important;
+            max-width: 100% !important;
+            border-radius: 12px !important;
           }
         }
       `}</style>

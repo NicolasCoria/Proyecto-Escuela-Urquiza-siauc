@@ -16,7 +16,8 @@ const Login = () => {
     setUnidadesDisponibles,
     setUnidadesCarrera,
     setUnidadesAprobadas,
-    setUnidadesInscriptas
+    setUnidadesInscriptas,
+    resetAlumnoState
   } = useStateContext();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -53,6 +54,9 @@ const Login = () => {
     }
 
     setIsLoading(true);
+    // Resetear inmediatamente estado del alumno para evitar parpadeo de datos previos
+    setUser(null);
+    resetAlumnoState();
     setErrors({});
 
     try {

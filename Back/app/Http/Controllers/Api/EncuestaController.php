@@ -12,13 +12,16 @@ use App\Models\AlumnoEncuesta;
 use App\Models\Alumno;
 use App\Models\AlumnoCarrera;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class EncuestaController extends Controller
 {
     // Obtener una encuesta específica con sus preguntas y opciones
     public function show($id_encuesta)
     {
-        $encuesta = Encuesta::with(['preguntas.opciones'])->find($id_encuesta);
+        $encuesta = Cache::remember('encuesta:show:' . $id_encuesta, 120, function () use ($id_encuesta) {
+            return Encuesta::with(['preguntas.opciones'])->find($id_encuesta);
+        });
         
         if (!$encuesta) {
             return response()->json(['error' => 'Encuesta no encontrada'], 404);
@@ -137,26 +140,27 @@ class EncuestaController extends Controller
     // Listar encuestas activas, con preguntas y opciones
     public function index(Request $request)
     {
-        $query = Encuesta::with(['preguntas.opciones']);
-        
-        if ($request->has('id_carrera')) {
-            $query->where('id_carrera', $request->input('id_carrera'));
-        }
-        
-        // Filtrar por fechas si se especifica
-        if ($request->has('fecha_actual')) {
-            $fechaActual = $request->input('fecha_actual');
-            $query->where(function($q) use ($fechaActual) {
-                $q->whereNull('fecha_inicio')
-                  ->orWhere('fecha_inicio', '<=', $fechaActual);
-            })->where(function($q) use ($fechaActual) {
-                $q->whereNull('fecha_fin')
-                  ->orWhere('fecha_fin', '>=', $fechaActual);
-            });
-        }
-        
-        $query->where('activa', true);
-        $encuestas = $query->get();
+        // Cache 60s de encuestas activas con filtros (id_carrera + fecha_actual)
+        $idCarrera = $request->input('id_carrera');
+        $fechaActual = $request->input('fecha_actual');
+        $cacheKey = 'encuestas:index:' . md5(json_encode([$idCarrera, $fechaActual]));
+
+        $encuestas = Cache::remember($cacheKey, 60, function () use ($idCarrera, $fechaActual) {
+            $query = Encuesta::with(['preguntas.opciones']);
+            if (!empty($idCarrera)) {
+                $query->where('id_carrera', $idCarrera);
+            }
+            if (!empty($fechaActual)) {
+                $query->where(function ($q) use ($fechaActual) {
+                    $q->whereNull('fecha_inicio')->orWhere('fecha_inicio', '<=', $fechaActual);
+                })->where(function ($q) use ($fechaActual) {
+                    $q->whereNull('fecha_fin')->orWhere('fecha_fin', '>=', $fechaActual);
+                });
+            }
+            $query->where('activa', true);
+            return $query->get();
+        });
+
         return response()->json(['success' => true, 'encuestas' => $encuestas]);
     }
 
@@ -482,27 +486,30 @@ class EncuestaController extends Controller
             return response()->json(['error' => 'No se pudo determinar el alumno'], 400);
         }
 
-        $encuestas = AlumnoEncuesta::with(['encuesta.preguntas.opciones'])
-            ->where('id_alumno', $id_alumno)
-            ->whereHas('encuesta', function ($query) {
-                $query->where('activa', true);
-            })
-            ->get()
-            ->map(function ($alumnoEncuesta) {
-                return [
-                    'id_encuesta' => $alumnoEncuesta->encuesta->id_encuesta,
-                    'titulo' => $alumnoEncuesta->encuesta->titulo,
-                    'descripcion' => $alumnoEncuesta->encuesta->descripcion,
-                    'activa' => $alumnoEncuesta->encuesta->activa,
-                    'fecha_inicio' => $alumnoEncuesta->encuesta->fecha_inicio,
-                    'fecha_fin' => $alumnoEncuesta->encuesta->fecha_fin,
-                    'preguntas' => $alumnoEncuesta->encuesta->preguntas,
-                    'fecha_asignacion' => $alumnoEncuesta->fecha_asignacion,
-                    'notificado' => $alumnoEncuesta->notificado,
-                    'respondida' => $alumnoEncuesta->respondida,
-                    'fecha_respuesta' => $alumnoEncuesta->fecha_respuesta,
-                ];
-            });
+        $cacheKey = "alumno:{$id_alumno}:encuestas_asignadas";
+        $encuestas = Cache::remember($cacheKey, 60, function () use ($id_alumno) {
+            return AlumnoEncuesta::with(['encuesta.preguntas.opciones'])
+                ->where('id_alumno', $id_alumno)
+                ->whereHas('encuesta', function ($query) {
+                    $query->where('activa', true);
+                })
+                ->get()
+                ->map(function ($alumnoEncuesta) {
+                    return [
+                        'id_encuesta' => $alumnoEncuesta->encuesta->id_encuesta,
+                        'titulo' => $alumnoEncuesta->encuesta->titulo,
+                        'descripcion' => $alumnoEncuesta->encuesta->descripcion,
+                        'activa' => $alumnoEncuesta->encuesta->activa,
+                        'fecha_inicio' => $alumnoEncuesta->encuesta->fecha_inicio,
+                        'fecha_fin' => $alumnoEncuesta->encuesta->fecha_fin,
+                        'preguntas' => $alumnoEncuesta->encuesta->preguntas,
+                        'fecha_asignacion' => $alumnoEncuesta->fecha_asignacion,
+                        'notificado' => $alumnoEncuesta->notificado,
+                        'respondida' => $alumnoEncuesta->respondida,
+                        'fecha_respuesta' => $alumnoEncuesta->fecha_respuesta,
+                    ];
+                });
+        });
 
         return response()->json([
             'success' => true,

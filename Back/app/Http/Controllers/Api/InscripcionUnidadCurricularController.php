@@ -14,12 +14,14 @@ use App\Models\Inscripcion;
 use App\Models\Alumno;
 use App\Models\Carrera;
 use App\Models\Grado;
+use Illuminate\Support\Facades\Cache;
 
 class InscripcionUnidadCurricularController extends Controller
 {
     // Obtener las unidades curriculares en las que ya está inscripto el alumno
     public function unidadesInscriptas(Request $request)
     {
+        $start = microtime(true);
         $user = Auth::user();
         if (!$user) {
             return response()->json(['error' => 'No autenticado'], 401);
@@ -29,9 +31,18 @@ class InscripcionUnidadCurricularController extends Controller
             return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
         }
 
-        // Obtener las unidades curriculares en las que ya está inscripto
-        $uc_ids = AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
-        $unidades = UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+        // Obtener las unidades curriculares en las que ya está inscripto (cache 60s)
+        $cacheKey = "alumno:{$id_alumno}:unidades_inscriptas";
+        $unidades = Cache::remember($cacheKey, 60, function () use ($id_alumno) {
+            $uc_ids = AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
+            return UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+        });
+
+        \Log::info('API alumnos/unidades-inscriptas', [
+            'id_alumno' => $id_alumno,
+            'count' => method_exists($unidades, 'count') ? $unidades->count() : (is_array($unidades) ? count($unidades) : null),
+            'duration_ms' => round((microtime(true) - $start) * 1000, 2)
+        ]);
 
         return response()->json($unidades);
     }
@@ -39,6 +50,7 @@ class InscripcionUnidadCurricularController extends Controller
     // Devuelve las unidades curriculares disponibles para inscripción para el alumno autenticado
     public function disponiblesParaInscripcion(Request $request)
     {
+        $start = microtime(true);
         $user = Auth::user();
         if (!$user) {
             return response()->json(['error' => 'No autenticado'], 401);
@@ -46,6 +58,15 @@ class InscripcionUnidadCurricularController extends Controller
         $id_alumno = $user->id_alumno ?? $user->id ?? null;
         if (!$id_alumno) {
             return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
+        }
+
+        // Verificar si hay un período de inscripción activo
+        $periodoActivo = $this->verificarPeriodoInscripcion($id_alumno);
+        if (!$periodoActivo['activo']) {
+            return response()->json([
+                'error' => 'No hay períodos de inscripción activos en este momento',
+                'periodo_info' => $periodoActivo['info']
+            ], 403);
         }
 
         // Obtener la carrera del alumno
@@ -55,54 +76,132 @@ class InscripcionUnidadCurricularController extends Controller
         }
         $id_carrera = $alumnoCarrera->id_carrera;
 
+        // OPTIMIZACIÓN: consultas en bloque (evitar N+1)
         // Unidades curriculares en las que ya está inscripto
         $inscripto_ids = AlumnoUc::where('id_alumno', $id_alumno)->pluck('id_uc')->toArray();
 
         // Unidades curriculares de la carrera del alumno (desde carrera_uc)
         $uc_carrera = \App\Models\CarreraUc::where('id_carrera', $id_carrera)->pluck('id_uc')->toArray();
-        
+
         // Obtener las unidades curriculares de la carrera
-        $todas_uc = UnidadCurricular::whereIn('id_uc', $uc_carrera)->get();
-        $disponibles = [];
+        $todas_uc = UnidadCurricular::whereIn('id_uc', $uc_carrera)->get()->keyBy('id_uc');
 
-        foreach ($todas_uc as $uc) {
-            // Si ya está inscripto, no la agrego
-            if (in_array($uc->id_uc, $inscripto_ids)) continue;
+        // Traer todas las correlatividades de las UCs de la carrera agrupadas por id_uc
+        $correlatividades = Correlatividad::whereIn('id_uc', $uc_carrera)->get()->groupBy('id_uc');
 
-            // Correlatividades requeridas para esta unidad curricular
-            $correlativas = Correlatividad::where('id_uc', $uc->id_uc)->pluck('correlativa')->toArray();
-            $aprobadas = true;
-            
-            // Si no tiene correlativas, puede inscribirse
-            if (empty($correlativas)) {
-                $disponibles[] = $uc;
-                continue;
-            }
-            
-            // Verificar que tenga aprobadas todas las correlativas
-            foreach ($correlativas as $id_correlativa) {
-                if (!$id_correlativa) continue;
-                // Buscar nota aprobada para la correlativa
-                $nota = Nota::where('id_alumno', $id_alumno)
-                    ->where('id_uc', $id_correlativa)
-                    ->where('nota', '>=', 6)
-                    ->first();
-                if (!$nota) {
-                    $aprobadas = false;
-                    break;
+        // Traer todas las notas aprobadas del alumno para UCs de la carrera y mapear por id_uc
+        $notas_aprobadas = Nota::where('id_alumno', $id_alumno)
+            ->whereIn('id_uc', $uc_carrera)
+            ->where('nota', '>=', 6)
+            ->get()
+            ->keyBy('id_uc');
+
+        $cacheKeyDisp = "alumno:{$id_alumno}:unidades_disponibles";
+        $disponibles = Cache::remember($cacheKeyDisp, 60, function () use (
+            $todas_uc,
+            $inscripto_ids,
+            $correlatividades,
+            $notas_aprobadas
+        ) {
+            $result = [];
+            foreach ($todas_uc as $uc_id => $uc) {
+                if (in_array($uc_id, $inscripto_ids)) {
+                    continue; // ya inscripto
+                }
+
+                $correlativas = $correlatividades->get($uc_id, collect())->pluck('correlativa')->filter();
+                if ($correlativas->isEmpty()) {
+                    $result[] = $uc;
+                    continue;
+                }
+
+                $tieneTodasAprobadas = true;
+                foreach ($correlativas as $id_correlativa) {
+                    if (!$notas_aprobadas->has($id_correlativa)) {
+                        $tieneTodasAprobadas = false;
+                        break;
+                    }
+                }
+                if ($tieneTodasAprobadas) {
+                    $result[] = $uc;
                 }
             }
-            if ($aprobadas) {
-                $disponibles[] = $uc;
-            }
-        }
+            return $result;
+        });
+
+        \Log::info('API alumnos/disponibles', [
+            'id_alumno' => $id_alumno,
+            'carrera' => $id_carrera,
+            'total_uc' => count($todas_uc),
+            'disponibles' => count($disponibles),
+            'duration_ms' => round((microtime(true) - $start) * 1000, 2)
+        ]);
 
         return response()->json(['unidades_disponibles' => $disponibles]);
+    }
+
+    // Verificar si hay un período de inscripción activo para el alumno
+    private function verificarPeriodoInscripcion($id_alumno)
+    {
+        // Obtener carrera y grado del alumno
+        $alumnoCarrera = \App\Models\AlumnoCarrera::where('id_alumno', $id_alumno)->first();
+        $alumnoGrado = \App\Models\AlumnoGrado::where('id_alumno', $id_alumno)->first();
+
+        $id_carrera = $alumnoCarrera ? $alumnoCarrera->id_carrera : null;
+        $id_grado = $alumnoGrado ? $alumnoGrado->id_grado : null;
+
+        // Buscar períodos activos que apliquen para este alumno
+        $periodosActivos = \App\Models\PeriodoInscripcion::where('activo', true)
+            ->where('fecha_inicio', '<=', now())
+            ->where('fecha_fin', '>=', now())
+            ->where(function($query) use ($id_carrera, $id_grado) {
+                $query->where(function($q) use ($id_carrera) {
+                    $q->whereNull('id_carrera')->orWhere('id_carrera', $id_carrera);
+                })->where(function($q) use ($id_grado) {
+                    $q->whereNull('id_grado')->orWhere('id_grado', $id_grado);
+                });
+            })
+            ->get();
+
+        if ($periodosActivos->isEmpty()) {
+            // Buscar el próximo período para mostrar información
+            $proximoPeriodo = \App\Models\PeriodoInscripcion::where('activo', true)
+                ->where('fecha_inicio', '>', now())
+                ->where(function($query) use ($id_carrera, $id_grado) {
+                    $query->where(function($q) use ($id_carrera) {
+                        $q->whereNull('id_carrera')->orWhere('id_carrera', $id_carrera);
+                    })->where(function($q) use ($id_grado) {
+                        $q->whereNull('id_grado')->orWhere('id_grado', $id_grado);
+                    });
+                })
+                ->orderBy('fecha_inicio', 'asc')
+                ->first();
+
+            return [
+                'activo' => false,
+                'info' => [
+                    'mensaje' => 'No hay períodos de inscripción activos',
+                    'proximo_periodo' => $proximoPeriodo ? [
+                        'nombre' => $proximoPeriodo->nombre_periodo,
+                        'fecha_inicio' => $proximoPeriodo->fecha_inicio,
+                        'fecha_fin' => $proximoPeriodo->fecha_fin
+                    ] : null
+                ]
+            ];
+        }
+
+        return [
+            'activo' => true,
+            'info' => [
+                'periodos_activos' => $periodosActivos
+            ]
+        ];
     }
 
     // Inscribir al alumno autenticado en varias unidades curriculares
     public function inscribir(Request $request)
     {
+        $start = microtime(true);
         $user = Auth::user();
         if (!$user) {
             return response()->json(['error' => 'No autenticado'], 401);
@@ -241,9 +340,19 @@ class InscripcionUnidadCurricularController extends Controller
         }
         $id_carrera = $alumnoCarrera->id_carrera;
 
-        // Obtener todas las UCs de la carrera
-        $uc_ids = \App\Models\CarreraUc::where('id_carrera', $id_carrera)->pluck('id_uc')->toArray();
-        $unidades = \App\Models\UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+        // Obtener todas las UCs de la carrera (cache 5 min)
+        $cacheKeyCarrera = "carrera:{$id_carrera}:unidades_carrera";
+        $unidades = Cache::remember($cacheKeyCarrera, 300, function () use ($id_carrera) {
+            $uc_ids = \App\Models\CarreraUc::where('id_carrera', $id_carrera)->pluck('id_uc')->toArray();
+            return \App\Models\UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+        });
+
+        \Log::info('API alumnos/unidades-carrera', [
+            'id_alumno' => $id_alumno,
+            'carrera' => $id_carrera,
+            'count' => count($unidades),
+            'duration_ms' => round((microtime(true) - $start) * 1000, 2)
+        ]);
 
         return response()->json($unidades);
     }
@@ -251,6 +360,7 @@ class InscripcionUnidadCurricularController extends Controller
     // Devuelve las unidades curriculares aprobadas por el alumno autenticado
     public function unidadesAprobadas(Request $request)
     {
+        $start = microtime(true);
         $user = Auth::user();
         if (!$user) {
             return response()->json(['error' => 'No autenticado'], 401);
@@ -260,10 +370,19 @@ class InscripcionUnidadCurricularController extends Controller
             return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
         }
 
-        // Buscar todas las notas >= 6 del alumno
-        $notas = \App\Models\Nota::where('id_alumno', $id_alumno)->where('nota', '>=', 6)->get();
-        $uc_ids = $notas->pluck('id_uc')->unique()->toArray();
-        $unidades = \App\Models\UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+        // Buscar todas las notas >= 6 del alumno (cache 60s)
+        $cacheKeyAprob = "alumno:{$id_alumno}:unidades_aprobadas";
+        $unidades = Cache::remember($cacheKeyAprob, 60, function () use ($id_alumno) {
+            $notas = \App\Models\Nota::where('id_alumno', $id_alumno)->where('nota', '>=', 6)->get();
+            $uc_ids = $notas->pluck('id_uc')->unique()->toArray();
+            return \App\Models\UnidadCurricular::whereIn('id_uc', $uc_ids)->get();
+        });
+
+        \Log::info('API alumnos/unidades-aprobadas', [
+            'id_alumno' => $id_alumno,
+            'count' => count($unidades),
+            'duration_ms' => round((microtime(true) - $start) * 1000, 2)
+        ]);
 
         return response()->json($unidades);
     }

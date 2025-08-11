@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\InformeController;
 use App\Http\Controllers\Api\EncuestaController;
 use App\Http\Controllers\Api\GruposDestinatariosController;
 use App\Http\Controllers\Api\PlanEstudioController;
+use App\Http\Controllers\Api\MensajeController;
+use App\Http\Controllers\Api\MensajeAlumnoController;
 use App\Http\Controllers\Solicitudes\SolicitudController;
 use App\Http\Controllers\Api\FaqController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +23,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/alumno/comprobante-inscripcion', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'comprobantePdf']);
     Route::get('/alumno/unidades-carrera', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesCarrera']);
     Route::get('/alumno/unidades-aprobadas', [\App\Http\Controllers\Api\InscripcionUnidadCurricularController::class, 'unidadesAprobadas']);
+    Route::get('/alumno/verificar-periodo-inscripcion', [\App\Http\Controllers\Api\PeriodoInscripcionController::class, 'verificarPeriodoActivo']);
+    Route::get('/alumno/bootstrap', [\App\Http\Controllers\Api\AlumnoController::class, 'bootstrapAlumno']);
     
     // Rutas para plan de estudios (CU-006)
     Route::get('/alumno/plan-estudio', [PlanEstudioController::class, 'getPlanEstudioAlumno']);
@@ -52,6 +56,25 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     // Solicitudes
     Route::get('solicitudes', [SolicitudController::class, 'index']);
     Route::put('solicitudes/{id}', [SolicitudController::class, 'update']);
+    
+    // Períodos de Inscripción
+    Route::get('periodos-inscripcion', [\App\Http\Controllers\Api\PeriodoInscripcionController::class, 'index']);
+    Route::post('periodos-inscripcion', [\App\Http\Controllers\Api\PeriodoInscripcionController::class, 'store']);
+    Route::put('periodos-inscripcion/{id}', [\App\Http\Controllers\Api\PeriodoInscripcionController::class, 'update']);
+    Route::delete('periodos-inscripcion/{id}', [\App\Http\Controllers\Api\PeriodoInscripcionController::class, 'destroy']);
+    Route::put('periodos-inscripcion/{id}/toggle', [\App\Http\Controllers\Api\PeriodoInscripcionController::class, 'toggleActivo']);
+    Route::get('periodos-inscripcion/datos-creacion', [\App\Http\Controllers\Api\PeriodoInscripcionController::class, 'getDatosCreacion']);
+    
+    // Comunicaciones Internas
+    Route::get('mensajes', [MensajeController::class, 'index']);
+    Route::get('mensajes/{id}', [MensajeController::class, 'show']);
+    Route::post('mensajes', [MensajeController::class, 'store']);
+    Route::put('mensajes/{id}', [MensajeController::class, 'update']);
+    Route::delete('mensajes/{id}', [MensajeController::class, 'destroy']);
+    Route::get('mensajes/datos/creacion', [MensajeController::class, 'getDatosCreacion']);
+    Route::post('mensajes/filtrar-alumnos', [MensajeController::class, 'filtrarAlumnos']);
+    Route::post('mensajes/obtener-alumnos-grupos', [MensajeController::class, 'obtenerAlumnosDeGrupos']);
+    Route::post('mensajes/enviar-grupos', [MensajeController::class, 'enviarAGrupos']);
 });
 
 // Grupo de rutas protegidas para Alumnos
@@ -62,6 +85,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('solicitudes', [SolicitudController::class, 'index']);
     Route::post('solicitudes', [SolicitudController::class, 'store']);
     Route::post('solicitudes/{id}/marcar-visto', [SolicitudController::class, 'marcarEstadoVisto']);
+    
+    // Comunicaciones para alumnos - Rutas específicas primero
+    Route::get('/alumno/mensajes/estadisticas', [MensajeAlumnoController::class, 'estadisticas']);
+    Route::put('/alumno/mensajes/marcar-todos-leidos', [MensajeAlumnoController::class, 'marcarTodosComoLeidos']);
+    Route::put('/alumno/mensajes/{id}/marcar-leido', [MensajeAlumnoController::class, 'marcarComoLeido']);
+    Route::get('/alumno/mensajes/{id}', [MensajeAlumnoController::class, 'show']);
+    Route::get('/alumno/mensajes', [MensajeAlumnoController::class, 'index']);
 });
 
 // Rutas para grupos de destinatarios
