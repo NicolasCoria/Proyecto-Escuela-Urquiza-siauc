@@ -8,10 +8,10 @@ import Button from '../../../Components/Shared/Button';
 const InscripcionesAlumno = () => {
   const {
     carrera,
-    unidadesDisponibles,
-    unidadesDisponiblesPorAno,
-    unidadesAprobadas,
-    unidadesInscriptasPorAno
+    unidadesDisponibles = [],
+    unidadesDisponiblesPorAno = {},
+    unidadesAprobadas = [],
+    unidadesInscriptasPorAno = {}
   } = useStateContext();
   const [seleccionadas, setSeleccionadas] = useState([]);
   const [inscripciones, setInscripciones] = useState([]);
@@ -127,10 +127,21 @@ const InscripcionesAlumno = () => {
 
   const handleDescargarComprobante = async () => {
     setLoading(true);
+    const inscripcionIds = (inscripciones || []).map((i) => i.id_inscripcion);
+
+    // Validar que tenemos IDs válidos
+    const validIds = inscripcionIds.filter((id) => id != null && !isNaN(id));
+
+    if (validIds.length === 0) {
+      setError('No se encontraron inscripciones válidas para generar el comprobante.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await axiosClient.post(
         '/alumno/comprobante-inscripcion',
-        { inscripciones: inscripciones.map((i) => i.id_inscripcion) },
+        { inscripciones: validIds },
         {
           responseType: 'blob'
         }
@@ -143,7 +154,26 @@ const InscripcionesAlumno = () => {
       link.click();
       link.remove();
     } catch (err) {
-      setError('Error al descargar el comprobante.');
+      console.error('Error al descargar comprobante:', err);
+
+      // Si la respuesta es un blob de error, convertirla a texto
+      if (err.response && err.response.data instanceof Blob) {
+        try {
+          const errorText = await err.response.data.text();
+          console.error('Error del servidor:', errorText);
+          const errorObj = JSON.parse(errorText);
+          setError(errorObj.message || errorObj.error || 'Error al descargar el comprobante.');
+        } catch (parseError) {
+          console.error('No se pudo parsear el error:', parseError);
+          setError('Error al descargar el comprobante.');
+        }
+      } else {
+        setError(
+          err.response?.data?.error ||
+            err.response?.data?.message ||
+            'Error al descargar el comprobante.'
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -151,6 +181,9 @@ const InscripcionesAlumno = () => {
 
   // Función para obtener el nombre de la UC por ID
   const getUnidadName = (id_uc) => {
+    if (!Array.isArray(unidadesDisponibles)) {
+      return 'UC no encontrada';
+    }
     const unidad = unidadesDisponibles.find((uc) => uc.id_uc === id_uc);
     return unidad ? unidad.unidad_curricular || unidad.Unidad_Curricular : 'UC no encontrada';
   };
@@ -175,13 +208,19 @@ const InscripcionesAlumno = () => {
   // Verificar si una unidad ya está inscripta
   const isUnidadInscripta = (id_uc) => {
     // Verificar en el array de unidadesInscriptas (objetos) si esta UC está incluida
-    return unidadesInscriptas.some((uc) => (uc.id_uc || uc.id) === id_uc);
+    return (
+      Array.isArray(unidadesInscriptas) &&
+      unidadesInscriptas.some((uc) => (uc.id_uc || uc.id) === id_uc)
+    );
   };
 
   // Verificar si una unidad ya está aprobada
   const isUnidadAprobada = (id_uc) => {
     // Verificar en el array de unidades aprobadas si esta UC está incluida
-    return unidadesAprobadas && unidadesAprobadas.some((uc) => (uc.id_uc || uc.id) === id_uc);
+    return (
+      Array.isArray(unidadesAprobadas) &&
+      unidadesAprobadas.some((uc) => (uc.id_uc || uc.id) === id_uc)
+    );
   };
 
   // Función para determinar si una UC es reinscribible
@@ -261,7 +300,7 @@ const InscripcionesAlumno = () => {
 
     return (
       <div>
-        {Object.keys(unidadesDisponiblesPorAno)
+        {Object.keys(unidadesDisponiblesPorAno || {})
           .sort((a, b) => parseInt(a) - parseInt(b))
           .map((ano) => (
             <div key={ano} className={styles.anoGroup}>
@@ -284,7 +323,7 @@ const InscripcionesAlumno = () => {
                         : `${ano}° Año`}
               </h4>
               <ul className={styles.unidadesList}>
-                {unidadesDisponiblesPorAno[ano].map((uc) => {
+                {(unidadesDisponiblesPorAno[ano] || []).map((uc) => {
                   const isInscripta = isUnidadInscripta(uc.id_uc);
                   const isAprobada = isUnidadAprobada(uc.id_uc);
                   const isReinscribible = isUnidadReinscribible(uc.id_uc);
@@ -405,7 +444,7 @@ const InscripcionesAlumno = () => {
       )}
 
       {/* Comprobante de inscripción exitosa */}
-      {success && (
+      {success && inscripciones && inscripciones.length > 0 && (
         <div className={styles.comprobanteContainer}>
           <div className={styles.comprobanteHeader}>
             <h3 className={styles.comprobanteTitle}>¡Inscripción exitosa!</h3>
@@ -414,12 +453,12 @@ const InscripcionesAlumno = () => {
             </p>
           </div>
           <div style={{ marginBottom: 24 }}>
-            {inscripciones.map((insc, i) => {
+            {(inscripciones || []).map((insc, i) => {
               const { fecha, hora } = formatDateTime(
                 insc.FechaHora || insc.fecha_inscripcion || insc.created_at || new Date()
               );
               return (
-                <div key={insc.id_inscripcion} className={styles.inscripcionItem}>
+                <div key={insc.id_inscripcion || i} className={styles.inscripcionItem}>
                   <div className={styles.inscripcionTitle}>
                     {i + 1}. {getUnidadName(insc.id_uc)}
                   </div>
@@ -427,6 +466,7 @@ const InscripcionesAlumno = () => {
                     <div>Fecha: {fecha}</div>
                     <div>Hora: {hora}</div>
                     <div>Carrera: {getCarreraName()}</div>
+                    <div>ID Inscripción: {insc.id_inscripcion || 'No disponible'}</div>
                   </div>
                 </div>
               );
@@ -435,12 +475,19 @@ const InscripcionesAlumno = () => {
           <div style={{ textAlign: 'center' }}>
             <button
               onClick={handleDescargarComprobante}
-              disabled={loading}
+              disabled={loading || !inscripciones || inscripciones.length === 0}
               className={styles.downloadButton}
             >
               {loading ? 'Descargando...' : 'Descargar comprobante PDF'}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Mensaje cuando no hay inscripciones */}
+      {success && (!inscripciones || inscripciones.length === 0) && (
+        <div className={styles.errorMessage}>
+          Inscripción exitosa, pero no se pudieron cargar los detalles del comprobante.
         </div>
       )}
     </main>

@@ -303,13 +303,8 @@ class InscripcionUnidadCurricularController extends Controller
                     ->pluck('unidad_curricular')
                     ->toArray();
                 
-                return response()->json([
-                    'warning' => 'Reinscripción en UCs no aprobadas',
-                    'message' => 'Te vas a reinscribir en las siguientes unidades curriculares: ' . implode(', ', $unidadesNombres),
-                    'unidades_reinscripcion' => $unidadesReinscripcion,
-                    'unidades_nombres' => $unidadesNombres,
-                    'allow_reinscription' => true
-                ], 200);
+                // No retornar aquí, continuar con el proceso de inscripción
+                // pero marcar que hay reinscripciones para mostrar el mensaje correcto al final
             }
         }
 
@@ -375,22 +370,16 @@ class InscripcionUnidadCurricularController extends Controller
         $mensaje = count($inscripciones) > 1 ? 'Inscripciones' : 'Inscripción';
         $mensaje .= ' exitosa';
         
-        // Verificar si hay reinscripciones
-        $reinscripciones = collect($inscripciones)->filter(function($insc) use ($id_alumno) {
-            $yaInscripto = AlumnoUc::where('id_alumno', $id_alumno)
-                ->where('id_uc', $insc->id_uc)
-                ->first();
-            return $yaInscripto && $yaInscripto->created_at != $insc->FechaHora;
-        });
-        
-        if ($reinscripciones->count() > 0) {
-            $mensaje .= ' (incluye ' . $reinscripciones->count() . ' reinscripción(es))';
+        // Incluir información de reinscripciones si las había
+        $esReinscripcion = !empty($unidadesReinscripcion ?? []);
+        if ($esReinscripcion) {
+            $mensaje .= ' (incluye reinscripción(es))';
         }
         
         return response()->json([
             'success' => true,
             'inscripciones' => $inscripciones,
-            'reinscripciones' => $reinscripciones->count(),
+            'es_reinscripcion' => $esReinscripcion,
             'message' => $mensaje . ' en ' . count($inscripciones) . ' unidad(es) curricular(es)'
         ]);
     }
@@ -406,6 +395,7 @@ class InscripcionUnidadCurricularController extends Controller
         if (!$id_alumno) {
             return response()->json(['error' => 'No se pudo determinar el alumno autenticado'], 400);
         }
+        
         $validated = $request->validate([
             'inscripciones' => 'required|array|min:1',
             'inscripciones.*' => 'integer|exists:inscripcion,id_inscripcion',
