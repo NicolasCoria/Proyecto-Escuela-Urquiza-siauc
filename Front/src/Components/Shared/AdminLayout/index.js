@@ -63,46 +63,42 @@ const AdminLayout = () => {
     setActiveButton(currentPath);
   }, [location]);
 
-  // Verificar autenticación al cargar
+  // Verificar autenticación al cargar (optimizado)
   React.useEffect(() => {
     const checkAuth = async () => {
-      console.log('AdminLayout - Checking auth:', { token, role, user });
-
+      // Verificación rápida sin logs innecesarios
       if (!token || role !== 'admin') {
-        console.log('AdminLayout - No token or wrong role, redirecting to login');
         navigate('/admin/login');
         return;
       }
 
-      // Si hay token pero no hay usuario, intentar obtener la información del usuario
+      // Solo hacer llamada API si no hay usuario
       if (token && !user) {
-        console.log('AdminLayout - Token exists but no user, fetching admin info');
         try {
           const response = await axiosClient.get('/admin/info');
           if (response.data.success) {
-            console.log('AdminLayout - Admin info fetched successfully');
             setUser(response.data.admin);
           } else {
-            console.log('AdminLayout - Failed to get admin info, clearing session');
             setUser(null);
             setTokenAndRole(null, null);
             navigate('/admin/login');
           }
         } catch (error) {
-          console.error('AdminLayout - Error getting admin info:', error);
+          console.error('Error getting admin info:', error);
           setUser(null);
           setTokenAndRole(null, null);
           navigate('/admin/login');
         }
-      } else {
-        console.log('AdminLayout - User already exists, proceeding');
       }
 
       setIsInitializing(false);
     };
 
-    checkAuth();
-  }, [token, role, user, navigate, setUser, setTokenAndRole]);
+    // Solo ejecutar si realmente es necesario
+    if (isInitializing) {
+      checkAuth();
+    }
+  }, [token, role, user, navigate, setUser, setTokenAndRole, isInitializing]);
 
   // Mostrar spinner mientras se inicializa
   if (isInitializing) {

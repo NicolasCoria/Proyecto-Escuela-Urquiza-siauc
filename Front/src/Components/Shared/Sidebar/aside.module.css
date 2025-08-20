@@ -342,13 +342,24 @@
   padding-top: 32px;
   z-index: 1000;
   backdrop-filter: blur(10px);
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
+  margin-left: 0;
 }
 
 .sidebarBase:hover {
   box-shadow: 6px 0 30px rgba(0, 0, 0, 0.15);
   transform: translateX(2px);
+}
+
+.sidebarBase::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 4px;
+  height: 100%;
+  background: inherit;
+  z-index: -1;
 }
 
 .sidebarGuest {

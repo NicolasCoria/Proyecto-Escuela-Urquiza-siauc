@@ -87,6 +87,7 @@ const DashboardAlumno = () => {
                     <div className={styles.ucTableCol}>Unidad Curricular</div>
                     <div className={styles.ucTableCol}>Fecha</div>
                     <div className={styles.ucTableCol}>Estado</div>
+                    <div className={styles.ucTableCol}>Última Nota</div>
                   </div>
                   {ucsPorAno[ano].map((uc) => {
                     const fechaInscripcion = uc.fecha_inscripcion;
@@ -124,6 +125,13 @@ const DashboardAlumno = () => {
                               <span className={styles.estadoReinscribible}>🔄 Reinscribible</span>
                             )}
                           </div>
+                        </div>
+                        <div className={styles.ucTableCol}>
+                          <span className={styles.notaValue}>
+                            {uc.ultima_nota !== null && uc.ultima_nota !== undefined
+                              ? uc.ultima_nota
+                              : '–'}
+                          </span>
                         </div>
                       </div>
                     );
@@ -223,19 +231,11 @@ const DashboardAlumno = () => {
         </section>
       </div>
 
-      <div className={styles.dashboardGrid}>
-        {/* UCs inscriptas */}
-        <section className={styles.dashboardCard}>
-          <h3>UCs inscriptas</h3>
-          {renderUCsPorAno(unidadesInscriptasPorAno, 'Unidades Curriculares Inscriptas')}
-        </section>
-
-        {/* UCs aprobadas */}
-        <section className={styles.dashboardCard}>
-          <h3>UCs aprobadas</h3>
-          {renderUCsPorAno(unidadesAprobadasPorAno, 'Unidades Curriculares Aprobadas')}
-        </section>
-      </div>
+      {/* Unidades Curriculares Inscriptas - Ancho completo */}
+      <section className={styles.dashboardCardFullWidth}>
+        <h3>Unidades Curriculares Inscriptas</h3>
+        {renderUCsPorAno(unidadesInscriptasPorAno, 'Unidades Curriculares Inscriptas')}
+      </section>
     </div>
   );
 };

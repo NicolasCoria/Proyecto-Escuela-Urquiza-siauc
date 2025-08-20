@@ -74,13 +74,13 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  background: var(--accent-color, linear-gradient(90deg, #667eea, #764ba2));
 }
 
 .materiaCard:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border-color: #667eea;
+  border-color: var(--accent-color, #667eea);
 }
 
 .materiaHeader {

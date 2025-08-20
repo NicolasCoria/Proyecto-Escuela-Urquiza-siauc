@@ -1,14 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../../../Components/Shared/Axios';
 import Spinner from '../../../Components/Shared/Spinner';
+import { useStateContext } from '../../../Components/Contexts';
 import styles from './planEstudio.module.css';
 
 const PlanEstudio = () => {
+  const { carrera } = useStateContext();
   const [planEstudio, setPlanEstudio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedMateria, setSelectedMateria] = useState(null);
   const [showModal, setShowModal] = useState(false);
+
+  // Función para generar estilos dinámicos basados en la carrera
+  const getCarreraStyles = () => {
+    if (!carrera) return {};
+
+    const carreraId = carrera.id || carrera.id_carrera;
+
+    // Colores específicos para cada carrera (basados en sidebarTheme.js)
+    const carreraColors = {
+      1: {
+        // AF - Azul (Análisis Funcional)
+        background: 'linear-gradient(135deg, #e3f2fd 0%, #1976d2 100%)',
+        primary: '#1976d2',
+        secondary: '#1565c0',
+        accent: '#0d47a1',
+        light: '#e3f2fd',
+        soft: '#fff'
+      },
+      2: {
+        // DS - Verde (Desarrollo de Software)
+        background: 'linear-gradient(135deg, #e8f5e9 0%, #43a047 100%)',
+        primary: '#43a047',
+        secondary: '#388e3c',
+        accent: '#1b5e20',
+        light: '#e8f5e9',
+        soft: '#fff'
+      },
+      3: {
+        // ITI - Rojo (Infraestructura de TI)
+        background: 'linear-gradient(135deg, #ffebee 0%, #e53935 100%)',
+        primary: '#e53935',
+        secondary: '#b71c1c',
+        accent: '#ff7043',
+        light: '#ffebee',
+        soft: '#fff'
+      }
+    };
+
+    return (
+      carreraColors[carreraId] || {
+        // Colores por defecto si no hay carrera
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        primary: '#667eea',
+        secondary: '#764ba2',
+        accent: '#667eea',
+        light: '#f8f9fa',
+        soft: '#fff'
+      }
+    );
+  };
 
   useEffect(() => {
     const fetchPlanEstudio = async () => {
@@ -62,7 +114,8 @@ const PlanEstudio = () => {
     );
   }
 
-  const { carrera, plan_estudio } = planEstudio;
+  const { carrera: carreraData, plan_estudio } = planEstudio;
+  const carreraStyles = getCarreraStyles();
 
   const handleVerContenido = (materia) => {
     setSelectedMateria(materia);
@@ -76,24 +129,51 @@ const PlanEstudio = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
+      <div
+        className={styles.header}
+        style={{
+          background: carreraStyles.background,
+          boxShadow: `0 8px 32px ${carreraStyles.primary}30`,
+          color: '#1a1a1a'
+        }}
+      >
         <h1>Plan de Estudios</h1>
-        <h2>{carrera.nombre}</h2>
+        <h2>{carreraData.nombre}</h2>
       </div>
 
       <div className={styles.planContainer}>
         {Object.keys(plan_estudio).map((anio) => (
           <div key={anio} className={styles.anioSection}>
-            <h3 className={styles.anioTitle}>
+            <h3
+              className={styles.anioTitle}
+              style={{
+                background: carreraStyles.background,
+                color: '#1a1a1a'
+              }}
+            >
               {anio === '1' ? '1er Año' : anio === '2' ? '2do Año' : '3er Año'}
             </h3>
 
             <div className={styles.materiasGrid}>
               {plan_estudio[anio].map((materia) => (
-                <div key={materia.id_uc} className={styles.materiaCard}>
+                <div
+                  key={materia.id_uc}
+                  className={styles.materiaCard}
+                  style={{
+                    borderColor: carreraStyles.primary + '30',
+                    '--accent-color': carreraStyles.primary
+                  }}
+                >
                   <div className={styles.materiaHeader}>
                     <h4 className={styles.materiaNombre}>{materia.unidad_curricular}</h4>
-                    <span className={styles.materiaTipo}>{materia.tipo}</span>
+                    <span
+                      className={styles.materiaTipo}
+                      style={{
+                        background: carreraStyles.background
+                      }}
+                    >
+                      {materia.tipo}
+                    </span>
                   </div>
 
                   <div className={styles.materiaDetails}>
@@ -115,6 +195,10 @@ const PlanEstudio = () => {
 
                   <button
                     className={styles.contenidoBtn}
+                    style={{
+                      background: carreraStyles.background,
+                      boxShadow: `0 6px 20px ${carreraStyles.primary}40`
+                    }}
                     onClick={() => handleVerContenido(materia)}
                   >
                     📚 Ver Contenido
@@ -129,19 +213,34 @@ const PlanEstudio = () => {
       <div className={styles.summary}>
         <h3>Resumen del Plan de Estudios</h3>
         <div className={styles.summaryStats}>
-          <div className={styles.statItem}>
+          <div
+            className={styles.statItem}
+            style={{
+              background: carreraStyles.background
+            }}
+          >
             <span className={styles.statNumber}>
               {Object.values(plan_estudio).reduce((total, materias) => total + materias.length, 0)}
             </span>
             <span className={styles.statLabel}>Total de Materias</span>
           </div>
 
-          <div className={styles.statItem}>
+          <div
+            className={styles.statItem}
+            style={{
+              background: carreraStyles.background
+            }}
+          >
             <span className={styles.statNumber}>{Object.keys(plan_estudio).length}</span>
             <span className={styles.statLabel}>Años de Cursado</span>
           </div>
 
-          <div className={styles.statItem}>
+          <div
+            className={styles.statItem}
+            style={{
+              background: carreraStyles.background
+            }}
+          >
             <span className={styles.statNumber}>
               {Object.values(plan_estudio).reduce(
                 (total, materias) =>
@@ -158,9 +257,19 @@ const PlanEstudio = () => {
       {showModal && selectedMateria && (
         <div className={styles.modalOverlay} onClick={handleCloseModal}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
+            <div
+              className={styles.modalHeader}
+              style={{
+                background: carreraStyles.background,
+                color: '#1a1a1a'
+              }}
+            >
               <h3>{selectedMateria.unidad_curricular}</h3>
-              <button className={styles.closeBtn} onClick={handleCloseModal}>
+              <button
+                className={styles.closeBtn}
+                style={{ color: '#1a1a1a' }}
+                onClick={handleCloseModal}
+              >
                 ✕
               </button>
             </div>

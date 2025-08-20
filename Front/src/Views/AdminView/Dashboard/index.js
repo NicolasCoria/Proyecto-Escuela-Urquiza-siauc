@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { Suspense, useState } from 'react';
 import styles from './dashboard.module.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStateContext } from '../../../Components/Contexts';
-import EncuestaForm from './EncuestaForm';
-import GestionarAsignaciones from './GestionarAsignaciones';
-import EditarEncuestas from './EditarEncuestas';
-import GruposDestinatarios from './GruposDestinatarios';
+import Spinner from '../../../Components/Shared/Spinner';
 import WelcomeTooltip from '../../../Components/Shared/WelcomeTooltip';
+
+// Lazy loading de componentes pesados
+const EncuestaForm = React.lazy(() => import('./EncuestaForm'));
+const GestionarAsignaciones = React.lazy(() => import('./GestionarAsignaciones'));
+const EditarEncuestas = React.lazy(() => import('./EditarEncuestas'));
+const GruposDestinatarios = React.lazy(() => import('./GruposDestinatarios'));
+const Estadisticas = React.lazy(() => import('./Estadisticas'));
 
 const AdminDashboard = () => {
   const { user } = useStateContext();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('overview');
 
   const handleViewFaqs = () => {
     navigate('/admin/faqs');
@@ -30,39 +35,107 @@ const AdminDashboard = () => {
       </header>
 
       <main className={styles.main}>
-        <section className={styles.section}>
-          <h2>Gestión de Encuestas Académicas</h2>
-          <p>
-            Desde aquí puedes crear, editar y gestionar la asignación de encuestas a los alumnos.
-          </p>
+        {/* Navegación por tabs */}
+        <div className={styles.tabNavigation}>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'overview' ? styles.active : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            📊 Resumen
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'create' ? styles.active : ''}`}
+            onClick={() => setActiveTab('create')}
+          >
+            ➕ Crear Encuesta
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'assign' ? styles.active : ''}`}
+            onClick={() => setActiveTab('assign')}
+          >
+            👥 Asignar Encuestas
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'edit' ? styles.active : ''}`}
+            onClick={() => setActiveTab('edit')}
+          >
+            ✏️ Editar Encuestas
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'groups' ? styles.active : ''}`}
+            onClick={() => setActiveTab('groups')}
+          >
+            👥 Grupos
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'stats' ? styles.active : ''}`}
+            onClick={() => setActiveTab('stats')}
+          >
+            📊 Estadísticas
+          </button>
+        </div>
 
-          <EncuestaForm />
+        {/* Contenido de los tabs */}
+        <div className={styles.tabContent}>
+          {activeTab === 'overview' && (
+            <section className={styles.section}>
+              <h2>Panel de Administración</h2>
+              <p>
+                Bienvenido al panel de administración. Selecciona una pestaña para comenzar a
+                trabajar.
+              </p>
 
-          <GestionarAsignaciones />
+              <h3>Acciones Rápidas</h3>
+              <div className={styles.quickActions}>
+                <div className={styles.actionCard}>
+                  <h3>Generar Informes</h3>
+                  <p>Accede a la herramienta de generación de informes personalizados</p>
+                  <Link to="/admin/informes" className={styles.actionBtn}>
+                    Ir a Informes
+                  </Link>
+                </div>
 
-          <EditarEncuestas />
+                <div className={styles.actionCard}>
+                  <h3>Estadísticas</h3>
+                  <p>Visualiza estadísticas y métricas del sistema</p>
+                  <button className={styles.actionBtn} onClick={() => setActiveTab('stats')}>
+                    Ver Estadísticas
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
 
-          <GruposDestinatarios />
+          {activeTab === 'create' && (
+            <Suspense fallback={<Spinner />}>
+              <EncuestaForm />
+            </Suspense>
+          )}
 
-          <h2>Otras Funciones</h2>
-          <div className={styles.quickActions}>
-            <div className={styles.actionCard}>
-              <h3>Generar Informes</h3>
-              <p>Accede a la herramienta de generación de informes personalizados</p>
-              <Link to="/admin/informes" className={styles.actionBtn}>
-                Ir a Informes
-              </Link>
-            </div>
+          {activeTab === 'assign' && (
+            <Suspense fallback={<Spinner />}>
+              <GestionarAsignaciones />
+            </Suspense>
+          )}
 
-            <div className={styles.actionCard}>
-              <h3>Estadísticas</h3>
-              <p>Visualiza estadísticas y métricas del sistema</p>
-              <button className={styles.actionBtn} disabled>
-                Próximamente
-              </button>
-            </div>
-          </div>
-        </section>
+          {activeTab === 'edit' && (
+            <Suspense fallback={<Spinner />}>
+              <EditarEncuestas />
+            </Suspense>
+          )}
+
+          {activeTab === 'groups' && (
+            <Suspense fallback={<Spinner />}>
+              <GruposDestinatarios />
+            </Suspense>
+          )}
+
+          {activeTab === 'stats' && (
+            <Suspense fallback={<Spinner />}>
+              <Estadisticas />
+            </Suspense>
+          )}
+        </div>
       </main>
 
       <WelcomeTooltip

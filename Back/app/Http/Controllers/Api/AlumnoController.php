@@ -130,10 +130,21 @@ class AlumnoController extends Controller
                 ->get()
             : collect();
 
-        // Marcar UCs inscriptas como aprobadas o no aprobadas
-        $unidades_inscriptas = $unidades_inscriptas->map(function($uc) use ($notas_aprobadas) {
+        // Obtener últimas notas para UCs inscriptas
+        $ultimas_notas = !empty($inscripto_ids)
+            ? Nota::where('nota.id_alumno', $id_alumno)
+                ->whereIn('nota.id_uc', $inscripto_ids)
+                ->selectRaw('id_uc, MAX(nota) as ultima_nota')
+                ->groupBy('id_uc')
+                ->get()
+                ->keyBy('id_uc')
+            : collect();
+
+        // Marcar UCs inscriptas como aprobadas o no aprobadas y agregar última nota
+        $unidades_inscriptas = $unidades_inscriptas->map(function($uc) use ($notas_aprobadas, $ultimas_notas) {
             $uc->esta_aprobada = in_array($uc->id_uc, $notas_aprobadas);
             $uc->puede_reinscribirse = !$uc->esta_aprobada; // Solo si no está aprobada
+            $uc->ultima_nota = $ultimas_notas->has($uc->id_uc) ? $ultimas_notas->get($uc->id_uc)->ultima_nota : null;
             return $uc;
         });
 

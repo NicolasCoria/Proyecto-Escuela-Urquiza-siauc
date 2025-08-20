@@ -58,6 +58,22 @@
   box-shadow: 0 4px 16px #0002;
 }
 
+.dashboardCardFullWidth {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: box-shadow 0.2s;
+}
+
+.dashboardCardFullWidth:hover {
+  box-shadow: 0 4px 16px #0002;
+}
+
 /* Estilos para la tabla de UCs inscriptas */
 .ucTable {
   border: 1px solid #e0e0e0;
@@ -68,7 +84,7 @@
 
 .ucTableHeader {
   display: grid;
-  grid-template-columns: 2fr 1fr 1.5fr;
+  grid-template-columns: 2fr 1fr 1.5fr 1fr;
   background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
   color: white;
   font-weight: 600;
@@ -79,7 +95,7 @@
 
 .ucTableRow {
   display: grid;
-  grid-template-columns: 2fr 1fr 1.5fr;
+  grid-template-columns: 2fr 1fr 1.5fr 1fr;
   border-bottom: 1px solid #f0f0f0;
   transition: background-color 0.2s ease;
 }
@@ -96,6 +112,8 @@
   padding: 12px 16px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   font-size: 13px;
   line-height: 1.4;
   word-break: break-word;
@@ -104,6 +122,12 @@
 .ucTableHeader .ucTableCol {
   justify-content: center;
   text-align: center;
+}
+
+.ucTableHeader .ucTableCol:first-child,
+.ucTableRow .ucTableCol:first-child {
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .fechaInscripcion {
@@ -119,7 +143,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
 }
 
 .estadoAprobada {
@@ -153,6 +178,19 @@
   font-weight: 600;
   text-align: center;
   box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+}
+
+.notaValue {
+  color: #333;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 4px 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+  min-width: 40px;
+  display: inline-block;
 }
 
 @media (max-width: 900px) {
@@ -194,6 +232,10 @@
   
   .ucTableRow .ucTableCol:nth-child(3):before {
     content: "Estado:";
+  }
+  
+  .ucTableRow .ucTableCol:nth-child(4):before {
+    content: "Última Nota:";
   }
   
   .estadoContainer {

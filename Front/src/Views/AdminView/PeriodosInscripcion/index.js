@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../../../Components/Shared/Axios';
+import Spinner from '../../../Components/Shared/Spinner';
 import styles from './periodosInscripcion.module.css';
+import { FaPlus, FaEdit, FaCalendarAlt, FaGraduationCap, FaUniversity } from 'react-icons/fa';
 
 const PeriodosInscripcion = () => {
   const [periodos, setPeriodos] = useState([]);
@@ -146,13 +148,35 @@ const PeriodosInscripcion = () => {
   };
 
   if (loading) {
-    return <div className={styles.loading}>Cargando períodos de inscripción...</div>;
+    return (
+      <div className={styles.container}>
+        <Spinner />
+      </div>
+    );
   }
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>Gestión de Períodos de Inscripción</h2>
+        <div className={styles.headerContent}>
+          <h1 className={styles.title}>📅 Gestión de Períodos de Inscripción</h1>
+          <div className={styles.headerStats}>
+            <div className={styles.statItem}>
+              <span className={styles.statNumber}>{periodos.length}</span>
+              <span className={styles.statLabel}>Total</span>
+            </div>
+            <div className={styles.statItem}>
+              <span className={styles.statNumber}>{periodos.filter((p) => p.activo).length}</span>
+              <span className={styles.statLabel}>Activos</span>
+            </div>
+            <div className={styles.statItem}>
+              <span className={styles.statNumber}>
+                {periodos.filter((p) => getEstadoPeriodo(p) === 'Activo').length}
+              </span>
+              <span className={styles.statLabel}>En Curso</span>
+            </div>
+          </div>
+        </div>
         <button
           onClick={() => {
             setShowForm(true);
@@ -161,7 +185,8 @@ const PeriodosInscripcion = () => {
           }}
           className={styles.addButton}
         >
-          + Nuevo Período
+          <FaPlus />
+          Nuevo Período
         </button>
       </div>
 
@@ -170,55 +195,91 @@ const PeriodosInscripcion = () => {
       {/* Formulario */}
       {showForm && (
         <div className={styles.formContainer}>
-          <h3>{editingPeriodo ? 'Editar' : 'Crear'} Período de Inscripción</h3>
+          <div className={styles.formHeader}>
+            <h3>{editingPeriodo ? '✏️ Editar' : '➕ Crear'} Período de Inscripción</h3>
+            <button
+              type="button"
+              onClick={() => {
+                setShowForm(false);
+                setEditingPeriodo(null);
+                resetForm();
+              }}
+              className={styles.closeFormBtn}
+              title="Cerrar formulario"
+            >
+              ×
+            </button>
+          </div>
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Nombre del Período *</label>
+                <label className={styles.formLabel}>
+                  <FaCalendarAlt className={styles.formIcon} />
+                  Nombre del Período *
+                </label>
                 <input
                   type="text"
                   value={formData.nombre_periodo}
                   onChange={(e) => setFormData({ ...formData, nombre_periodo: e.target.value })}
                   required
+                  className={styles.formInput}
+                  placeholder="Ej: Inscripción 2024 - Primer Cuatrimestre"
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Descripción</label>
+                <label className={styles.formLabel}>
+                  <FaEdit className={styles.formIcon} />
+                  Descripción
+                </label>
                 <textarea
                   value={formData.descripcion}
                   onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
                   rows="3"
+                  className={styles.formTextarea}
+                  placeholder="Descripción opcional del período..."
                 />
               </div>
             </div>
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Fecha y Hora de Inicio *</label>
+                <label className={styles.formLabel}>
+                  <FaCalendarAlt className={styles.formIcon} />
+                  Fecha y Hora de Inicio *
+                </label>
                 <input
                   type="datetime-local"
                   value={formData.fecha_inicio}
                   onChange={(e) => setFormData({ ...formData, fecha_inicio: e.target.value })}
                   required
+                  className={styles.formInput}
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Fecha y Hora de Fin *</label>
+                <label className={styles.formLabel}>
+                  <FaCalendarAlt className={styles.formIcon} />
+                  Fecha y Hora de Fin *
+                </label>
                 <input
                   type="datetime-local"
                   value={formData.fecha_fin}
                   onChange={(e) => setFormData({ ...formData, fecha_fin: e.target.value })}
                   required
+                  className={styles.formInput}
                 />
               </div>
             </div>
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Carrera (opcional)</label>
+                <label className={styles.formLabel}>
+                  <FaUniversity className={styles.formIcon} />
+                  Carrera (opcional)
+                </label>
                 <select
                   value={formData.id_carrera}
                   onChange={(e) => setFormData({ ...formData, id_carrera: e.target.value })}
+                  className={styles.formSelect}
                 >
                   <option value="">Todas las carreras</option>
                   {carreras.map((carrera) => (
@@ -229,10 +290,14 @@ const PeriodosInscripcion = () => {
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label>Grado (opcional)</label>
+                <label className={styles.formLabel}>
+                  <FaGraduationCap className={styles.formIcon} />
+                  Grado (opcional)
+                </label>
                 <select
                   value={formData.id_grado}
                   onChange={(e) => setFormData({ ...formData, id_grado: e.target.value })}
+                  className={styles.formSelect}
                 >
                   <option value="">Todos los grados</option>
                   {grados.map((grado) => (
@@ -245,19 +310,29 @@ const PeriodosInscripcion = () => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>
+              <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   checked={formData.activo}
                   onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}
+                  className={styles.checkbox}
                 />
-                Activo
+                <span className={styles.checkboxText}>Período Activo</span>
               </label>
             </div>
 
             <div className={styles.formActions}>
               <button type="submit" disabled={loading} className={styles.saveButton}>
-                {loading ? 'Guardando...' : editingPeriodo ? 'Actualizar' : 'Crear'}
+                {loading ? (
+                  <>
+                    <Spinner />
+                    Guardando...
+                  </>
+                ) : editingPeriodo ? (
+                  'Actualizar'
+                ) : (
+                  'Crear'
+                )}
               </button>
               <button
                 type="button"
@@ -285,26 +360,43 @@ const PeriodosInscripcion = () => {
           periodos.map((periodo) => (
             <div key={periodo.id} className={styles.periodoCard}>
               <div className={styles.periodoHeader}>
-                <h3>{periodo.nombre_periodo}</h3>
+                <div className={styles.periodoTitle}>
+                  <FaCalendarAlt className={styles.periodoIcon} />
+                  <h3>{periodo.nombre_periodo}</h3>
+                </div>
                 <span className={`${styles.estado} ${getEstadoClass(getEstadoPeriodo(periodo))}`}>
                   {getEstadoPeriodo(periodo)}
                 </span>
               </div>
-              {periodo.descripcion && <p className={styles.descripcion}>{periodo.descripcion}</p>}
+
+              {periodo.descripcion && (
+                <p className={styles.descripcion}>
+                  <FaEdit className={styles.descripcionIcon} />
+                  {periodo.descripcion}
+                </p>
+              )}
+
               <div className={styles.periodoDetails}>
-                <div>
-                  <strong>Inicio:</strong> {formatDateTime(periodo.fecha_inicio)}
+                <div className={styles.detailItem}>
+                  <FaCalendarAlt className={styles.detailIcon} />
+                  <span className={styles.detailLabel}>Inicio:</span>
+                  <span className={styles.detailValue}>{formatDateTime(periodo.fecha_inicio)}</span>
                 </div>
-                <div>
-                  <strong>Fin:</strong> {formatDateTime(periodo.fecha_fin)}
+                <div className={styles.detailItem}>
+                  <FaCalendarAlt className={styles.detailIcon} />
+                  <span className={styles.detailLabel}>Fin:</span>
+                  <span className={styles.detailValue}>{formatDateTime(periodo.fecha_fin)}</span>
                 </div>
-                <div>
-                  <strong>Aplicable a:</strong>{' '}
-                  {periodo.carrera
-                    ? `Carrera: ${periodo.carrera.carrera}`
-                    : periodo.grado
-                      ? `Grado: ${periodo.grado.grado}°`
-                      : 'Todas las carreras y grados'}
+                <div className={styles.detailItem}>
+                  <FaUniversity className={styles.detailIcon} />
+                  <span className={styles.detailLabel}>Aplicable a:</span>
+                  <span className={styles.detailValue}>
+                    {periodo.carrera
+                      ? `Carrera: ${periodo.carrera.carrera}`
+                      : periodo.grado
+                        ? `Grado: ${periodo.grado.grado}°`
+                        : 'Todas las carreras y grados'}
+                  </span>
                 </div>
               </div>
 
@@ -312,13 +404,23 @@ const PeriodosInscripcion = () => {
                 <button
                   onClick={() => handleToggleActivo(periodo.id)}
                   className={`${styles.toggleButton} ${periodo.activo ? styles.deactivate : styles.activate}`}
+                  title={periodo.activo ? 'Desactivar período' : 'Activar período'}
                 >
                   {periodo.activo ? 'Desactivar' : 'Activar'}
                 </button>
-                <button onClick={() => handleEdit(periodo)} className={styles.editButton}>
+                <button
+                  onClick={() => handleEdit(periodo)}
+                  className={styles.editButton}
+                  title="Editar período"
+                >
+                  <FaEdit />
                   Editar
                 </button>
-                <button onClick={() => handleDelete(periodo.id)} className={styles.deleteButton}>
+                <button
+                  onClick={() => handleDelete(periodo.id)}
+                  className={styles.deleteButton}
+                  title="Eliminar período"
+                >
                   Eliminar
                 </button>
               </div>

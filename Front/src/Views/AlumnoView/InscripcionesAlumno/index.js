@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Skeleton from '../../../Components/Shared/Skeleton';
+//import Skeleton from '../../../Components/Shared/Skeleton';
+import Spinner from '../../../Components/Shared/Spinner';
 import { useStateContext } from '../../../Components/Contexts';
 import axiosClient from '../../../Components/Shared/Axios';
 import styles from './inscripciones.module.css';
@@ -17,6 +18,7 @@ const InscripcionesAlumno = () => {
   const [inscripciones, setInscripciones] = useState([]);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
   const [unidadesInscriptas, setUnidadesInscriptas] = useState([]);
   const [loadingUnidades, setLoadingUnidades] = useState(true);
@@ -61,6 +63,7 @@ const InscripcionesAlumno = () => {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
+        setInitialLoading(true);
         // Cargar unidades inscriptas
         const responseInscriptas = await axiosClient.get('/alumno/unidades-inscriptas');
         if (responseInscriptas.data.success) {
@@ -75,6 +78,8 @@ const InscripcionesAlumno = () => {
         if (err.response?.status === 403) {
           setPeriodoInfo(err.response.data);
         }
+      } finally {
+        setInitialLoading(false);
       }
     };
 
@@ -87,6 +92,13 @@ const InscripcionesAlumno = () => {
       setLoadingUnidades(false);
     }
   }, [unidadesDisponibles]);
+
+  // Verificar si la carga inicial está completa
+  useEffect(() => {
+    if (!initialLoading && !loadingUnidades) {
+      // La carga inicial está completa
+    }
+  }, [initialLoading, loadingUnidades]);
 
   const handleSelect = (id) => {
     setSeleccionadas((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -363,16 +375,23 @@ const InscripcionesAlumno = () => {
     );
   };
 
+  // Mostrar spinner durante la carga inicial
+  if (initialLoading) {
+    return (
+      <div className={styles.container}>
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
     <main className={styles.container}>
       <h2 className={styles.title}>Inscripción a Unidades Curriculares</h2>
 
-      {/* Mostrar skeleton solo cuando está cargando las UC inicialmente */}
+      {/* Mostrar spinner durante el proceso de inscripción */}
       {loading && !success && (
-        <div className={styles.skeletonContainer}>
-          {[...Array(7)].map((_, i) => (
-            <Skeleton key={i} height={28} style={{ marginBottom: 14, borderRadius: 8 }} />
-          ))}
+        <div className={styles.container}>
+          <Spinner />
         </div>
       )}
 

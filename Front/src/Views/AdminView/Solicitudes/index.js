@@ -4,8 +4,9 @@ import axios from '../../../Components/Shared/Axios';
 import CustomModal from './CustomModal';
 import ModalRespuesta from './ModalRespuesta';
 import WelcomeTooltip from '../../../Components/Shared/WelcomeTooltip';
+import Spinner from '../../../Components/Shared/Spinner';
 import styles from './solicitudes.module.css';
-import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { FaSort, FaSortUp, FaSortDown, FaSearch, FaTimes } from 'react-icons/fa';
 import { useStateContext } from '../../../Components/Contexts';
 
 const estados = ['', 'pendiente', 'en_proceso', 'respondida', 'rechazada'];
@@ -173,7 +174,11 @@ const SolicitudesAdmin = () => {
   }, [filters]);
 
   if (loading) {
-    return <p>Cargando solicitudes...</p>;
+    return (
+      <div className={styles.container}>
+        <Spinner />
+      </div>
+    );
   }
 
   if (error) {
@@ -182,132 +187,137 @@ const SolicitudesAdmin = () => {
 
   return (
     <div className={styles.container}>
-      <h1>Gestión de Solicitudes</h1>
-      {/* Filtros */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 16,
-          marginBottom: 24,
-          alignItems: 'flex-end',
-          maxWidth: 900
-        }}
-      >
-        <div>
-          <label>
-            ID Solicitud
-            <br />
+      <div className={styles.header}>
+        <h1 className={styles.title}>📋 Gestión de Solicitudes</h1>
+        <div className={styles.headerStats}>
+          <div className={styles.statItem}>
+            <span className={styles.statNumber}>{filteredSolicitudes.length}</span>
+            <span className={styles.statLabel}>Total</span>
+          </div>
+          <div className={styles.statItem}>
+            <span className={styles.statNumber}>{pendientes.length}</span>
+            <span className={styles.statLabel}>Pendientes</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filtros mejorados */}
+      <div className={styles.filtersCard}>
+        <div className={styles.filtersHeader}>
+          <div className={styles.filtersTitle}>
+            <FaSearch className={styles.searchIcon} />
+            <span>Filtros de Búsqueda</span>
+          </div>
+          <button
+            onClick={handleClearFilters}
+            className={styles.clearFiltersBtn}
+            title="Limpiar todos los filtros"
+          >
+            <FaTimes />
+            Limpiar
+          </button>
+        </div>
+
+        <div className={styles.filtersGrid}>
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>ID Solicitud</label>
             <input
               type="text"
               name="id"
               value={filters.id}
               onChange={handleFilterChange}
-              style={{ width: 80 }}
+              className={styles.filterInput}
+              placeholder="Ej: 123"
             />
-          </label>
-        </div>
-        <div>
-          <label>
-            Nombre/Apellido Alumno
-            <br />
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Nombre/Apellido</label>
             <input
               type="text"
               name="nombre"
               value={filters.nombre}
               onChange={handleFilterChange}
-              style={{ width: 160 }}
-              placeholder="Nombre o Apellido"
+              className={styles.filterInput}
+              placeholder="Buscar por nombre..."
             />
-          </label>
-        </div>
-        <div>
-          <label>
-            Estado
-            <br />
-            <select name="estado" value={filters.estado} onChange={handleFilterChange}>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Estado</label>
+            <select
+              name="estado"
+              value={filters.estado}
+              onChange={handleFilterChange}
+              className={styles.filterSelect}
+            >
               {estados.map((e) => (
                 <option key={e} value={e}>
-                  {e ? e.charAt(0).toUpperCase() + e.slice(1) : 'Todos'}
+                  {e
+                    ? e.charAt(0).toUpperCase() + e.slice(1).replace('_', ' ')
+                    : 'Todos los estados'}
                 </option>
               ))}
             </select>
-          </label>
-        </div>
-        <div>
-          <label>
-            Categoría
-            <br />
-            <select name="categoria" value={filters.categoria} onChange={handleFilterChange}>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Categoría</label>
+            <select
+              name="categoria"
+              value={filters.categoria}
+              onChange={handleFilterChange}
+              className={styles.filterSelect}
+            >
               {categorias.map((c) => (
                 <option key={c} value={c}>
-                  {c ? c.charAt(0).toUpperCase() + c.slice(1).replace('_', ' ') : 'Todas'}
+                  {c
+                    ? c.charAt(0).toUpperCase() + c.slice(1).replace('_', ' ')
+                    : 'Todas las categorías'}
                 </option>
               ))}
             </select>
-          </label>
-        </div>
-        <div>
-          <label>
-            Fecha desde
-            <br />
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Fecha desde</label>
             <input
               type="date"
               name="fechaDesde"
               value={filters.fechaDesde}
               onChange={handleFilterChange}
+              className={styles.filterInput}
             />
-          </label>
-        </div>
-        <div>
-          <label>
-            Fecha hasta
-            <br />
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>Fecha hasta</label>
             <input
               type="date"
               name="fechaHasta"
               value={filters.fechaHasta}
               onChange={handleFilterChange}
+              className={styles.filterInput}
             />
-          </label>
+          </div>
         </div>
-        <button onClick={handleClearFilters} style={{ height: 36, marginTop: 18 }}>
-          Limpiar filtros
-        </button>
       </div>
       {pendientes.length > 0 && showPendientes && (
-        <div
-          style={{
-            background: '#dbeafe',
-            color: '#1e40af',
-            padding: 16,
-            borderRadius: 8,
-            marginBottom: 24,
-            border: '1px solid #60a5fa',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            maxWidth: 700
-          }}
-        >
-          <span>
-            <b>¡Atención!</b> Tienes {pendientes.length} solicitud
-            {pendientes.length > 1 ? 'es' : ''} pendiente
-            {pendientes.length > 1 ? 's' : ''} de revisión.
-          </span>
+        <div className={styles.alertCard}>
+          <div className={styles.alertContent}>
+            <div className={styles.alertIcon}>⚠️</div>
+            <div className={styles.alertText}>
+              <strong>¡Atención!</strong> Tienes {pendientes.length} solicitud
+              {pendientes.length > 1 ? 'es' : ''} pendiente
+              {pendientes.length > 1 ? 's' : ''} de revisión.
+            </div>
+          </div>
           <button
-            style={{
-              marginLeft: 16,
-              background: '#60a5fa',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 4,
-              padding: '6px 12px',
-              cursor: 'pointer'
-            }}
+            className={styles.alertCloseBtn}
             onClick={() => setShowPendientes(false)}
+            title="Cerrar alerta"
           >
-            Cerrar
+            <FaTimes />
           </button>
         </div>
       )}
@@ -386,37 +396,56 @@ const SolicitudesAdmin = () => {
                 <td>{solicitud.estado}</td>
                 <td>{new Date(solicitud.fecha_creacion).toLocaleDateString()}</td>
                 <td>
-                  <button onClick={() => handleOpenModal(solicitud)}>Ver Detalles</button>
+                  <button onClick={() => handleOpenModal(solicitud)} className={styles.actionBtn}>
+                    Ver Detalles
+                  </button>
                 </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
-      {/* Controles de paginación */}
+      {/* Controles de paginación mejorados */}
       {totalPaginas > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, gap: 8 }}>
-          <button onClick={() => handlePageChange(1)} disabled={currentPage === 1}>
-            « Primera
-          </button>
-          <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
-            ‹ Anterior
-          </button>
-          <span style={{ alignSelf: 'center' }}>
-            Página {currentPage} de {totalPaginas}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPaginas}
-          >
-            Siguiente ›
-          </button>
-          <button
-            onClick={() => handlePageChange(totalPaginas)}
-            disabled={currentPage === totalPaginas}
-          >
-            Última »
-          </button>
+        <div className={styles.paginationContainer}>
+          <div className={styles.paginationInfo}>
+            Mostrando {(currentPage - 1) * solicitudesPorPagina + 1} -{' '}
+            {Math.min(currentPage * solicitudesPorPagina, filteredSolicitudes.length)} de{' '}
+            {filteredSolicitudes.length} solicitudes
+          </div>
+          <div className={styles.paginationControls}>
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              className={styles.paginationBtn}
+            >
+              « Primera
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={styles.paginationBtn}
+            >
+              ‹ Anterior
+            </button>
+            <span className={styles.paginationCurrent}>
+              Página {currentPage} de {totalPaginas}
+            </span>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPaginas}
+              className={styles.paginationBtn}
+            >
+              Siguiente ›
+            </button>
+            <button
+              onClick={() => handlePageChange(totalPaginas)}
+              disabled={currentPage === totalPaginas}
+              className={styles.paginationBtn}
+            >
+              Última »
+            </button>
+          </div>
         </div>
       )}
       {isModalOpen && selectedSolicitud && (

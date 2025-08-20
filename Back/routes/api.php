@@ -94,6 +94,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/alumno/mensajes', [MensajeAlumnoController::class, 'index']);
 });
 
+// Rutas para estadísticas de administrador
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/admin/estadisticas', [App\Http\Controllers\Api\EstadisticasController::class, 'index']);
+});
+
 // Rutas para grupos de destinatarios
 Route::get('/grupos-destinatarios', [GruposDestinatariosController::class, 'index']); // Listar grupos
 Route::get('/grupos-destinatarios/{id}', [GruposDestinatariosController::class, 'show']); // Obtener grupo específico
