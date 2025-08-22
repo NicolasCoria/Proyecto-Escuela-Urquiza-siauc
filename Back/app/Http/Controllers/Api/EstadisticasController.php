@@ -15,69 +15,17 @@ class EstadisticasController extends Controller
             $periodo = $request->get('periodo', 'all');
             $carrera = $request->get('carrera', 'all');
 
-            // Datos de ejemplo para asegurar que funcione
+            // Obtener estadísticas reales usando los métodos implementados
             $estadisticas = [
-                'inscripciones' => [
-                    'total' => 234,
-                    'porMes' => [
-                        'Oct' => 45,
-                        'Nov' => 52,
-                        'Dic' => 38,
-                        'Ene' => 67,
-                        'Feb' => 59,
-                        'Mar' => 73
-                    ],
-                    'trend' => 15
-                ],
-                'academico' => [
-                    'aprobacion' => 74.5,
-                    'porUC' => [
-                        ['id' => 1, 'nombre' => 'Programación I', 'aprobacion' => 85.2],
-                        ['id' => 2, 'nombre' => 'Base de Datos I', 'aprobacion' => 78.9],
-                        ['id' => 3, 'nombre' => 'Análisis de Sistemas', 'aprobacion' => 76.4],
-                        ['id' => 4, 'nombre' => 'Redes I', 'aprobacion' => 72.1],
-                        ['id' => 5, 'nombre' => 'Matemática Aplicada', 'aprobacion' => 68.7]
-                    ],
-                    'trend' => 8
-                ],
-                'alumnos' => [
-                    'activos' => 253,
-                    'porCarrera' => [
-                        'Análisis Funcional' => [
-                            'nombre' => 'Análisis Funcional',
-                            'cantidad' => 89,
-                            'porcentaje' => 35.2,
-                            'color' => '#3182ce'
-                        ],
-                        'Desarrollo de Software' => [
-                            'nombre' => 'Desarrollo de Software',
-                            'cantidad' => 112,
-                            'porcentaje' => 44.3,
-                            'color' => '#38a169'
-                        ],
-                        'Infraestructura de TI' => [
-                            'nombre' => 'Infraestructura de TI',
-                            'cantidad' => 52,
-                            'porcentaje' => 20.5,
-                            'color' => '#805ad5'
-                        ]
-                    ],
-                    'trend' => 12
-                ],
-                'encuestas' => [
-                    'completadas' => 68.4,
-                    'activas' => 5,
-                    'total' => 12,
-                    'trend' => 5
-                ],
-                'sistema' => [
-                    'comunicaciones' => 156,
-                    'solicitudes' => 43,
-                    'encuestasActivas' => 5,
-                    'tiempoRespuesta' => 24
-                ],
+                'inscripciones' => $this->getEstadisticasInscripciones($periodo, $carrera),
+                'academico' => $this->getEstadisticasAcademicas($periodo, $carrera),
+                'alumnos' => $this->getEstadisticasAlumnos($periodo, $carrera),
+                'encuestas' => $this->getEstadisticasEncuestas($periodo, $carrera),
+                'sistema' => $this->getEstadisticasSistema($periodo, $carrera),
                 'resumen' => [
-                    'observaciones' => 'Estadísticas generadas correctamente. El sistema muestra un funcionamiento normal con métricas dentro de los rangos esperados.'
+                    'observaciones' => 'Estadísticas generadas correctamente desde la base de datos. Filtros aplicados: ' . 
+                        ($periodo !== 'all' ? 'Período: ' . $periodo . ' ' : '') . 
+                        ($carrera !== 'all' ? 'Carrera: ' . $carrera : 'Todas las carreras')
                 ]
             ];
 
@@ -324,8 +272,8 @@ class EstadisticasController extends Controller
             $totalEncuestas = DB::table('encuesta')->count();
             $encuestasActivas = DB::table('encuesta')->where('activa', true)->count();
             
-            $totalRespuestas = DB::table('respuesta_encuesta')->count();
-            $totalAsignaciones = DB::table('encuesta_alumno')->count();
+            $totalRespuestas = DB::table('respuesta')->count();
+            $totalAsignaciones = DB::table('alumno_encuesta')->count();
             
             $tasaCompletadas = $totalAsignaciones > 0 ? round(($totalRespuestas / $totalAsignaciones) * 100, 1) : 0;
 
@@ -348,7 +296,7 @@ class EstadisticasController extends Controller
     private function getEstadisticasSistema($periodo, $carrera)
     {
         try {
-            $comunicaciones = DB::table('mensajes')->count();
+            $comunicaciones = DB::table('mensaje')->count();
             $solicitudes = DB::table('solicitudes')->count();
             $encuestasActivas = DB::table('encuesta')->where('activa', true)->count();
             

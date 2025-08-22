@@ -59,64 +59,8 @@ const Estadisticas = () => {
         setError('Error al configurar la petición');
       }
 
-      // Fallback: usar datos de ejemplo si hay problemas de conexión
-      if (!err.response || err.code === 'NETWORK_ERROR') {
-        console.log('Usando datos de ejemplo debido a problemas de conexión');
-        setStats({
-          inscripciones: {
-            total: 234,
-            porMes: { Oct: 45, Nov: 52, Dic: 38, Ene: 67, Feb: 59, Mar: 73 },
-            trend: 15
-          },
-          academico: {
-            aprobacion: 74.5,
-            porUC: [
-              { id: 1, nombre: 'Programación I', aprobacion: 85.2 },
-              { id: 2, nombre: 'Base de Datos I', aprobacion: 78.9 },
-              { id: 3, nombre: 'Análisis de Sistemas', aprobacion: 76.4 },
-              { id: 4, nombre: 'Redes I', aprobacion: 72.1 },
-              { id: 5, nombre: 'Matemática Aplicada', aprobacion: 68.7 }
-            ],
-            trend: 8
-          },
-          alumnos: {
-            activos: 253,
-            porCarrera: {
-              'Análisis Funcional': {
-                nombre: 'Análisis Funcional',
-                cantidad: 89,
-                porcentaje: 35.2,
-                color: '#3182ce'
-              },
-              'Desarrollo de Software': {
-                nombre: 'Desarrollo de Software',
-                cantidad: 112,
-                porcentaje: 44.3,
-                color: '#38a169'
-              },
-              'Infraestructura de TI': {
-                nombre: 'Infraestructura de TI',
-                cantidad: 52,
-                porcentaje: 20.5,
-                color: '#805ad5'
-              }
-            },
-            trend: 12
-          },
-          encuestas: { completadas: 68.4, activas: 5, total: 12, trend: 5 },
-          sistema: {
-            comunicaciones: 156,
-            solicitudes: 43,
-            encuestasActivas: 5,
-            tiempoRespuesta: 24
-          },
-          resumen: {
-            observaciones:
-              'Datos de ejemplo mostrados debido a problemas de conexión con el servidor.'
-          }
-        });
-        setError(''); // Limpiar error ya que mostramos datos de ejemplo
-      }
+      // No usar datos de ejemplo, mostrar error real
+      console.error('Error al cargar estadísticas:', err);
     } finally {
       setLoading(false);
     }
@@ -172,6 +116,7 @@ const Estadisticas = () => {
             <option value="all">Todos los períodos</option>
             <option value="current">Período actual</option>
             <option value="last_month">Último mes</option>
+            <option value="last_quarter">Último trimestre</option>
             <option value="last_year">Último año</option>
           </select>
 
@@ -185,7 +130,61 @@ const Estadisticas = () => {
             <option value="2">Desarrollo de Software</option>
             <option value="3">Infraestructura de TI</option>
           </select>
+
+          <button
+            onClick={cargarEstadisticas}
+            className={styles.btn}
+            disabled={loading}
+            style={{
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {loading ? '🔄 Cargando...' : '🔍 Aplicar Filtros'}
+          </button>
         </div>
+
+        {/* Indicador de filtros activos */}
+        {(selectedPeriod !== 'all' || selectedCarrera !== 'all') && (
+          <div
+            style={{
+              background: '#e3f2fd',
+              border: '1px solid #2196f3',
+              borderRadius: '8px',
+              padding: '12px',
+              marginTop: '16px',
+              fontSize: '14px',
+              color: '#1976d2'
+            }}
+          >
+            🔍 <strong>Filtros activos:</strong>
+            {selectedPeriod !== 'all' &&
+              ` Período: ${selectedPeriod === 'current' ? 'Actual' : selectedPeriod === 'last_month' ? 'Último mes' : selectedPeriod === 'last_quarter' ? 'Último trimestre' : 'Último año'}`}
+            {selectedCarrera !== 'all' &&
+              ` Carrera: ${selectedCarrera === '1' ? 'Análisis Funcional' : selectedCarrera === '2' ? 'Desarrollo de Software' : 'Infraestructura de TI'}`}
+            <button
+              onClick={() => {
+                setSelectedPeriod('all');
+                setSelectedCarrera('all');
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#1976d2',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                marginLeft: '10px'
+              }}
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Métricas principales */}
@@ -313,11 +312,39 @@ const Estadisticas = () => {
         <div className={styles.summaryContent}>
           <p>
             <strong>Período analizado:</strong>{' '}
-            {selectedPeriod === 'all' ? 'Todos los períodos' : selectedPeriod}
+            {selectedPeriod === 'all'
+              ? 'Todos los períodos'
+              : selectedPeriod === 'current'
+                ? 'Período actual'
+                : selectedPeriod === 'last_month'
+                  ? 'Último mes'
+                  : selectedPeriod === 'last_quarter'
+                    ? 'Último trimestre'
+                    : selectedPeriod === 'last_year'
+                      ? 'Último año'
+                      : selectedPeriod}
           </p>
           <p>
             <strong>Carrera:</strong>{' '}
-            {selectedCarrera === 'all' ? 'Todas las carreras' : 'Carrera seleccionada'}
+            {selectedCarrera === 'all'
+              ? 'Todas las carreras'
+              : selectedCarrera === '1'
+                ? 'Análisis Funcional'
+                : selectedCarrera === '2'
+                  ? 'Desarrollo de Software'
+                  : selectedCarrera === '3'
+                    ? 'Infraestructura de TI'
+                    : 'Carrera seleccionada'}
+          </p>
+          <p>
+            <strong>Última actualización:</strong>{' '}
+            {new Date().toLocaleString('es-ES', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
           </p>
           <p>
             <strong>Observaciones:</strong>{' '}

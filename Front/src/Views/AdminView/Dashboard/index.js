@@ -1,6 +1,6 @@
 import React, { Suspense, useState } from 'react';
 import styles from './dashboard.module.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useStateContext } from '../../../Components/Contexts';
 import Spinner from '../../../Components/Shared/Spinner';
 import WelcomeTooltip from '../../../Components/Shared/WelcomeTooltip';
@@ -11,6 +11,7 @@ const GestionarAsignaciones = React.lazy(() => import('./GestionarAsignaciones')
 const EditarEncuestas = React.lazy(() => import('./EditarEncuestas'));
 const GruposDestinatarios = React.lazy(() => import('./GruposDestinatarios'));
 const Estadisticas = React.lazy(() => import('./Estadisticas'));
+const ResultadosEncuestas = React.lazy(() => import('./ResultadosEncuestas'));
 
 const AdminDashboard = () => {
   const { user } = useStateContext();
@@ -73,37 +74,39 @@ const AdminDashboard = () => {
           >
             📊 Estadísticas
           </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === 'results' ? styles.active : ''}`}
+            onClick={() => setActiveTab('results')}
+          >
+            📋 Resultados de Encuestas
+          </button>
         </div>
 
         {/* Contenido de los tabs */}
         <div className={styles.tabContent}>
           {activeTab === 'overview' && (
-            <section className={styles.section}>
-              <h2>Panel de Administración</h2>
-              <p>
-                Bienvenido al panel de administración. Selecciona una pestaña para comenzar a
-                trabajar.
-              </p>
+            <div className={styles.overview}>
+              <h2>Bienvenido al Panel de Administración</h2>
+              <p>Selecciona una opción del menú superior para comenzar.</p>
 
-              <h3>Acciones Rápidas</h3>
               <div className={styles.quickActions}>
-                <div className={styles.actionCard}>
-                  <h3>Generar Informes</h3>
-                  <p>Accede a la herramienta de generación de informes personalizados</p>
-                  <Link to="/admin/informes" className={styles.actionBtn}>
-                    Ir a Informes
-                  </Link>
-                </div>
-
-                <div className={styles.actionCard}>
-                  <h3>Estadísticas</h3>
-                  <p>Visualiza estadísticas y métricas del sistema</p>
-                  <button className={styles.actionBtn} onClick={() => setActiveTab('stats')}>
-                    Ver Estadísticas
+                <h3>Acciones Rápidas</h3>
+                <div className={styles.actionGrid}>
+                  <button onClick={() => setActiveTab('create')} className={styles.actionButton}>
+                    ➕ Crear Nueva Encuesta
+                  </button>
+                  <button onClick={() => setActiveTab('assign')} className={styles.actionButton}>
+                    👥 Asignar Encuestas
+                  </button>
+                  <button onClick={() => setActiveTab('results')} className={styles.actionButton}>
+                    📋 Ver Resultados
+                  </button>
+                  <button onClick={handleViewFaqs} className={styles.actionButton}>
+                    ❓ Gestionar FAQs
                   </button>
                 </div>
               </div>
-            </section>
+            </div>
           )}
 
           {activeTab === 'create' && (
@@ -133,6 +136,11 @@ const AdminDashboard = () => {
           {activeTab === 'stats' && (
             <Suspense fallback={<Spinner />}>
               <Estadisticas />
+            </Suspense>
+          )}
+          {activeTab === 'results' && (
+            <Suspense fallback={<Spinner />}>
+              <ResultadosEncuestas />
             </Suspense>
           )}
         </div>
