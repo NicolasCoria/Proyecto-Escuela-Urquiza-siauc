@@ -75,6 +75,12 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::post('mensajes/filtrar-alumnos', [MensajeController::class, 'filtrarAlumnos']);
     Route::post('mensajes/obtener-alumnos-grupos', [MensajeController::class, 'obtenerAlumnosDeGrupos']);
     Route::post('mensajes/enviar-grupos', [MensajeController::class, 'enviarAGrupos']);
+    
+    // Rutas para plantillas personalizadas de informes
+    Route::get('informes/mis-plantillas', [InformeController::class, 'getMisPlantillas']);
+    Route::post('informes/plantillas', [InformeController::class, 'storePlantilla']);
+    Route::put('informes/plantillas/{id}', [InformeController::class, 'updatePlantilla']);
+    Route::delete('informes/plantillas/{id}', [InformeController::class, 'destroyPlantilla']);
 });
 
 // Grupo de rutas protegidas para Alumnos
@@ -106,6 +112,7 @@ Route::post('/grupos-destinatarios', [GruposDestinatariosController::class, 'sto
 Route::put('/grupos-destinatarios/{id}', [GruposDestinatariosController::class, 'update']); // Actualizar grupo
 Route::delete('/grupos-destinatarios/{id}', [GruposDestinatariosController::class, 'destroy']); // Eliminar grupo
 Route::get('/grupos-destinatarios/datos/creacion', [GruposDestinatariosController::class, 'getDatosCreacion']); // Datos para crear
+Route::post('/grupos-destinatarios/materias-por-carrera', [GruposDestinatariosController::class, 'getMateriasPorCarrera']); // Materias por carrera
 Route::post('/grupos-destinatarios/filtrar-alumnos', [GruposDestinatariosController::class, 'filtrarAlumnos']); // Filtrar alumnos
 Route::post('/grupos-destinatarios/obtener-alumnos', [GruposDestinatariosController::class, 'obtenerAlumnosDeGrupos']); // Obtener alumnos de grupos
 
@@ -128,7 +135,9 @@ Route::post('/plantillas-informe', [\App\Http\Controllers\PlantillaInformeContro
 Route::put('/plantillas-informe/{id}', [\App\Http\Controllers\PlantillaInformeController::class, 'update']);
 
 // Ruta optimizada para datos del dashboard
-Route::get('/dashboard-data', [\App\Http\Controllers\Api\DashboardController::class, 'getDashboardData']);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/admin/dashboard-data', [\App\Http\Controllers\Api\DashboardController::class, 'getDashboardData']);
+});
 Route::delete('/plantillas-informe/{id}', [\App\Http\Controllers\PlantillaInformeController::class, 'destroy']);
 
 Route::get('/grados', [\App\Http\Controllers\Api\GradoController::class, 'getAllGrados']);

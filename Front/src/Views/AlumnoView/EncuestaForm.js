@@ -61,8 +61,9 @@ export default function EncuestaForm({ encuesta, onEncuestaRespondida }) {
 
       if (response.data.success) {
         setEnviado(true);
+        // Llamar al callback para actualizar el estado en el componente padre
         if (onEncuestaRespondida) {
-          onEncuestaRespondida();
+          onEncuestaRespondida(encuesta.id_encuesta);
         }
       } else {
         setError('Error al enviar las respuestas. Inténtalo de nuevo.');
@@ -77,8 +78,9 @@ export default function EncuestaForm({ encuesta, onEncuestaRespondida }) {
         );
         // Marcar como respondida en el frontend
         if (onEncuestaRespondida) {
-          onEncuestaRespondida();
+          onEncuestaRespondida(encuesta.id_encuesta);
         }
+        setEnviado(true); // Mostrar mensaje de éxito aunque ya esté respondida
       } else if (err.response?.status === 400) {
         setError(
           err.response?.data?.error ||

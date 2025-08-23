@@ -311,6 +311,13 @@ class EncuestaController extends Controller
                     'fecha_respuesta' => now()
                 ]);
 
+            \Log::info("Encuesta {$validated['id_encuesta']} marcada como respondida para alumno {$idAlumno}");
+
+            // Limpiar caché de encuestas asignadas para este alumno
+            $cacheKey = "alumno:{$idAlumno}:encuestas_asignadas";
+            Cache::forget($cacheKey);
+            \Log::info("Caché limpiado para alumno {$idAlumno}");
+
             DB::commit();
 
             return response()->json([
@@ -486,30 +493,39 @@ class EncuestaController extends Controller
             return response()->json(['error' => 'No se pudo determinar el alumno'], 400);
         }
 
+        \Log::info("Cargando encuestas asignadas para alumno: {$id_alumno}");
+
         $cacheKey = "alumno:{$id_alumno}:encuestas_asignadas";
         $encuestas = Cache::remember($cacheKey, 60, function () use ($id_alumno) {
-            return AlumnoEncuesta::with(['encuesta.preguntas.opciones'])
+            $alumnoEncuestas = AlumnoEncuesta::with(['encuesta.preguntas.opciones'])
                 ->where('id_alumno', $id_alumno)
                 ->whereHas('encuesta', function ($query) {
                     $query->where('activa', true);
                 })
-                ->get()
-                ->map(function ($alumnoEncuesta) {
-                    return [
-                        'id_encuesta' => $alumnoEncuesta->encuesta->id_encuesta,
-                        'titulo' => $alumnoEncuesta->encuesta->titulo,
-                        'descripcion' => $alumnoEncuesta->encuesta->descripcion,
-                        'activa' => $alumnoEncuesta->encuesta->activa,
-                        'fecha_inicio' => $alumnoEncuesta->encuesta->fecha_inicio,
-                        'fecha_fin' => $alumnoEncuesta->encuesta->fecha_fin,
-                        'preguntas' => $alumnoEncuesta->encuesta->preguntas,
-                        'fecha_asignacion' => $alumnoEncuesta->fecha_asignacion,
-                        'notificado' => $alumnoEncuesta->notificado,
-                        'respondida' => $alumnoEncuesta->respondida,
-                        'fecha_respuesta' => $alumnoEncuesta->fecha_respuesta,
-                    ];
-                });
+                ->get();
+
+            \Log::info("Encuestas encontradas para alumno {$id_alumno}: " . $alumnoEncuestas->count());
+            
+            return $alumnoEncuestas->map(function ($alumnoEncuesta) {
+                \Log::info("Encuesta {$alumnoEncuesta->encuesta->id_encuesta} - Respondida: " . ($alumnoEncuesta->respondida ? 'Sí' : 'No'));
+                
+                return [
+                    'id_encuesta' => $alumnoEncuesta->encuesta->id_encuesta,
+                    'titulo' => $alumnoEncuesta->encuesta->titulo,
+                    'descripcion' => $alumnoEncuesta->encuesta->descripcion,
+                    'activa' => $alumnoEncuesta->encuesta->activa,
+                    'fecha_inicio' => $alumnoEncuesta->encuesta->fecha_inicio,
+                    'fecha_fin' => $alumnoEncuesta->encuesta->fecha_fin,
+                    'preguntas' => $alumnoEncuesta->encuesta->preguntas,
+                    'fecha_asignacion' => $alumnoEncuesta->fecha_asignacion,
+                    'notificado' => $alumnoEncuesta->notificado,
+                    'respondida' => $alumnoEncuesta->respondida,
+                    'fecha_respuesta' => $alumnoEncuesta->fecha_respuesta,
+                ];
+            });
         });
+
+        \Log::info("Retornando " . count($encuestas) . " encuestas para alumno {$id_alumno}");
 
         return response()->json([
             'success' => true,

@@ -23,7 +23,7 @@ const AdminLayout = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
-  const { user, setUser, setTokenAndRole, token, role } = useStateContext();
+  const { user, setUser, setTokenAndRole, token, role, clearAllSession } = useStateContext();
   const { openModal } = useModalContext();
 
   const toggleMenu = () => {
@@ -34,9 +34,8 @@ const AdminLayout = () => {
     e.preventDefault();
     const clickLogout = async () => {
       setIsLoading(true);
-      // Limpiar sesión inmediatamente para mejor UX
-      setUser(null);
-      setTokenAndRole(null, null);
+      // Limpiar sesión completamente
+      clearAllSession();
       // Navegar inmediatamente
       navigate('/admin/login');
       // Hacer logout en el backend en background (sin esperar)
@@ -66,29 +65,35 @@ const AdminLayout = () => {
   // Verificar autenticación al cargar (optimizado)
   React.useEffect(() => {
     const checkAuth = async () => {
-      // Verificación rápida sin logs innecesarios
+      // Si no hay token o rol incorrecto, redirigir
       if (!token || role !== 'admin') {
         navigate('/admin/login');
         return;
       }
 
+      // Si ya tenemos usuario, no hacer nada más
+      if (user) {
+        setIsInitializing(false);
+        return;
+      }
+
       // Solo hacer llamada API si no hay usuario
-      if (token && !user) {
-        try {
-          const response = await axiosClient.get('/admin/info');
-          if (response.data.success) {
-            setUser(response.data.admin);
-          } else {
-            setUser(null);
-            setTokenAndRole(null, null);
-            navigate('/admin/login');
-          }
-        } catch (error) {
-          console.error('Error getting admin info:', error);
+      try {
+        const response = await axiosClient.get('/admin/info');
+        if (response.data.success) {
+          setUser(response.data.admin);
+        } else {
           setUser(null);
           setTokenAndRole(null, null);
+          localStorage.clear();
           navigate('/admin/login');
         }
+      } catch (error) {
+        console.error('Error getting admin info:', error.response?.data || error.message);
+        setUser(null);
+        setTokenAndRole(null, null);
+        localStorage.clear();
+        navigate('/admin/login');
       }
 
       setIsInitializing(false);

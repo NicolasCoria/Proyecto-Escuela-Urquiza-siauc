@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import styles from './informes.module.css';
-import Button from '../../../Components/Shared/Button';
 import Modal from '../../../Components/Shared/Modal';
 import Spinner from '../../../Components/Shared/Spinner';
 import axiosClient from '../../../Components/Shared/Axios';
@@ -12,24 +11,65 @@ import {
   FaDownload,
   FaPlus,
   FaEdit,
-  FaTrash
+  FaTrash,
+  FaChartBar,
+  FaCog
 } from 'react-icons/fa';
 
-// Campos configurables posibles
+// Campos configurables posibles (estructura base)
 const CAMPOS_CONFIGURABLES = [
-  { value: 'carrera', label: 'Carrera' },
-  { value: 'grado', label: 'Grado' },
-  { value: 'año', label: 'Año' },
-  { value: 'estado_inscripcion', label: 'Estado de Inscripción' },
-  { value: 'fecha_desde', label: 'Fecha Desde' },
-  { value: 'fecha_hasta', label: 'Fecha Hasta' },
-  { value: 'unidad_curricular', label: 'Unidad Curricular' },
-  { value: 'promedio_minimo', label: 'Promedio Mínimo' },
-  { value: 'porcentaje_asistencia', label: 'Porcentaje de Asistencia' }
+  {
+    value: 'carrera',
+    label: 'Carrera',
+    tipo: 'select',
+    opciones: [] // Se cargarán dinámicamente
+  },
+  {
+    value: 'grado',
+    label: 'Año (Grado)',
+    tipo: 'select',
+    opciones: [] // Se cargarán dinámicamente
+  },
+  {
+    value: 'estado_inscripcion',
+    label: 'Estado de Inscripción',
+    tipo: 'select',
+    opciones: [
+      { value: 'activa', label: 'Activa' },
+      { value: 'inactiva', label: 'Inactiva' },
+      { value: 'pendiente', label: 'Pendiente' }
+    ]
+  },
+  {
+    value: 'fecha_desde',
+    label: 'Fecha Desde',
+    tipo: 'date'
+  },
+  {
+    value: 'fecha_hasta',
+    label: 'Fecha Hasta',
+    tipo: 'date'
+  },
+  {
+    value: 'unidad_curricular',
+    label: 'Unidad Curricular',
+    tipo: 'select',
+    opciones: [] // Se cargarán dinámicamente
+  },
+  {
+    value: 'promedio_minimo',
+    label: 'Promedio Mínimo',
+    tipo: 'number',
+    min: 0,
+    max: 10,
+    step: 0.1
+  }
 ];
 
 const Informes = () => {
   const { openModal, modalState, closeModal } = useModalContext();
+
+  // Estados para la sección de Generar Informes
   const [isLoading, setIsLoading] = useState(false);
   const [plantillas, setPlantillas] = useState([]);
   const [selectedPlantilla, setSelectedPlantilla] = useState('');
@@ -37,6 +77,8 @@ const Informes = () => {
   const [filtrosDef, setFiltrosDef] = useState({});
   const [filtros, setFiltros] = useState({});
   const [errores, setErrores] = useState({});
+
+  // Estados para la sección de Gestionar Plantillas
   const [misPlantillas, setMisPlantillas] = useState([]);
   const [nombrePlantilla, setNombrePlantilla] = useState('');
   const [camposSeleccionados, setCamposSeleccionados] = useState([]);
@@ -45,9 +87,12 @@ const Informes = () => {
   const [editNombre, setEditNombre] = useState('');
   const [editCampos, setEditCampos] = useState([]);
   const [errorEditar, setErrorEditar] = useState('');
-  const [unidadesCurriculares, setUnidadesCurriculares] = useState([]);
-  const [carreras, setCarreras] = useState([]);
-  const [grados, setGrados] = useState([]);
+
+  // Estado para campos configurables con datos dinámicos
+  const [camposConfigurables, setCamposConfigurables] = useState(CAMPOS_CONFIGURABLES);
+
+  // Estado para controlar qué sección está activa
+  const [seccionActiva, setSeccionActiva] = useState('generar'); // 'generar' o 'gestionar'
 
   const sortedMisPlantillas = [...misPlantillas].sort((a, b) => a.nombre.localeCompare(b.nombre));
   const sortedPlantillas = [...plantillas].sort((a, b) => a.nombre.localeCompare(b.nombre));
@@ -55,28 +100,60 @@ const Informes = () => {
   useEffect(() => {
     cargarPlantillas();
     cargarMisPlantillas();
-    axiosClient.get('/carreras').then((res) => setCarreras(res.data.carreras || []));
-    axiosClient.get('/grados').then((res) => setGrados(res.data.grados || []));
-    const fetchUnidades = async () => {
-      try {
-        const { data } = await axiosClient.get('/unidades-curriculares');
-        setUnidadesCurriculares(data.unidades_curriculares || data || []);
-      } catch (error) {
-        setUnidadesCurriculares([]);
-      }
-    };
-    fetchUnidades();
+    cargarDatosFiltros();
   }, []);
 
   useEffect(() => {
-    if (selectedPlantilla) {
+    if (selectedPlantilla && seccionActiva === 'generar') {
       cargarFiltros(selectedPlantilla);
     } else {
       setFiltrosDef({});
       setFiltros({});
       setErrores({});
     }
-  }, [selectedPlantilla]);
+  }, [selectedPlantilla, seccionActiva]);
+
+  // Limpiar estados cuando se cambia de sección
+  useEffect(() => {
+    if (seccionActiva === 'generar') {
+      // Limpiar estados de gestión
+      setEditandoId(null);
+      setEditNombre('');
+      setEditCampos([]);
+      setErrorEditar('');
+      setNombrePlantilla('');
+      setCamposSeleccionados([]);
+      setErrorPlantilla('');
+    } else {
+      // Limpiar estados de generación
+      setSelectedPlantilla('');
+      setFiltrosDef({});
+      setFiltros({});
+      setErrores({});
+    }
+  }, [seccionActiva]);
+
+  // const cargarDatosFiltros = async () => {
+  //   try {
+  //     const [carrerasRes, gradosRes] = await Promise.all([
+  //       axiosClient.get('/carreras'),
+  //       axiosClient.get('/grados')
+  //     ]);
+
+  //     setCarreras(carrerasRes.data.carreras || []);
+  //     setGrados(gradosRes.data.grados || []);
+
+  //     // Cargar unidades curriculares
+  //     try {
+  //       const { data } = await axiosClient.get('/unidades-curriculares');
+  //       setUnidadesCurriculares(data.unidades_curriculares || data || []);
+  //     } catch (error) {
+  //       setUnidadesCurriculares([]);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error al cargar datos de filtros:', error);
+  //   }
+  // };
 
   const cargarPlantillas = async () => {
     setIsLoading(true);
@@ -92,256 +169,175 @@ const Informes = () => {
   const cargarFiltros = async (plantillaId) => {
     setIsLoading(true);
     try {
-      const { data } = await axiosClient.get(`/admin/informes/filtros?plantilla_id=${plantillaId}`);
-      setFiltrosDef(data.filtros || {});
+      // Determinar si es plantilla del sistema o personalizada
+      const plantillaSistema = plantillas.find((p) => p.id == plantillaId);
+      const plantillaPersonalizada = misPlantillas.find((p) => p.id == plantillaId);
+
+      let nuevosFiltrosDef = {};
+
+      if (plantillaSistema) {
+        // Es una plantilla del sistema
+        const { data } = await axiosClient.get(
+          `/admin/informes/filtros?plantilla_id=${plantillaId}`
+        );
+        nuevosFiltrosDef = data.filtros || {};
+      } else if (plantillaPersonalizada) {
+        // Es una plantilla personalizada
+        plantillaPersonalizada.campos_configurables?.forEach((campo) => {
+          const campoConfig = camposConfigurables.find((c) => c.value === campo);
+          nuevosFiltrosDef[campo] = {
+            label: campoConfig?.label || campo,
+            tipo: campoConfig?.tipo || 'text',
+            required: false,
+            opciones: campoConfig?.opciones || undefined,
+            min: campoConfig?.min || undefined,
+            max: campoConfig?.max || undefined,
+            step: campoConfig?.step || undefined
+          };
+        });
+      }
+
+      setFiltrosDef(nuevosFiltrosDef);
+
       // Inicializar filtros con valores vacíos
       const nuevosFiltros = {};
-      Object.keys(data.filtros || {}).forEach((key) => {
+      Object.keys(nuevosFiltrosDef).forEach((key) => {
         nuevosFiltros[key] = '';
       });
       setFiltros(nuevosFiltros);
       setErrores({});
     } catch (error) {
+      console.error('Error al cargar filtros:', error);
       setFiltrosDef({});
       setFiltros({});
-      setErrores({});
     }
     setIsLoading(false);
   };
 
-  const handleFiltroChange = (key, value) => {
-    setFiltros((prev) => ({ ...prev, [key]: value }));
-    setErrores((prev) => ({ ...prev, [key]: undefined }));
-  };
-
-  // Definir campos obligatorios por plantilla
-  const camposObligatorios = {
-    1: ['carrera'],
-    2: ['fecha_desde', 'fecha_hasta'],
-    3: ['carrera', 'unidad_curricular'],
-    4: ['carrera', 'unidad_curricular']
-  };
-
-  // Buscar plantilla seleccionada en ambas listas
-  const plantillaSeleccionada =
-    sortedMisPlantillas.find((p) => p.id === selectedPlantilla) ||
-    sortedPlantillas.find((p) => p.id === selectedPlantilla);
-
-  // Mapear campos configurables a definiciones de input
-  const getCampoDef = (campo) =>
-    CAMPOS_CONFIGURABLES.find((c) => c.value === campo) || {
-      value: campo,
-      label: campo,
-      tipo: 'text'
-    };
-
-  // Renderizar inputs dinámicos
-  const renderFiltros = () => {
-    // Si es plantilla personalizada
-    if (plantillaSeleccionada && Array.isArray(plantillaSeleccionada.campos_configurables)) {
-      if (plantillaSeleccionada.campos_configurables.length === 0) return null;
-      return (
-        <div className={styles.formGroup}>
-          <label>Filtros:</label>
-          {plantillaSeleccionada.campos_configurables.map((campo) => {
-            const def = getCampoDef(campo);
-            // Definir tipo de input
-            if (
-              ['carrera', 'grado', 'estado_inscripcion', 'unidad_curricular'].includes(def.value)
-            ) {
-              // Opciones dummy, deberías reemplazar por datos reales si tienes
-              let opciones = [];
-              if (def.value === 'carrera')
-                opciones = carreras.map((c) => ({
-                  value: c.id_carrera,
-                  label: c.carrera
-                }));
-              if (def.value === 'grado')
-                opciones = grados.map((g) => ({
-                  value: g.id_grado,
-                  label: g.detalle || `Grado ${g.grado}`
-                }));
-              if (def.value === 'estado_inscripcion')
-                opciones = [
-                  { value: 'activo', label: 'Activo' },
-                  { value: 'inactivo', label: 'Inactivo' }
-                ];
-              if (def.value === 'unidad_curricular')
-                opciones = unidadesCurriculares.map((uc) => ({
-                  value: uc.id_uc,
-                  label: uc.unidad_curricular
-                }));
-              return (
-                <div key={campo} className={styles.filtroField}>
-                  <label>{def.label}</label>
-                  <select
-                    value={filtros[campo] || ''}
-                    onChange={(e) => handleFiltroChange(campo, e.target.value)}
-                    className={styles.select}
-                  >
-                    <option value="">Selecciona...</option>
-                    {opciones.map((op) => (
-                      <option key={op.value} value={op.value}>
-                        {op.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errores[campo] && <div className={styles.error}>{errores[campo]}</div>}
-                </div>
-              );
-            }
-            if (def.value === 'fecha_desde' || def.value === 'fecha_hasta') {
-              return (
-                <div key={campo} className={styles.filtroField}>
-                  <label>{def.label}</label>
-                  <input
-                    type="date"
-                    value={filtros[campo] || ''}
-                    onChange={(e) => handleFiltroChange(campo, e.target.value)}
-                    className={styles.input}
-                  />
-                  {errores[campo] && <div className={styles.error}>{errores[campo]}</div>}
-                </div>
-              );
-            }
-            if (def.value === 'promedio_minimo' || def.value === 'porcentaje_asistencia') {
-              return (
-                <div key={campo} className={styles.filtroField}>
-                  <label>{def.label}</label>
-                  <input
-                    type="number"
-                    value={filtros[campo] || ''}
-                    onChange={(e) => handleFiltroChange(campo, e.target.value)}
-                    className={styles.input}
-                  />
-                  {errores[campo] && <div className={styles.error}>{errores[campo]}</div>}
-                </div>
-              );
-            }
-            // Por defecto, input de texto
-            return (
-              <div key={campo} className={styles.filtroField}>
-                <label>{def.label}</label>
-                <input
-                  type="text"
-                  value={filtros[campo] || ''}
-                  onChange={(e) => handleFiltroChange(campo, e.target.value)}
-                  className={styles.input}
-                />
-                {errores[campo] && <div className={styles.error}>{errores[campo]}</div>}
-              </div>
-            );
-          })}
-        </div>
-      );
+  const cargarMisPlantillas = async () => {
+    try {
+      const { data } = await axiosClient.get('/admin/informes/mis-plantillas');
+      setMisPlantillas(data.plantillas || []);
+    } catch (error) {
+      console.error('Error al cargar mis plantillas:', error);
+      setMisPlantillas([]);
     }
-    // Si es plantilla del sistema, usar lógica actual
-    if (!filtrosDef || Object.keys(filtrosDef).length === 0) return null;
-    return (
-      <div className={styles.formGroup}>
-        <label>Filtros:</label>
-        {Object.entries(filtrosDef).map(([key, def]) => {
-          const obligatorio = (camposObligatorios[selectedPlantilla] || []).includes(key);
-          if (def.tipo === 'select') {
-            return (
-              <div key={key} className={styles.filtroField}>
-                <label>
-                  {def.label} {obligatorio && <span style={{ color: 'red' }}>*</span>}
-                </label>
-                <select
-                  value={filtros[key] || ''}
-                  onChange={(e) => handleFiltroChange(key, e.target.value)}
-                  className={styles.select}
-                >
-                  <option value="">Selecciona...</option>
-                  {def.opciones &&
-                    def.opciones.length > 0 &&
-                    def.opciones.map((op) => (
-                      <option key={op.value} value={op.value}>
-                        {op.label}
-                      </option>
-                    ))}
-                </select>
-                {errores[key] && <div className={styles.error}>{errores[key]}</div>}
-              </div>
-            );
-          }
-          if (def.tipo === 'date') {
-            return (
-              <div key={key} className={styles.filtroField}>
-                <label>
-                  {def.label} {obligatorio && <span style={{ color: 'red' }}>*</span>}
-                </label>
-                <input
-                  type="date"
-                  value={filtros[key] || ''}
-                  onChange={(e) => handleFiltroChange(key, e.target.value)}
-                  className={styles.input}
-                />
-                {errores[key] && <div className={styles.error}>{errores[key]}</div>}
-              </div>
-            );
-          }
-          if (def.tipo === 'number') {
-            return (
-              <div key={key} className={styles.filtroField}>
-                <label>
-                  {def.label} {obligatorio && <span style={{ color: 'red' }}>*</span>}
-                </label>
-                <input
-                  type="number"
-                  value={filtros[key] || ''}
-                  min={def.min}
-                  max={def.max}
-                  onChange={(e) => handleFiltroChange(key, e.target.value)}
-                  className={styles.input}
-                />
-                {errores[key] && <div className={styles.error}>{errores[key]}</div>}
-              </div>
-            );
-          }
-          // Por defecto, input de texto
-          return (
-            <div key={key} className={styles.filtroField}>
-              <label>
-                {def.label} {obligatorio && <span style={{ color: 'red' }}>*</span>}
-              </label>
-              <input
-                type="text"
-                value={filtros[key] || ''}
-                onChange={(e) => handleFiltroChange(key, e.target.value)}
-                className={styles.input}
-              />
-              {errores[key] && <div className={styles.error}>{errores[key]}</div>}
-            </div>
-          );
-        })}
-      </div>
-    );
   };
 
-  // Validar filtros para plantillas personalizadas
-  const validarFiltros = () => {
-    if (plantillaSeleccionada && Array.isArray(plantillaSeleccionada.campos_configurables)) {
-      const nuevosErrores = {};
-      plantillaSeleccionada.campos_configurables.forEach((campo) => {
-        if (!filtros[campo]) {
-          nuevosErrores[campo] = 'Este campo es obligatorio';
+  const cargarDatosFiltros = async () => {
+    try {
+      // Cargar datos dinámicos de la API
+      const [carrerasResponse, gradosResponse, unidadesResponse] = await Promise.all([
+        axiosClient.get('/carreras'),
+        axiosClient.get('/grados'),
+        axiosClient.get('/unidades-curriculares')
+      ]);
+
+      // Extraer datos según la estructura de respuesta de cada API
+      const carrerasData = carrerasResponse.data.success
+        ? carrerasResponse.data.carreras
+        : carrerasResponse.data;
+      const gradosData = gradosResponse.data; // Esta API devuelve array directo
+      const unidadesData = unidadesResponse.data; // Esta API devuelve array directo
+
+      // Actualizar campos configurables con datos dinámicos
+      const camposActualizados = CAMPOS_CONFIGURABLES.map((campo) => {
+        switch (campo.value) {
+          case 'carrera':
+            return {
+              ...campo,
+              opciones: Array.isArray(carrerasData)
+                ? carrerasData.map((c) => ({
+                    value: c.id_carrera,
+                    label: c.carrera
+                  }))
+                : []
+            };
+          case 'grado':
+            return {
+              ...campo,
+              opciones: Array.isArray(gradosData)
+                ? [
+                    { value: 'todos', label: 'Todos los años' },
+                    ...gradosData.map((g) => ({
+                      value: g.id_grado,
+                      label: `${g.grado}-${g.division}°`
+                    }))
+                  ]
+                : [{ value: 'todos', label: 'Todos los años' }]
+            };
+          case 'unidad_curricular':
+            return {
+              ...campo,
+              opciones: Array.isArray(unidadesData)
+                ? unidadesData.map((u) => ({
+                    value: u.id_uc,
+                    label: u.unidad_curricular
+                  }))
+                : []
+            };
+          default:
+            return campo;
         }
       });
-      setErrores(nuevosErrores);
-      return Object.keys(nuevosErrores).length === 0;
+
+      setCamposConfigurables(camposActualizados);
+    } catch (error) {
+      console.error('Error al cargar datos de filtros:', error);
     }
-    // Lógica original para plantillas del sistema
-    const obligatorios = camposObligatorios[selectedPlantilla] || [];
+  };
+
+  const validarFiltros = () => {
     const nuevosErrores = {};
-    obligatorios.forEach((campo) => {
-      if (!filtros[campo]) {
-        nuevosErrores[campo] = 'Este campo es obligatorio';
+
+    Object.keys(filtrosDef).forEach((key) => {
+      const filtro = filtrosDef[key];
+      const valor = filtros[key];
+
+      if (filtro.required && (!valor || valor.toString().trim() === '')) {
+        nuevosErrores[key] = `${filtro.label} es obligatorio`;
+      }
+
+      // Validaciones específicas
+      if (filtro.tipo === 'date' && valor) {
+        const fecha = new Date(valor);
+        if (isNaN(fecha.getTime())) {
+          nuevosErrores[key] = `${filtro.label} debe ser una fecha válida`;
+        }
+      }
+
+      if (filtro.tipo === 'number' && valor) {
+        if (isNaN(Number(valor))) {
+          nuevosErrores[key] = `${filtro.label} debe ser un número válido`;
+        }
       }
     });
+
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
+  };
+
+  const aplicarFiltros = () => {
+    if (validarFiltros()) {
+      // Los filtros son válidos, se pueden aplicar
+      openModal({
+        title: 'Filtros Aplicados',
+        description: 'Los filtros se han aplicado correctamente. Puedes generar el informe.',
+        confirmBtn: 'Aceptar',
+        onClick: closeModal,
+        noButton: false,
+        confirmModal: true
+      });
+    } else {
+      openModal({
+        title: 'Error en Filtros',
+        description: 'Por favor, completa los campos obligatorios correctamente.',
+        confirmBtn: 'Aceptar',
+        onClick: closeModal,
+        noButton: false,
+        confirmModal: true
+      });
+    }
   };
 
   const generarInforme = async () => {
@@ -356,10 +352,11 @@ const Informes = () => {
       });
       return;
     }
+
     if (!validarFiltros()) {
       openModal({
         title: 'Error',
-        description: 'Completa los campos obligatorios',
+        description: 'Completa los campos obligatorios correctamente',
         confirmBtn: 'Aceptar',
         onClick: closeModal,
         noButton: false,
@@ -367,6 +364,7 @@ const Informes = () => {
       });
       return;
     }
+
     setIsLoading(true);
     try {
       const response = await axiosClient.post(
@@ -380,6 +378,7 @@ const Informes = () => {
           responseType: 'blob'
         }
       );
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -390,6 +389,7 @@ const Informes = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+
       openModal({
         description: 'Informe generado y descargado correctamente',
         chooseModal: false
@@ -420,333 +420,552 @@ const Informes = () => {
     }
   };
 
-  const cargarMisPlantillas = async () => {
-    try {
-      const { data } = await axiosClient.get('/plantillas-informe');
-      setMisPlantillas(data);
-    } catch (error) {
-      setMisPlantillas([]);
-    }
-  };
-
-  const handleCampoChange = (campo) => {
-    setCamposSeleccionados((prev) =>
-      prev.includes(campo) ? prev.filter((c) => c !== campo) : [...prev, campo]
-    );
-  };
-
-  const handleCrearPlantilla = async (e) => {
-    e.preventDefault();
-    setErrorPlantilla('');
+  const handleCrearPlantilla = async () => {
     if (!nombrePlantilla.trim()) {
-      setErrorPlantilla('El nombre es obligatorio');
+      setErrorPlantilla('El nombre de la plantilla es obligatorio');
       return;
     }
+
     if (camposSeleccionados.length === 0) {
-      setErrorPlantilla('Selecciona al menos un campo configurable');
+      setErrorPlantilla('Debes seleccionar al menos un campo');
       return;
     }
+
+    setErrorPlantilla('');
+    setIsLoading(true);
+
     try {
-      await axiosClient.post('/plantillas-informe', {
-        nombre: nombrePlantilla,
-        campos_configurables: camposSeleccionados
+      // Crear plantilla en la base de datos
+      const { data } = await axiosClient.post('/admin/informes/plantillas', {
+        nombre: nombrePlantilla.trim(),
+        campos: camposSeleccionados,
+        descripcion: `Plantilla personalizada con ${camposSeleccionados.length} campos`
       });
+
+      // Agregar la nueva plantilla a la lista
+      setMisPlantillas([...misPlantillas, data.plantilla]);
+
+      // Limpiar formulario
       setNombrePlantilla('');
       setCamposSeleccionados([]);
-      cargarMisPlantillas();
+
       openModal({
-        description: 'Plantilla creada correctamente',
-        chooseModal: false
+        title: 'Éxito',
+        description: 'Plantilla creada correctamente. Ya puedes usarla en "Generar Informes".',
+        confirmBtn: 'Aceptar',
+        onClick: closeModal,
+        noButton: false,
+        confirmModal: true
       });
     } catch (error) {
-      setErrorPlantilla('Error al crear la plantilla');
+      console.error('Error al crear plantilla:', error);
+      openModal({
+        title: 'Error',
+        description: 'Error al crear la plantilla. Inténtalo de nuevo.',
+        confirmBtn: 'Aceptar',
+        onClick: closeModal,
+        noButton: false,
+        confirmModal: true
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleEditarClick = (plantilla) => {
+  const handleEditarPlantilla = (plantilla) => {
     setEditandoId(plantilla.id);
     setEditNombre(plantilla.nombre);
-    setEditCampos(
-      Array.isArray(plantilla.campos_configurables) ? plantilla.campos_configurables : []
-    );
+    setEditCampos(plantilla.campos_configurables || []);
     setErrorEditar('');
   };
 
-  const handleCancelarEditar = () => {
+  const handleGuardarEdicion = async () => {
+    if (!editNombre.trim()) {
+      setErrorEditar('El nombre de la plantilla es obligatorio');
+      return;
+    }
+
+    if (editCampos.length === 0) {
+      setErrorEditar('Debes seleccionar al menos un campo');
+      return;
+    }
+
+    setErrorEditar('');
+    setIsLoading(true);
+
+    try {
+      // Actualizar plantilla en la base de datos
+      const { data } = await axiosClient.put(`/admin/informes/plantillas/${editandoId}`, {
+        nombre: editNombre.trim(),
+        campos: editCampos,
+        descripcion: `Plantilla personalizada con ${editCampos.length} campos`
+      });
+
+      // Actualizar la plantilla en la lista
+      const plantillasActualizadas = misPlantillas.map((plantilla) => {
+        if (plantilla.id === editandoId) {
+          return data.plantilla;
+        }
+        return plantilla;
+      });
+
+      setMisPlantillas(plantillasActualizadas);
+
+      openModal({
+        title: 'Éxito',
+        description: 'Plantilla actualizada correctamente',
+        confirmBtn: 'Aceptar',
+        onClick: () => {
+          closeModal();
+          setEditandoId(null);
+          setEditNombre('');
+          setEditCampos([]);
+        },
+        noButton: false,
+        confirmModal: true
+      });
+    } catch (error) {
+      console.error('Error al actualizar plantilla:', error);
+      openModal({
+        title: 'Error',
+        description: 'Error al actualizar la plantilla. Inténtalo de nuevo.',
+        confirmBtn: 'Aceptar',
+        onClick: closeModal,
+        noButton: false,
+        confirmModal: true
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelarEdicion = () => {
     setEditandoId(null);
     setEditNombre('');
     setEditCampos([]);
     setErrorEditar('');
   };
 
-  const handleEditarCampoChange = (campo) => {
-    setEditCampos((prev) =>
-      prev.includes(campo) ? prev.filter((c) => c !== campo) : [...prev, campo]
-    );
+  const handleEliminarPlantilla = (plantilla) => {
+    openModal({
+      title: 'Confirmar eliminación',
+      description: `¿Estás seguro de que quieres eliminar la plantilla "${plantilla.nombre}"?`,
+      confirmBtn: 'Eliminar',
+      cancelBtn: 'Cancelar',
+      onClick: async () => {
+        setIsLoading(true);
+        try {
+          // Eliminar plantilla de la base de datos
+          await axiosClient.delete(`/admin/informes/plantillas/${plantilla.id}`);
+
+          // Eliminar la plantilla de la lista
+          const plantillasActualizadas = misPlantillas.filter((p) => p.id !== plantilla.id);
+          setMisPlantillas(plantillasActualizadas);
+
+          openModal({
+            title: 'Éxito',
+            description: 'Plantilla eliminada correctamente',
+            confirmBtn: 'Aceptar',
+            onClick: closeModal,
+            noButton: false,
+            confirmModal: true
+          });
+        } catch (error) {
+          console.error('Error al eliminar plantilla:', error);
+          openModal({
+            title: 'Error',
+            description: 'Error al eliminar la plantilla. Inténtalo de nuevo.',
+            confirmBtn: 'Aceptar',
+            onClick: closeModal,
+            noButton: false,
+            confirmModal: true
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      noButton: false,
+      confirmModal: true
+    });
   };
 
-  const handleGuardarEdicion = async (id) => {
-    setErrorEditar('');
-    if (!editNombre.trim()) {
-      setErrorEditar('El nombre es obligatorio');
-      return;
-    }
-    if (editCampos.length === 0) {
-      setErrorEditar('Selecciona al menos un campo configurable');
-      return;
-    }
-    try {
-      await axiosClient.put(`/plantillas-informe/${id}`, {
-        nombre: editNombre,
-        campos_configurables: editCampos
-      });
-      setEditandoId(null);
-      setEditNombre('');
-      setEditCampos([]);
-      cargarMisPlantillas();
-      openModal({
-        description: 'Plantilla editada correctamente',
-        chooseModal: false
-      });
-    } catch (error) {
-      setErrorEditar('Error al editar la plantilla');
+  const handleFiltroChange = (key, value) => {
+    setFiltros({ ...filtros, [key]: value });
+    // Limpiar error específico cuando el usuario cambia el valor
+    if (errores[key]) {
+      setErrores({ ...errores, [key]: undefined });
     }
   };
 
-  const handleEliminarPlantilla = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar esta plantilla?')) return;
-    try {
-      await axiosClient.delete(`/plantillas-informe/${id}`);
-      cargarMisPlantillas();
-      openModal({
-        description: 'Plantilla eliminada correctamente',
-        chooseModal: false
-      });
-    } catch (error) {
-      openModal({
-        description: 'Error al eliminar la plantilla',
-        chooseModal: false
-      });
+  const renderFiltro = (key, filtro) => {
+    const valor = filtros[key] || '';
+    const error = errores[key];
+
+    switch (filtro.tipo) {
+      case 'select':
+        return (
+          <div key={key} className={styles.filtroItem}>
+            <label className={styles.filtroLabel}>
+              {filtro.label} {filtro.required && <span className={styles.required}>*</span>}
+            </label>
+            <select
+              value={valor}
+              onChange={(e) => handleFiltroChange(key, e.target.value)}
+              className={`${styles.filtroInput} ${error ? styles.error : ''}`}
+            >
+              <option value="">Seleccionar...</option>
+              {filtro.opciones?.map((opcion) => (
+                <option key={opcion.value} value={opcion.value}>
+                  {opcion.label}
+                </option>
+              ))}
+            </select>
+            {error && <span className={styles.errorText}>{error}</span>}
+          </div>
+        );
+
+      case 'date':
+        return (
+          <div key={key} className={styles.filtroItem}>
+            <label className={styles.filtroLabel}>
+              {filtro.label} {filtro.required && <span className={styles.required}>*</span>}
+            </label>
+            <input
+              type="date"
+              value={valor}
+              onChange={(e) => handleFiltroChange(key, e.target.value)}
+              className={`${styles.filtroInput} ${error ? styles.error : ''}`}
+            />
+            {error && <span className={styles.errorText}>{error}</span>}
+          </div>
+        );
+
+      case 'number':
+        return (
+          <div key={key} className={styles.filtroItem}>
+            <label className={styles.filtroLabel}>
+              {filtro.label} {filtro.required && <span className={styles.required}>*</span>}
+            </label>
+            <input
+              type="number"
+              value={valor}
+              onChange={(e) => handleFiltroChange(key, e.target.value)}
+              className={`${styles.filtroInput} ${error ? styles.error : ''}`}
+              min={filtro.min}
+              max={filtro.max}
+              step={filtro.step}
+            />
+            {error && <span className={styles.errorText}>{error}</span>}
+          </div>
+        );
+
+      default:
+        return (
+          <div key={key} className={styles.filtroItem}>
+            <label className={styles.filtroLabel}>
+              {filtro.label} {filtro.required && <span className={styles.required}>*</span>}
+            </label>
+            <input
+              type="text"
+              value={valor}
+              onChange={(e) => handleFiltroChange(key, e.target.value)}
+              className={`${styles.filtroInput} ${error ? styles.error : ''}`}
+              placeholder={filtro.placeholder}
+            />
+            {error && <span className={styles.errorText}>{error}</span>}
+          </div>
+        );
     }
   };
-
-  // Mostrar spinner si está cargando
-  if (isLoading) {
-    return <Spinner />;
-  }
 
   return (
-    <>
-      {modalState.isOpen && <Modal />}
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1>Gestión de Informes</h1>
+        <p>Genera informes y gestiona plantillas personalizadas</p>
+      </div>
 
-      <div className={styles.informesContainer}>
-        <div className={styles.header}>
-          <h1>Generar Informes</h1>
-          <p>Selecciona una plantilla y formato para generar tu informe</p>
-        </div>
+      {/* Navegación entre secciones */}
+      <div className={styles.navigation}>
+        <button
+          className={`${styles.navButton} ${seccionActiva === 'generar' ? styles.active : ''}`}
+          onClick={() => setSeccionActiva('generar')}
+        >
+          <FaChartBar />
+          Generar Informes
+        </button>
+        <button
+          className={`${styles.navButton} ${seccionActiva === 'gestionar' ? styles.active : ''}`}
+          onClick={() => setSeccionActiva('gestionar')}
+        >
+          <FaCog />
+          Gestionar Plantillas
+        </button>
+      </div>
 
-        <div className={styles.formCard}>
-          <div className={styles.formGroup}>
-            <label>Plantilla de Informe:</label>
-            <select
-              value={selectedPlantilla}
-              onChange={(e) => setSelectedPlantilla(Number(e.target.value))}
-              className={styles.select}
-            >
-              <option value="">Selecciona una plantilla</option>
-              {/* Plantillas del usuario */}
-              {sortedMisPlantillas.length > 0 && (
-                <optgroup label="Mis Plantillas">
-                  {sortedMisPlantillas.map((plantilla) => (
-                    <option
-                      key={`mis-${plantilla.id}`}
-                      value={plantilla.id}
-                      className={styles.misPlantillaOption}
-                    >
-                      {plantilla.nombre}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              {/* Plantillas predefinidas */}
-              {sortedPlantillas.length > 0 && (
-                <optgroup label="Plantillas del sistema">
-                  {sortedPlantillas.map((plantilla) => (
-                    <option
-                      key={`sys-${plantilla.id}`}
-                      value={plantilla.id}
-                      className={styles.sistemaPlantillaOption}
-                    >
-                      {plantilla.nombre}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
+      {/* Sección: Generar Informes */}
+      {seccionActiva === 'generar' && (
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2>Generar Informe</h2>
+            <p>Selecciona una plantilla y configura los filtros para generar tu informe</p>
           </div>
 
-          <div className={styles.formGroup}>
-            <label>Formato de Salida:</label>
-            <div className={styles.formatOptions}>
-              {['pdf', 'excel', 'csv'].map((fmt) => (
-                <button
-                  key={fmt}
-                  type="button"
-                  className={`${styles.formatBtn} ${formato === fmt ? styles.active : ''}`}
-                  onClick={() => setFormato(fmt)}
-                >
-                  {getFormatoIcon(fmt)}
-                  {fmt.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className={styles.generarContainer}>
+            {/* Selección de plantilla */}
+            <div className={styles.plantillaSection}>
+              <h3>1. Seleccionar Plantilla</h3>
+              <select
+                value={selectedPlantilla}
+                onChange={(e) => setSelectedPlantilla(e.target.value)}
+                className={styles.plantillaSelect}
+              >
+                <option value="">Seleccionar plantilla...</option>
 
-          {renderFiltros()}
-
-          <Button
-            text="Generar y Descargar Informe"
-            onClick={generarInforme}
-            icon={<FaDownload />}
-            className={styles.generateBtn}
-          />
-        </div>
-
-        <div className={styles.plantillasSection}>
-          <h2>Plantillas Disponibles</h2>
-          <div className={styles.plantillasGrid}>
-            {plantillas.map((plantilla) => (
-              <div key={plantilla.id} className={styles.plantillaCard}>
-                <h3>{plantilla.nombre}</h3>
-                <p>{plantilla.descripcion}</p>
-                <div className={styles.filtros}>
-                  <strong>Filtros disponibles:</strong>
-                  <ul>
-                    {plantilla.filtros_disponibles?.map((filtro) => (
-                      <li key={filtro}>{filtro}</li>
+                {/* Plantillas del sistema */}
+                {sortedPlantillas.length > 0 && (
+                  <optgroup label="Plantillas del Sistema">
+                    {sortedPlantillas.map((plantilla) => (
+                      <option key={`sys-${plantilla.id}`} value={plantilla.id}>
+                        {plantilla.nombre}
+                      </option>
                     ))}
-                  </ul>
+                  </optgroup>
+                )}
+
+                {/* Plantillas personalizadas */}
+                {sortedMisPlantillas.length > 0 && (
+                  <optgroup label="Mis Plantillas">
+                    {sortedMisPlantillas.map((plantilla) => (
+                      <option key={`custom-${plantilla.id}`} value={plantilla.id}>
+                        {plantilla.nombre}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+              {selectedPlantilla && (
+                <p className={styles.plantillaDesc}>
+                  {plantillas.find((p) => p.id == selectedPlantilla)?.descripcion ||
+                    misPlantillas.find((p) => p.id == selectedPlantilla)?.descripcion ||
+                    'Plantilla personalizada'}
+                </p>
+              )}
+            </div>
+
+            {/* Configuración de filtros */}
+            {selectedPlantilla && (
+              <div className={styles.filtrosSection}>
+                <h3>2. Configurar Filtros</h3>
+                <div className={styles.filtrosGrid}>
+                  {Object.keys(filtrosDef).map((key) => renderFiltro(key, filtrosDef[key]))}
+                </div>
+                <div className={styles.aplicarFiltrosButton}>
+                  <button onClick={aplicarFiltros} className={styles.aplicarBtn}>
+                    <FaCog />
+                    Aplicar Filtros
+                  </button>
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Configuración de formato */}
+            {selectedPlantilla && (
+              <div className={styles.formatoSection}>
+                <h3>3. Seleccionar Formato</h3>
+                <div className={styles.formatoOptions}>
+                  {['pdf', 'excel', 'csv'].map((fmt) => (
+                    <button
+                      key={fmt}
+                      className={`${styles.formatoButton} ${formato === fmt ? styles.active : ''}`}
+                      onClick={() => setFormato(fmt)}
+                    >
+                      {getFormatoIcon(fmt)}
+                      {fmt.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Botón de generación */}
+            {selectedPlantilla && (
+              <div className={styles.generarButton}>
+                <button
+                  onClick={generarInforme}
+                  disabled={isLoading}
+                  className={styles.generateBtn}
+                >
+                  {isLoading ? <Spinner /> : <FaDownload />}
+                  {isLoading ? 'Generando...' : 'Generar Informe'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
+      )}
 
-        {/* Formulario para crear nueva plantilla */}
-        <div className={styles.crearPlantillaBox}>
-          <h2>
-            <FaPlus /> Crear nueva plantilla de informe
-          </h2>
-          <form onSubmit={handleCrearPlantilla} className={styles.formPlantilla}>
-            <div>
-              <label>Nombre de la plantilla:</label>
-              <input
-                type="text"
-                value={nombrePlantilla}
-                onChange={(e) => setNombrePlantilla(e.target.value)}
-                className={styles.input}
-              />
-            </div>
-            <div>
-              <label>Campos configurables:</label>
-              <div className={styles.camposCheckboxes}>
-                {CAMPOS_CONFIGURABLES.map((campo) => (
-                  <label key={campo.value} className={styles.checkboxLabel}>
+      {/* Sección: Gestionar Plantillas */}
+      {seccionActiva === 'gestionar' && (
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2>Gestionar Plantillas</h2>
+            <p>Crea, edita y elimina plantillas de informes personalizadas</p>
+          </div>
+
+          <div className={styles.gestionarContainer}>
+            {/* Crear nueva plantilla (solo si no está editando) */}
+            {!editandoId && (
+              <div className={styles.crearPlantilla}>
+                <h3>Crear Nueva Plantilla</h3>
+                <div className={styles.crearForm}>
+                  <div className={styles.inputGroup}>
+                    <label>Nombre de la plantilla:</label>
                     <input
-                      type="checkbox"
-                      checked={camposSeleccionados.includes(campo.value)}
-                      onChange={() => handleCampoChange(campo.value)}
+                      type="text"
+                      value={nombrePlantilla}
+                      onChange={(e) => setNombrePlantilla(e.target.value)}
+                      placeholder="Ej: Informe de Alumnos por Carrera"
+                      className={errorPlantilla ? styles.error : ''}
                     />
-                    {campo.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-            {errorPlantilla && <div className={styles.error}>{errorPlantilla}</div>}
-            <button type="submit" className={styles.btnCrear}>
-              Crear Plantilla
-            </button>
-          </form>
-        </div>
+                    {errorPlantilla && <span className={styles.errorText}>{errorPlantilla}</span>}
+                  </div>
 
-        {/* Sección Mis Plantillas */}
-        <div className={styles.misPlantillasBox}>
-          <h2>Mis Plantillas</h2>
-          {misPlantillas.length === 0 ? (
-            <p>No tienes plantillas creadas.</p>
-          ) : (
-            <ul className={styles.listaPlantillas}>
-              {misPlantillas.map((p) => (
-                <li key={p.id} className={styles.plantillaItem}>
-                  {editandoId === p.id ? (
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleGuardarEdicion(p.id);
-                      }}
-                      className={styles.formPlantilla}
-                    >
-                      <input
-                        type="text"
-                        value={editNombre}
-                        onChange={(e) => setEditNombre(e.target.value)}
-                        className={styles.input}
-                      />
-                      <div className={styles.camposCheckboxes}>
-                        {CAMPOS_CONFIGURABLES.map((campo) => (
-                          <label key={campo.value} className={styles.checkboxLabel}>
-                            <input
-                              type="checkbox"
-                              checked={editCampos.includes(campo.value)}
-                              onChange={() => handleEditarCampoChange(campo.value)}
-                            />
-                            {campo.label}
-                          </label>
-                        ))}
+                  <div className={styles.inputGroup}>
+                    <label>Filtros a incluir en la plantilla:</label>
+                    <div className={styles.camposGrid}>
+                      {camposConfigurables.map((campo) => (
+                        <label key={campo.value} className={styles.campoCheckbox}>
+                          <input
+                            type="checkbox"
+                            checked={camposSeleccionados.includes(campo.value)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setCamposSeleccionados([...camposSeleccionados, campo.value]);
+                              } else {
+                                setCamposSeleccionados(
+                                  camposSeleccionados.filter((c) => c !== campo.value)
+                                );
+                              }
+                            }}
+                          />
+                          {campo.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button onClick={handleCrearPlantilla} className={styles.createBtn}>
+                    <FaPlus />
+                    Crear Plantilla
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Editar plantilla existente */}
+            {editandoId && (
+              <div className={styles.editarPlantilla}>
+                <h3>Editar Plantilla</h3>
+                <div className={styles.editarForm}>
+                  <div className={styles.inputGroup}>
+                    <label>Nombre de la plantilla:</label>
+                    <input
+                      type="text"
+                      value={editNombre}
+                      onChange={(e) => setEditNombre(e.target.value)}
+                      className={errorEditar ? styles.error : ''}
+                    />
+                    {errorEditar && <span className={styles.errorText}>{errorEditar}</span>}
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label>Filtros a incluir:</label>
+                    <div className={styles.camposGrid}>
+                      {camposConfigurables.map((campo) => (
+                        <label key={campo.value} className={styles.campoCheckbox}>
+                          <input
+                            type="checkbox"
+                            checked={editCampos.includes(campo.value)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setEditCampos([...editCampos, campo.value]);
+                              } else {
+                                setEditCampos(editCampos.filter((c) => c !== campo.value));
+                              }
+                            }}
+                          />
+                          {campo.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className={styles.editarButtons}>
+                    <button onClick={handleGuardarEdicion} className={styles.saveBtn}>
+                      <FaEdit />
+                      Guardar Cambios
+                    </button>
+                    <button onClick={handleCancelarEdicion} className={styles.cancelBtn}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Lista de plantillas existentes */}
+            <div className={styles.plantillasList}>
+              <h3>Mis Plantillas</h3>
+              {sortedMisPlantillas.length === 0 ? (
+                <p className={styles.noPlantillas}>No tienes plantillas personalizadas</p>
+              ) : (
+                <div className={styles.plantillasGrid}>
+                  {sortedMisPlantillas.map((plantilla) => (
+                    <div key={plantilla.id} className={styles.plantillaCard}>
+                      <div className={styles.plantillaInfo}>
+                        <h4>{plantilla.nombre}</h4>
+                        <p>{plantilla.campos?.length || 0} campos configurados</p>
                       </div>
-                      {errorEditar && <div className={styles.error}>{errorEditar}</div>}
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button type="submit" className={styles.btnCrear}>
-                          <FaEdit /> Guardar
+                      <div className={styles.plantillaActions}>
+                        <button
+                          onClick={() => handleEditarPlantilla(plantilla)}
+                          className={styles.editBtn}
+                          disabled={editandoId}
+                        >
+                          <FaEdit />
                         </button>
                         <button
-                          type="button"
-                          className={styles.btnCancelar}
-                          onClick={handleCancelarEditar}
+                          onClick={() => handleEliminarPlantilla(plantilla)}
+                          className={styles.deleteBtn}
+                          disabled={editandoId}
                         >
-                          Cancelar
+                          <FaTrash />
                         </button>
                       </div>
-                    </form>
-                  ) : (
-                    <>
-                      <strong>{p.nombre}</strong> <br />
-                      <span>
-                        Campos:{' '}
-                        {Array.isArray(p.campos_configurables)
-                          ? p.campos_configurables.join(', ')
-                          : ''}
-                      </span>
-                      <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                        <button className={styles.btnEditar} onClick={() => handleEditarClick(p)}>
-                          <FaEdit /> Editar
-                        </button>
-                        <button
-                          className={styles.btnEliminar}
-                          onClick={() => handleEliminarPlantilla(p.id)}
-                        >
-                          <FaTrash /> Eliminar
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </>
+      )}
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        title={modalState.title}
+        description={modalState.description}
+        confirmBtn={modalState.confirmBtn}
+        cancelBtn={modalState.cancelBtn}
+        onClick={modalState.onClick}
+        noButton={modalState.noButton}
+        confirmModal={modalState.confirmModal}
+        chooseModal={modalState.chooseModal}
+      />
+    </div>
   );
 };
 

@@ -23,11 +23,13 @@ const GruposDestinatarios = () => {
   const [carreras, setCarreras] = useState([]);
   const [grados, setGrados] = useState([]);
   const [materias, setMaterias] = useState([]);
+  const [todasLasMaterias, setTodasLasMaterias] = useState([]); // Guardar todas las materias originales
   const [selectedCarreras, setSelectedCarreras] = useState([]);
   const [selectedGrados, setSelectedGrados] = useState([]);
   const [selectedMaterias, setSelectedMaterias] = useState([]);
   const [alumnosFiltrados, setAlumnosFiltrados] = useState([]);
   const [gradosFiltrados, setGradosFiltrados] = useState([]);
+  const [loadingMaterias, setLoadingMaterias] = useState(false);
 
   // Función para generar nombre sugerido
   const generarNombreSugerido = () => {
@@ -82,10 +84,44 @@ const GruposDestinatarios = () => {
     setGradosFiltrados(grados);
   };
 
+  // Función para filtrar materias según carreras seleccionadas
+  const filtrarMateriasPorCarreras = async () => {
+    if (selectedCarreras.length === 0) {
+      setMaterias(todasLasMaterias);
+      return;
+    }
+
+    try {
+      setLoadingMaterias(true);
+      const response = await axiosClient.post('/grupos-destinatarios/materias-por-carrera', {
+        id_carreras: selectedCarreras
+      });
+
+      if (response.data.success) {
+        setMaterias(response.data.materias);
+        // Limpiar materias seleccionadas que ya no están disponibles
+        const materiasDisponibles = response.data.materias.map((m) => m.id_uc);
+        setSelectedMaterias((prev) => prev.filter((id) => materiasDisponibles.includes(id)));
+      }
+    } catch (err) {
+      console.error('Error filtrando materias por carrera:', err);
+      setError('Error al filtrar materias por carrera');
+    } finally {
+      setLoadingMaterias(false);
+    }
+  };
+
   // Efecto para filtrar grados cuando cambian las carreras
   useEffect(() => {
     filtrarGradosPorCarreras();
   }, [selectedCarreras, grados]);
+
+  // Efecto para filtrar materias cuando cambian las carreras
+  useEffect(() => {
+    if (todasLasMaterias.length > 0) {
+      filtrarMateriasPorCarreras();
+    }
+  }, [selectedCarreras, todasLasMaterias]);
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -96,6 +132,7 @@ const GruposDestinatarios = () => {
           setGrados(response.data.datos.grados || []);
           setGradosFiltrados(response.data.datos.grados || []); // Inicializar grados filtrados
           setMaterias(response.data.datos.materias || []);
+          setTodasLasMaterias(response.data.datos.materias || []); // Guardar todas las materias
         }
       } catch (err) {
         console.error('Error cargando datos:', err);
@@ -282,6 +319,7 @@ const GruposDestinatarios = () => {
     setSelectedMaterias([]);
     setAlumnosFiltrados([]);
     setGradosFiltrados([]);
+    setMaterias(todasLasMaterias); // Restaurar todas las materias
     setError('');
     setSuccess('');
   };
@@ -690,6 +728,12 @@ const GruposDestinatarios = () => {
               <div>
                 <label>
                   <strong>📖 Materias:</strong>
+                  {selectedCarreras.length > 0 && (
+                    <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>
+                      (Filtradas por carrera{selectedCarreras.length > 1 ? 's' : ''} seleccionada
+                      {selectedCarreras.length > 1 ? 's' : ''})
+                    </span>
+                  )}
                   <br />
                   <div
                     style={{
@@ -702,28 +746,47 @@ const GruposDestinatarios = () => {
                       marginTop: 5
                     }}
                   >
-                    {materias.map((materia) => (
-                      <label
-                        key={materia.id_uc}
-                        style={{ display: 'block', marginBottom: '4px', fontSize: '14px' }}
+                    {loadingMaterias ? (
+                      <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+                        🔄 Cargando materias...
+                      </div>
+                    ) : materias.length === 0 ? (
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '20px',
+                          color: '#666',
+                          fontStyle: 'italic'
+                        }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedMaterias.includes(materia.id_uc)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedMaterias([...selectedMaterias, materia.id_uc]);
-                            } else {
-                              setSelectedMaterias(
-                                selectedMaterias.filter((id) => id !== materia.id_uc)
-                              );
-                            }
-                          }}
-                          style={{ marginRight: 6 }}
-                        />
-                        {materia.unidad_curricular}
-                      </label>
-                    ))}
+                        {selectedCarreras.length > 0
+                          ? 'No hay materias disponibles para la(s) carrera(s) seleccionada(s)'
+                          : 'Selecciona una carrera para ver las materias'}
+                      </div>
+                    ) : (
+                      materias.map((materia) => (
+                        <label
+                          key={materia.id_uc}
+                          style={{ display: 'block', marginBottom: '4px', fontSize: '14px' }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedMaterias.includes(materia.id_uc)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedMaterias([...selectedMaterias, materia.id_uc]);
+                              } else {
+                                setSelectedMaterias(
+                                  selectedMaterias.filter((id) => id !== materia.id_uc)
+                                );
+                              }
+                            }}
+                            style={{ marginRight: 6 }}
+                          />
+                          {materia.unidad_curricular}
+                        </label>
+                      ))
+                    )}
                   </div>
                 </label>
               </div>

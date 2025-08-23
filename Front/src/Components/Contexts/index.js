@@ -17,116 +17,158 @@ const StateContext = createContext({
 
 export const ContextProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const storedUser = sessionStorage.getItem('user');
+    const storedUser = localStorage.getItem('user');
     return storedUser ? JSON.parse(storedUser) : null;
   });
-  const [token, setToken] = useState(sessionStorage.getItem('ACCESS_TOKEN'));
-  const [role, setRole] = useState(sessionStorage.getItem('role'));
+  const [token, setToken] = useState(localStorage.getItem('ACCESS_TOKEN'));
+  const [role, setRole] = useState(localStorage.getItem('role'));
   const [notification, setNotification] = useState([]);
   const [carrera, setCarrera] = useState(() => {
-    const storedCarrera = sessionStorage.getItem('carrera');
+    const storedCarrera = localStorage.getItem('carrera');
     return storedCarrera ? JSON.parse(storedCarrera) : null;
   });
   const [unidadesCarrera, setUnidadesCarrera] = useState(() => {
-    const stored = sessionStorage.getItem('unidadesCarrera');
+    const stored = localStorage.getItem('unidadesCarrera');
     return stored ? JSON.parse(stored) : [];
   });
   const [unidadesCarreraPorAno, setUnidadesCarreraPorAno] = useState(() => {
-    const stored = sessionStorage.getItem('unidadesCarreraPorAno');
+    const stored = localStorage.getItem('unidadesCarreraPorAno');
     return stored ? JSON.parse(stored) : {};
   });
   const [unidadesAprobadas, setUnidadesAprobadas] = useState(() => {
-    const stored = sessionStorage.getItem('unidadesAprobadas');
+    const stored = localStorage.getItem('unidadesAprobadas');
     return stored ? JSON.parse(stored) : [];
   });
   const [unidadesAprobadasPorAno, setUnidadesAprobadasPorAno] = useState(() => {
-    const stored = sessionStorage.getItem('unidadesAprobadasPorAno');
+    const stored = localStorage.getItem('unidadesAprobadasPorAno');
     return stored ? JSON.parse(stored) : {};
   });
   const [unidadesInscriptas, setUnidadesInscriptas] = useState(() => {
-    const stored = sessionStorage.getItem('unidadesInscriptas');
+    const stored = localStorage.getItem('unidadesInscriptas');
     return stored ? JSON.parse(stored) : [];
   });
   const [unidadesInscriptasPorAno, setUnidadesInscriptasPorAno] = useState(() => {
-    const stored = sessionStorage.getItem('unidadesInscriptasPorAno');
+    const stored = localStorage.getItem('unidadesInscriptasPorAno');
     return stored ? JSON.parse(stored) : {};
   });
   const [unidadesDisponibles, setUnidadesDisponibles] = useState(() => {
-    const storedUC = sessionStorage.getItem('unidadesDisponibles');
+    const storedUC = localStorage.getItem('unidadesDisponibles');
     return storedUC ? JSON.parse(storedUC) : [];
   });
   const [unidadesDisponiblesPorAno, setUnidadesDisponiblesPorAno] = useState(() => {
-    const stored = sessionStorage.getItem('unidadesDisponiblesPorAno');
+    const stored = localStorage.getItem('unidadesDisponiblesPorAno');
     return stored ? JSON.parse(stored) : {};
   });
   const [isValidating, setIsValidating] = useState(false);
 
+  // Función para limpiar completamente toda la sesión
+  const clearAllSession = () => {
+    // Limpiar estado en memoria
+    setUser(null);
+    setToken(null);
+    setRole(null);
+    setCarrera(null);
+    setNotification([]);
+
+    // Limpiar localStorage completamente
+    localStorage.clear();
+
+    // Limpiar sessionStorage completamente
+    sessionStorage.clear();
+
+    // Limpiar directamente los estados del alumno
+    setUnidadesDisponibles([]);
+    setUnidadesDisponiblesPorAno({});
+    setUnidadesCarrera([]);
+    setUnidadesCarreraPorAno({});
+    setUnidadesAprobadas([]);
+    setUnidadesAprobadasPorAno({});
+    setUnidadesInscriptas([]);
+    setUnidadesInscriptasPorAno({});
+
+    console.log('Context - Sesión completamente limpiada');
+  };
+
+  // Limpia inmediatamente todos los datos académicos del alumno en memoria y sessionStorage
+  const resetAlumnoState = () => {
+    setCarreraPersist(null);
+    setUnidadesDisponiblesPersist([]);
+    setUnidadesDisponiblesPorAnoPersist({});
+    setUnidadesCarreraPersist([]);
+    setUnidadesCarreraPorAnoPersist({});
+    setUnidadesAprobadasPersist([]);
+    setUnidadesAprobadasPorAnoPersist({});
+    setUnidadesInscriptasPersist([]);
+    setUnidadesInscriptasPorAnoPersist({});
+  };
+
   // Validar token al cargar la aplicación
   useEffect(() => {
     const validateToken = async () => {
-      const storedToken = sessionStorage.getItem('ACCESS_TOKEN');
-      const storedRole = sessionStorage.getItem('role');
+      const storedToken = localStorage.getItem('ACCESS_TOKEN');
+      const storedRole = localStorage.getItem('role');
+      const storedUser = localStorage.getItem('user');
+
+      console.log('Context - Validando token al cargar...');
+      console.log('Context - Stored Token:', storedToken);
+      console.log('Context - Stored Role:', storedRole);
+      console.log('Context - Stored User:', storedUser);
+
+      // Verificar si estamos en una página de login
+      const isOnLoginPage =
+        window.location.pathname === '/login' ||
+        window.location.pathname === '/admin/login' ||
+        window.location.pathname === '/';
+
+      if (isOnLoginPage) {
+        console.log('Context - En página de login, limpiando sesión automáticamente');
+        clearAllSession();
+        setIsValidating(false);
+        return;
+      }
 
       if (storedToken && storedRole) {
+        // Actualizar el estado con los valores del localStorage
+        setToken(storedToken);
+        setRole(storedRole);
+
+        // Si ya tenemos el usuario en localStorage, restaurarlo inmediatamente
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
+            console.log('Context - Usuario restaurado desde localStorage:', userData);
+            setIsValidating(false);
+            return; // No hacer validación adicional si ya tenemos el usuario
+          } catch (error) {
+            console.error('Context - Error parseando usuario del localStorage:', error);
+            // Si hay error parseando, limpiar el localStorage corrupto
+            localStorage.removeItem('user');
+          }
+        }
+
+        // Solo validar si no tenemos el usuario
+        console.log('Context - No hay usuario en localStorage, validando token...');
         setIsValidating(true);
         try {
-          // Intentar hacer una petición para validar el token
-          if (storedRole === 'alumno') {
-            console.log('Validando token de alumno...');
-            const response = await axiosClient.get('/alumno/info');
-            // Actualizar el estado del usuario con la información del backend
-            if (response.data.success && response.data.alumno) {
-              console.log('Token válido, actualizando estado del alumno:', response.data.alumno);
-              setUser(response.data.alumno);
-              sessionStorage.setItem('user', JSON.stringify(response.data.alumno));
-
-              // Si el alumno tiene carrera, actualizar el estado de la carrera
-              if (response.data.alumno.carrera) {
-                // Buscar la carrera completa en sessionStorage o usar la información básica
-                const storedCarrera = sessionStorage.getItem('carrera');
-                if (storedCarrera) {
-                  const carreraData = JSON.parse(storedCarrera);
-                  console.log('Actualizando estado de carrera:', carreraData);
-                  setCarrera(carreraData);
-                }
-              }
-            }
-          } else if (storedRole === 'admin') {
+          if (storedRole === 'admin') {
             console.log('Validando token de admin...');
             const response = await axiosClient.get('/admin/info');
-            // Actualizar el estado del usuario con la información del backend
+            console.log('Respuesta del servidor:', response.data);
             if (response.data.success && response.data.admin) {
               console.log('Token válido, actualizando estado del admin:', response.data.admin);
               setUser(response.data.admin);
-              sessionStorage.setItem('user', JSON.stringify(response.data.admin));
+              localStorage.setItem('user', JSON.stringify(response.data.admin));
             }
           }
-          // Si llega aquí, el token es válido
-          console.log('Token válido, usuario autenticado');
         } catch (error) {
-          console.log('Token inválido, limpiando sesión');
-          // Token inválido, limpiar sesión
-          sessionStorage.removeItem('ACCESS_TOKEN');
-          sessionStorage.removeItem('role');
-          sessionStorage.removeItem('user');
-          sessionStorage.removeItem('carrera');
-          sessionStorage.removeItem('unidadesDisponibles');
-          sessionStorage.removeItem('unidadesCarrera');
-          sessionStorage.removeItem('unidadesAprobadas');
-          sessionStorage.removeItem('unidadesInscriptas');
-
-          setToken(null);
-          setRole(null);
-          setUser(null);
-          setCarrera(null);
-          setUnidadesDisponibles([]);
-          setUnidadesCarrera([]);
-          setUnidadesAprobadas([]);
-          setUnidadesInscriptas([]);
+          console.error('Error validando token:', error.response?.data || error.message);
+          // No limpiar sesión automáticamente, solo log del error
         } finally {
           setIsValidating(false);
         }
       } else {
+        console.log('Context - No hay token o rol almacenado');
         setIsValidating(false);
       }
     };
@@ -143,7 +185,7 @@ export const ContextProvider = ({ children }) => {
         if (data?.success) {
           if (data.alumno) {
             setUser(data.alumno);
-            sessionStorage.setItem('user', JSON.stringify(data.alumno));
+            localStorage.setItem('user', JSON.stringify(data.alumno));
           }
           if (data.carrera) setCarreraPersist(data.carrera);
           setUnidadesCarreraPersist(data.unidades_carrera || []);
@@ -167,29 +209,29 @@ export const ContextProvider = ({ children }) => {
     setToken(token);
     setRole(role);
     if (token && role) {
-      sessionStorage.setItem('ACCESS_TOKEN', token);
-      sessionStorage.setItem('role', role);
+      localStorage.setItem('ACCESS_TOKEN', token);
+      localStorage.setItem('role', role);
     } else {
-      sessionStorage.removeItem('ACCESS_TOKEN');
-      sessionStorage.removeItem('role');
+      localStorage.removeItem('ACCESS_TOKEN');
+      localStorage.removeItem('role');
     }
   };
 
   const setUserHeader = (userData, token) => {
     setUser(userData);
     if (userData && token) {
-      sessionStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(userData));
     } else {
-      sessionStorage.removeItem('user');
+      localStorage.removeItem('user');
     }
   };
 
   const setCarreraPersist = (carreraData) => {
     setCarrera(carreraData);
     if (carreraData) {
-      sessionStorage.setItem('carrera', JSON.stringify(carreraData));
+      localStorage.setItem('carrera', JSON.stringify(carreraData));
     } else {
-      sessionStorage.removeItem('carrera');
+      localStorage.removeItem('carrera');
     }
   };
 
@@ -198,9 +240,9 @@ export const ContextProvider = ({ children }) => {
     const safeUcList = Array.isArray(ucList) ? ucList : [];
     setUnidadesDisponibles(safeUcList);
     if (safeUcList) {
-      sessionStorage.setItem('unidadesDisponibles', JSON.stringify(safeUcList));
+      localStorage.setItem('unidadesDisponibles', JSON.stringify(safeUcList));
     } else {
-      sessionStorage.removeItem('unidadesDisponibles');
+      localStorage.removeItem('unidadesDisponibles');
     }
   };
 
@@ -209,9 +251,9 @@ export const ContextProvider = ({ children }) => {
     const safeUcList = Array.isArray(ucList) ? ucList : [];
     setUnidadesCarrera(safeUcList);
     if (safeUcList) {
-      sessionStorage.setItem('unidadesCarrera', JSON.stringify(safeUcList));
+      localStorage.setItem('unidadesCarrera', JSON.stringify(safeUcList));
     } else {
-      sessionStorage.removeItem('unidadesCarrera');
+      localStorage.removeItem('unidadesCarrera');
     }
   };
 
@@ -219,9 +261,9 @@ export const ContextProvider = ({ children }) => {
     const safeUcList = ucList || {};
     setUnidadesCarreraPorAno(safeUcList);
     if (safeUcList) {
-      sessionStorage.setItem('unidadesCarreraPorAno', JSON.stringify(safeUcList));
+      localStorage.setItem('unidadesCarreraPorAno', JSON.stringify(safeUcList));
     } else {
-      sessionStorage.removeItem('unidadesCarreraPorAno');
+      localStorage.removeItem('unidadesCarreraPorAno');
     }
   };
 
@@ -230,9 +272,9 @@ export const ContextProvider = ({ children }) => {
     const safeUcList = Array.isArray(ucList) ? ucList : [];
     setUnidadesAprobadas(safeUcList);
     if (safeUcList) {
-      sessionStorage.setItem('unidadesAprobadas', JSON.stringify(safeUcList));
+      localStorage.setItem('unidadesAprobadas', JSON.stringify(safeUcList));
     } else {
-      sessionStorage.removeItem('unidadesAprobadas');
+      localStorage.removeItem('unidadesAprobadas');
     }
   };
 
@@ -240,9 +282,9 @@ export const ContextProvider = ({ children }) => {
     const safeUcList = ucList || {};
     setUnidadesAprobadasPorAno(safeUcList);
     if (safeUcList) {
-      sessionStorage.setItem('unidadesAprobadasPorAno', JSON.stringify(safeUcList));
+      localStorage.setItem('unidadesAprobadasPorAno', JSON.stringify(safeUcList));
     } else {
-      sessionStorage.removeItem('unidadesAprobadasPorAno');
+      localStorage.removeItem('unidadesAprobadasPorAno');
     }
   };
 
@@ -251,9 +293,9 @@ export const ContextProvider = ({ children }) => {
     const safeUcList = Array.isArray(ucList) ? ucList : [];
     setUnidadesInscriptas(safeUcList);
     if (safeUcList) {
-      sessionStorage.setItem('unidadesInscriptas', JSON.stringify(safeUcList));
+      localStorage.setItem('unidadesInscriptas', JSON.stringify(safeUcList));
     } else {
-      sessionStorage.removeItem('unidadesInscriptas');
+      localStorage.removeItem('unidadesInscriptas');
     }
   };
 
@@ -261,9 +303,9 @@ export const ContextProvider = ({ children }) => {
     const safeUcList = ucList || {};
     setUnidadesInscriptasPorAno(safeUcList);
     if (safeUcList) {
-      sessionStorage.setItem('unidadesInscriptasPorAno', JSON.stringify(safeUcList));
+      localStorage.setItem('unidadesInscriptasPorAno', JSON.stringify(safeUcList));
     } else {
-      sessionStorage.removeItem('unidadesInscriptasPorAno');
+      localStorage.removeItem('unidadesInscriptasPorAno');
     }
   };
 
@@ -271,27 +313,14 @@ export const ContextProvider = ({ children }) => {
     const safeUcList = ucList || {};
     setUnidadesDisponiblesPorAno(safeUcList);
     if (safeUcList) {
-      sessionStorage.setItem('unidadesDisponiblesPorAno', JSON.stringify(safeUcList));
+      localStorage.setItem('unidadesDisponiblesPorAno', JSON.stringify(safeUcList));
     } else {
-      sessionStorage.removeItem('unidadesDisponiblesPorAno');
+      localStorage.removeItem('unidadesDisponiblesPorAno');
     }
   };
 
   const updateNotification = (newNotifications) => {
     setNotification(newNotifications);
-  };
-
-  // Limpia inmediatamente todos los datos académicos del alumno en memoria y sessionStorage
-  const resetAlumnoState = () => {
-    setCarreraPersist(null);
-    setUnidadesDisponiblesPersist([]);
-    setUnidadesDisponiblesPorAnoPersist({});
-    setUnidadesCarreraPersist([]);
-    setUnidadesCarreraPorAnoPersist({});
-    setUnidadesAprobadasPersist([]);
-    setUnidadesAprobadasPorAnoPersist({});
-    setUnidadesInscriptasPersist([]);
-    setUnidadesInscriptasPorAnoPersist({});
   };
 
   return (
@@ -324,7 +353,8 @@ export const ContextProvider = ({ children }) => {
         unidadesInscriptasPorAno,
         setUnidadesInscriptasPorAno: setUnidadesInscriptasPorAnoPersist,
         isValidating,
-        resetAlumnoState
+        resetAlumnoState,
+        clearAllSession
       }}
     >
       {children}

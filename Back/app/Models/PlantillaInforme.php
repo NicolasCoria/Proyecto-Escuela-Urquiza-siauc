@@ -14,6 +14,8 @@ class PlantillaInforme extends Model
     protected $fillable = [
         'nombre',
         'campos_configurables',
+        'admin_id',
+        'descripcion',
     ];
 
     protected $casts = [

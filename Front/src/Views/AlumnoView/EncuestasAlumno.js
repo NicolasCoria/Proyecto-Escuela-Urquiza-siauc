@@ -138,7 +138,8 @@ const EncuestasAlumno = () => {
     });
   };
 
-  const handleEncuestaRespondida = (idEncuesta) => {
+  const handleEncuestaRespondida = async (idEncuesta) => {
+    // Actualizar estado local inmediatamente para mejor UX
     setEncuestas((prevEncuestas) => {
       const encuestasActualizadas = prevEncuestas.map((encuesta) =>
         encuesta?.id_encuesta === idEncuesta
@@ -147,6 +148,18 @@ const EncuestasAlumno = () => {
       );
       return ordenarEncuestas(encuestasActualizadas);
     });
+
+    // Recargar datos desde el servidor para asegurar sincronización
+    try {
+      const response = await axiosClient.get('/alumno/encuestas');
+      if (response.data.success) {
+        const nuevasEncuestas = response.data.encuestas || [];
+        setEncuestas(ordenarEncuestas(nuevasEncuestas));
+      }
+    } catch (err) {
+      console.error('Error recargando encuestas después de responder:', err);
+      // Si falla la recarga, mantener el estado local actualizado
+    }
   };
 
   if (loading) return <Spinner />;

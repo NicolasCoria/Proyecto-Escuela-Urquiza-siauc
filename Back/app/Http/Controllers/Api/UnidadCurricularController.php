@@ -13,7 +13,13 @@ class UnidadCurricularController extends Controller
         // ✅ Optimizado: Solo campos necesarios y ordenado
         $ucs = UnidadCurricular::select(['id_uc', 'Unidad_Curricular'])
             ->orderBy('Unidad_Curricular')
-            ->get();
+            ->get()
+            ->map(function($uc) {
+                return [
+                    'id_uc' => $uc->id_uc,
+                    'unidad_curricular' => $uc->unidad_curricular
+                ];
+            });
         return response()->json($ucs);
     }
 
@@ -41,7 +47,13 @@ class UnidadCurricularController extends Controller
                     });
             })
             ->orderBy('Unidad_Curricular')
-            ->get();
+            ->get()
+            ->map(function($uc) {
+                return [
+                    'id_uc' => $uc->id_uc,
+                    'unidad_curricular' => $uc->unidad_curricular
+                ];
+            });
             
         return response()->json(['success' => true, 'materias' => $materias]);
     }

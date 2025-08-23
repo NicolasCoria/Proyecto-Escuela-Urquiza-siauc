@@ -15,6 +15,9 @@ class EstadisticasController extends Controller
             $periodo = $request->get('periodo', 'all');
             $carrera = $request->get('carrera', 'all');
 
+            // Debug: verificar datos en tablas
+            $this->debugTablas();
+
             // Obtener estadísticas reales usando los métodos implementados
             $estadisticas = [
                 'inscripciones' => $this->getEstadisticasInscripciones($periodo, $carrera),
@@ -40,6 +43,43 @@ class EstadisticasController extends Controller
                 'success' => false,
                 'message' => 'Error al obtener las estadísticas: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function debugTablas()
+    {
+        try {
+            // Verificar datos en tabla nota
+            $totalNotas = DB::table('nota')->count();
+            $notasConUC = DB::table('nota')->whereNotNull('id_uc')->count();
+            $notasConAlumno = DB::table('nota')->whereNotNull('id_alumno')->count();
+            
+            \Log::info("DEBUG TABLAS - Total notas: {$totalNotas}, Con UC: {$notasConUC}, Con alumno: {$notasConAlumno}");
+
+            // Verificar datos en tabla unidad_curricular
+            $totalUCs = DB::table('unidad_curricular')->count();
+            \Log::info("DEBUG TABLAS - Total UCs: {$totalUCs}");
+
+            // Verificar join entre nota y unidad_curricular
+            $notasConJoin = DB::table('nota')
+                ->join('unidad_curricular', 'nota.id_uc', '=', 'unidad_curricular.id_uc')
+                ->count();
+            \Log::info("DEBUG TABLAS - Notas con join exitoso: {$notasConJoin}");
+
+            // Mostrar algunas UCs de ejemplo
+            $ucsEjemplo = DB::table('unidad_curricular')->limit(5)->get();
+            foreach ($ucsEjemplo as $uc) {
+                \Log::info("DEBUG TABLAS - UC ejemplo: ID {$uc->id_uc}, Nombre: {$uc->unidad_curricular}");
+            }
+
+            // Mostrar algunas notas de ejemplo
+            $notasEjemplo = DB::table('nota')->limit(5)->get();
+            foreach ($notasEjemplo as $nota) {
+                \Log::info("DEBUG TABLAS - Nota ejemplo: ID {$nota->id_nota}, Alumno: {$nota->id_alumno}, UC: {$nota->id_uc}, Nota: {$nota->nota}");
+            }
+
+        } catch (\Exception $e) {
+            \Log::error("Error en debug de tablas: " . $e->getMessage());
         }
     }
 
@@ -122,6 +162,8 @@ class EstadisticasController extends Controller
             $notasAprobadas = $query->where('nota', '>=', 6)->count();
             $tasaAprobacion = $totalNotas > 0 ? round(($notasAprobadas / $totalNotas) * 100, 1) : 0;
 
+            \Log::info("Estadísticas académicas - Total notas: {$totalNotas}, Aprobadas: {$notasAprobadas}, Tasa: {$tasaAprobacion}%");
+
             // Rendimiento por UC (top 5) con consulta directa
             $porUC = DB::table('nota')
                 ->join('unidad_curricular', 'nota.id_uc', '=', 'unidad_curricular.id_uc')
@@ -143,8 +185,14 @@ class EstadisticasController extends Controller
                 })
                 ->toArray();
 
+            \Log::info("UCs encontradas en BD: " . count($porUC));
+            foreach ($porUC as $uc) {
+                \Log::info("UC: {$uc['nombre']} - Aprobación: {$uc['aprobacion']}%");
+            }
+
             // Si no hay datos, usar datos de ejemplo
             if (empty($porUC)) {
+                \Log::info("No hay datos de UC en BD, usando datos hardcodeados");
                 $porUC = [
                     ['id' => 1, 'nombre' => 'Programación I', 'aprobacion' => 85.2],
                     ['id' => 2, 'nombre' => 'Base de Datos I', 'aprobacion' => 78.9],
@@ -152,6 +200,8 @@ class EstadisticasController extends Controller
                     ['id' => 4, 'nombre' => 'Redes I', 'aprobacion' => 72.1],
                     ['id' => 5, 'nombre' => 'Matemática Aplicada', 'aprobacion' => 68.7]
                 ];
+            } else {
+                \Log::info("Usando datos reales de la base de datos");
             }
 
             return [
@@ -160,6 +210,7 @@ class EstadisticasController extends Controller
                 'trend' => rand(-5, 15)
             ];
         } catch (\Exception $e) {
+            \Log::error("Error en estadísticas académicas: " . $e->getMessage());
             return [
                 'aprobacion' => 74.5,
                 'porUC' => [

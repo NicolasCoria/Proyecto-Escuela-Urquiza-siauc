@@ -22,7 +22,7 @@ const Aside = () => {
   const [activeButton, setActiveButton] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { user, setUser, setTokenAndRole, carrera } = useStateContext();
+  const { user, setUser, setTokenAndRole, carrera, clearAllSession } = useStateContext();
   const { openModal } = useModalContext();
   const theme = getTheme(user, carrera);
 
@@ -51,9 +51,7 @@ const Aside = () => {
       setIsLoading(true);
       
       // Limpiar sesión inmediatamente para mejor UX
-      setUser(null);
-      setTokenAndRole(null, null);
-      sessionStorage.removeItem('hasShownNotificationModal');
+      clearAllSession();
       
       // Navegar inmediatamente
       navigate('/');

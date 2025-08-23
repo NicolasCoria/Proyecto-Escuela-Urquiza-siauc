@@ -28,9 +28,9 @@ const EditarEncuestas = () => {
   const cargarEncuestas = async () => {
     try {
       setLoadingEncuestas(true);
-      const response = await axiosClient.get('/encuestas');
+      const response = await axiosClient.get('/admin/dashboard-data');
       if (response.data.success) {
-        setEncuestas(response.data.encuestas || []);
+        setEncuestas(response.data.data.encuestas || []);
       }
     } catch (err) {
       console.error('Error cargando encuestas:', err);
@@ -38,6 +38,30 @@ const EditarEncuestas = () => {
     } finally {
       setLoadingEncuestas(false);
     }
+  };
+
+  // Función para calcular el estado real de la encuesta
+  const getEstadoEncuesta = (encuesta) => {
+    if (!encuesta.activa) {
+      return { estado: 'Inactiva', color: '#dc3545', esVencida: false };
+    }
+
+    const fechaActual = new Date();
+    const fechaInicio = encuesta.fecha_inicio ? new Date(encuesta.fecha_inicio) : null;
+    const fechaFin = encuesta.fecha_fin ? new Date(encuesta.fecha_fin) : null;
+
+    // Si tiene fecha de fin y ya pasó
+    if (fechaFin && fechaActual > fechaFin) {
+      return { estado: 'Vencida', color: '#dc3545', esVencida: true };
+    }
+
+    // Si tiene fecha de inicio y aún no comenzó
+    if (fechaInicio && fechaActual < fechaInicio) {
+      return { estado: 'Próximamente', color: '#ffc107', esVencida: false };
+    }
+
+    // Si está en el período válido
+    return { estado: 'Activa', color: 'inherit', esVencida: false };
   };
 
   const handleSeleccionarEncuesta = async (idEncuesta) => {
@@ -53,7 +77,8 @@ const EditarEncuestas = () => {
         setFechaFin(encuesta.fecha_fin || '');
         setActiva(encuesta.activa !== false);
         setPreguntas(encuesta.preguntas || []);
-        setEditando(true);
+        // No activar automáticamente el modo de edición
+        // setEditando(true);
       }
     } catch (err) {
       console.error('Error cargando encuesta:', err);
@@ -226,11 +251,22 @@ const EditarEncuestas = () => {
                 className={styles.select}
               >
                 <option value="">Selecciona una encuesta</option>
-                {encuestas.map((encuesta) => (
-                  <option key={encuesta.id_encuesta} value={encuesta.id_encuesta}>
-                    {encuesta.titulo} - {encuesta.activa ? 'Activa' : 'Inactiva'}
-                  </option>
-                ))}
+                {encuestas.map((encuesta) => {
+                  const { estado, color, esVencida } = getEstadoEncuesta(encuesta);
+                  return (
+                    <option
+                      key={encuesta.id_encuesta}
+                      value={encuesta.id_encuesta}
+                      style={{
+                        color: color,
+                        fontWeight: estado === 'Activa' ? 'normal' : 'bold'
+                      }}
+                    >
+                      {encuesta.titulo} - {estado}
+                      {esVencida && ' (Vencida)'}
+                    </option>
+                  );
+                })}
               </select>
             )}
           </div>
@@ -250,7 +286,20 @@ const EditarEncuestas = () => {
             selectedEncuesta && (
               <div
                 style={{
-                  backgroundColor: '#e3f2fd',
+                  backgroundColor: (() => {
+                    const { estado } = getEstadoEncuesta(selectedEncuesta);
+                    if (estado === 'Activa') return '#e3f2fd';
+                    if (estado === 'Vencida' || estado === 'Inactiva') return '#ffebee';
+                    if (estado === 'Próximamente') return '#fff3cd';
+                    return '#e3f2fd';
+                  })(),
+                  border: `2px solid ${(() => {
+                    const { estado } = getEstadoEncuesta(selectedEncuesta);
+                    if (estado === 'Activa') return '#2196f3';
+                    if (estado === 'Vencida' || estado === 'Inactiva') return '#f44336';
+                    if (estado === 'Próximamente') return '#ffc107';
+                    return '#2196f3';
+                  })()}`,
                   padding: '15px',
                   borderRadius: '6px',
                   marginBottom: '20px'
@@ -261,7 +310,25 @@ const EditarEncuestas = () => {
                   <strong>Descripción:</strong> {selectedEncuesta.descripcion || 'Sin descripción'}
                 </p>
                 <p>
-                  <strong>Estado:</strong> {selectedEncuesta.activa ? 'Activa' : 'Inactiva'}
+                  <strong>Estado:</strong>
+                  {(() => {
+                    const { estado, color } = getEstadoEncuesta(selectedEncuesta);
+                    let emoji = '✅';
+                    if (estado === 'Inactiva' || estado === 'Vencida') emoji = '❌';
+                    if (estado === 'Próximamente') emoji = '⏰';
+
+                    return (
+                      <span
+                        style={{
+                          color: color,
+                          fontWeight: 'bold',
+                          marginLeft: '5px'
+                        }}
+                      >
+                        {emoji} {estado}
+                      </span>
+                    );
+                  })()}
                 </p>
                 <p>
                   <strong>Preguntas:</strong> {selectedEncuesta.preguntas?.length || 0}

@@ -10,7 +10,10 @@ class GradoController extends Controller
 {
     public function getAllGrados()
     {
-        $grados = Grado::all(['id_grado', 'grado']);
+        $grados = Grado::select(['id_grado', 'grado', 'division', 'detalle'])
+            ->orderBy('grado')
+            ->orderBy('division')
+            ->get();
         return response()->json($grados);
     }
 }

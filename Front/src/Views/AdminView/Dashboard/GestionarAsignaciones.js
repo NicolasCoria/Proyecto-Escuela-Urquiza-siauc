@@ -56,7 +56,7 @@ const GestionarAsignaciones = () => {
         }
 
         // ✅ Una sola llamada HTTP optimizada
-        const response = await axiosClient.get('/dashboard-data', { params });
+        const response = await axiosClient.get('/admin/dashboard-data', { params });
 
         if (response.data.success) {
           const data = response.data.data;
@@ -351,7 +351,7 @@ const GestionarAsignaciones = () => {
         params.fecha_actual = new Date().toISOString().split('T')[0];
       }
 
-      const response = await axiosClient.get('/dashboard-data', { params });
+      const response = await axiosClient.get('/admin/dashboard-data', { params });
 
       if (response.data.success) {
         const data = response.data.data;
@@ -391,6 +391,12 @@ const GestionarAsignaciones = () => {
 
   // Determinar si mostrar el mensaje de error de carrera
   const mostrarErrorCarrera = !usarGrupos && !selectedCarrera && selectedEncuesta;
+
+  // Determinar si mostrar el mensaje de que debe filtrar alumnos
+  const debeFiltrarAlumnos =
+    selectedEncuesta &&
+    alumnos.length === 0 &&
+    ((usarGrupos && selectedGrupos.length > 0) || (!usarGrupos && selectedCarrera));
 
   return (
     <div style={{ background: '#f9f9f9', padding: 24, borderRadius: 8, marginBottom: 32 }}>
@@ -441,28 +447,53 @@ const GestionarAsignaciones = () => {
           style={{
             backgroundColor: '#f8d7da',
             color: '#721c24',
-            padding: '10px',
-            borderRadius: '4px',
-            marginBottom: '20px'
+            padding: '16px 20px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            border: '2px solid #f5c6cb',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
           }}
         >
           ❌ {error}
         </div>
       )}
 
-      {success && (
+      {success && !success.includes('Encuesta asignada') && (
         <div
+          className={styles.successMessage}
           style={{
-            backgroundColor: '#d4edda',
-            color: '#155724',
-            padding: '10px',
-            borderRadius: '4px',
-            marginBottom: '20px'
+            backgroundColor: '#d1ecf1',
+            color: '#0c5460',
+            padding: '20px 24px',
+            borderRadius: '12px',
+            marginBottom: '24px',
+            border: '3px solid #bee5eb',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
+            position: 'relative',
+            overflow: 'hidden'
           }}
         >
-          ✅ {success}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '4px',
+              background: 'linear-gradient(90deg, #28a745, #20c997, #17a2b8)',
+              animation: 'pulse 2s ease-in-out infinite'
+            }}
+          ></div>
+          🎉 ¡{success}! 🎉
         </div>
       )}
+
       <div className={styles.selectGroup}>
         <label>
           <strong>Seleccionar Encuesta:</strong>
@@ -948,8 +979,57 @@ const GestionarAsignaciones = () => {
           ℹ️ Modo Grupos: Selecciona los grupos de destinatarios y luego envía la encuesta.
         </div>
       )}
+      {debeFiltrarAlumnos && (
+        <div
+          style={{
+            color: '#856404',
+            marginTop: 12,
+            fontSize: '16px',
+            fontStyle: 'italic',
+            backgroundColor: '#fff3cd',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            border: '2px solid #ffeaa7',
+            fontWeight: '500',
+            textAlign: 'center'
+          }}
+        >
+          💡 Filtre alumnos para corroborar y confirmar su elección antes de asignar la encuesta.
+        </div>
+      )}
       {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
-      {success && <div style={{ color: 'green', marginTop: 10 }}>{success}</div>}
+      {success && success.includes('Encuesta asignada') && (
+        <div
+          className={styles.successMessage}
+          style={{
+            backgroundColor: '#d1ecf1',
+            color: '#0c5460',
+            padding: '20px 24px',
+            borderRadius: '12px',
+            marginTop: '20px',
+            border: '3px solid #bee5eb',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '4px',
+              background: 'linear-gradient(90deg, #28a745, #20c997, #17a2b8)',
+              animation: 'pulse 2s ease-in-out infinite'
+            }}
+          ></div>
+          🎉 ¡{success}! 🎉
+        </div>
+      )}
     </div>
   );
 };

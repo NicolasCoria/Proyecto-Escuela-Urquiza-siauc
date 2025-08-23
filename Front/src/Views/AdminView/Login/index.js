@@ -56,6 +56,8 @@ const AdminLogin = () => {
       // Configurar sesión inmediatamente
       setUser(data.admin);
       setTokenAndRole(data.token, 'admin');
+      // Guardar usuario en localStorage
+      localStorage.setItem('user', JSON.stringify(data.admin));
 
       // Ocultar spinner inmediatamente
       setIsLoading(false);

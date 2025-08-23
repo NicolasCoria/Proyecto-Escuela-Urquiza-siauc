@@ -29,7 +29,6 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
 
   // Si no hay token, redirigir al login correspondiente
   if (!token) {
-    console.log('No token found, redirecting to login');
     if (location.pathname.startsWith('/admin')) {
       return <Navigate to="/admin/login" replace />;
     } else if (location.pathname.startsWith('/alumno')) {

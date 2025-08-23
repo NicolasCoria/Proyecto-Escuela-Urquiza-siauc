@@ -273,11 +273,16 @@ class GruposDestinatariosController extends Controller
                     });
             });
 
-            $materias = \Cache::remember('materias_list', 3600, function () {
-                return UnidadCurricular::select(['id_uc', 'unidad_curricular'])
-                    ->orderBy('unidad_curricular')
-                    ->get();
-            });
+            // Por defecto, devolver todas las materias
+            $materias = UnidadCurricular::select(['id_uc', 'Unidad_Curricular'])
+                ->orderBy('Unidad_Curricular')
+                ->get()
+                ->map(function($uc) {
+                    return [
+                        'id_uc' => $uc->id_uc,
+                        'unidad_curricular' => $uc->Unidad_Curricular
+                    ];
+                });
 
             return response()->json([
                 'success' => true,
@@ -292,6 +297,46 @@ class GruposDestinatariosController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Error al obtener datos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener materias filtradas por carrera(s)
+     */
+    public function getMateriasPorCarrera(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'id_carreras' => 'required|array',
+                'id_carreras.*' => 'integer|exists:carrera,id_carrera'
+            ]);
+
+            $materias = UnidadCurricular::select(['id_uc', 'Unidad_Curricular'])
+                ->whereExists(function ($query) use ($validated) {
+                    $query->select(\DB::raw(1))
+                        ->from('carrera_uc')
+                        ->whereColumn('carrera_uc.id_uc', 'unidad_curricular.id_uc')
+                        ->whereIn('carrera_uc.id_carrera', $validated['id_carreras']);
+                })
+                ->orderBy('Unidad_Curricular')
+                ->get()
+                ->map(function($uc) {
+                    return [
+                        'id_uc' => $uc->id_uc,
+                        'unidad_curricular' => $uc->Unidad_Curricular
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'materias' => $materias
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener materias: ' . $e->getMessage()
             ], 500);
         }
     }

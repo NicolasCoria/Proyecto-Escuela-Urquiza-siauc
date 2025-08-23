@@ -67,32 +67,52 @@ class InformeController extends Controller
         
         $filtros = [];
         
+        // ✅ OPTIMIZACIÓN: Usar caché para datos que no cambian frecuentemente
+        $carreras = \Cache::remember('carreras_list', 3600, function () {
+            return Carrera::select(['id_carrera', 'carrera'])
+                ->orderBy('carrera')
+                ->get();
+        });
+
+        $grados = \Cache::remember('grados_list', 3600, function () {
+            return Grado::select(['id_grado', 'grado', 'division', 'detalle'])
+                ->orderBy('grado')
+                ->orderBy('division')
+                ->get();
+        });
+
+        $materias = \Cache::remember('materias_list', 3600, function () {
+            return UnidadCurricular::select(['id_uc', 'Unidad_Curricular'])
+                ->orderBy('Unidad_Curricular')
+                ->get();
+        });
+        
         switch ($plantillaId) {
             case 1: // Informe de Alumnos por Carrera
                 $filtros = [
                     'carrera' => [
                         'tipo' => 'select',
                         'label' => 'Carrera',
-                        'opciones' => Carrera::select('id_carrera', 'carrera')->get()->map(function($c) {
+                        'opciones' => $carreras->map(function($c) {
                             return ['value' => $c->id_carrera, 'label' => $c->carrera];
                         })
                     ],
                     'grado' => [
                         'tipo' => 'select',
-                        'label' => 'Grado',
-                        'opciones' => [
-                            ['value' => 1, 'label' => 'Primer Año'],
-                            ['value' => 2, 'label' => 'Segundo Año'],
-                            ['value' => 3, 'label' => 'Tercer Año'],
-                            ['value' => 4, 'label' => 'Cuarto Año']
-                        ]
+                        'label' => 'Año (Grado)',
+                        'opciones' => collect([
+                            ['value' => 'todos', 'label' => 'Todos los años']
+                        ])->merge($grados->map(function($g) {
+                            return ['value' => $g->id_grado, 'label' => $g->grado . '-' . $g->division . '°'];
+                        }))
                     ],
                     'estado_inscripcion' => [
                         'tipo' => 'select',
                         'label' => 'Estado de Inscripción',
                         'opciones' => [
-                            ['value' => 'activo', 'label' => 'Activo'],
-                            ['value' => 'inactivo', 'label' => 'Inactivo']
+                            ['value' => 'activa', 'label' => 'Activa'],
+                            ['value' => 'inactiva', 'label' => 'Inactiva'],
+                            ['value' => 'pendiente', 'label' => 'Pendiente']
                         ]
                     ]
                 ];
@@ -111,15 +131,15 @@ class InformeController extends Controller
                     'carrera' => [
                         'tipo' => 'select',
                         'label' => 'Carrera',
-                        'opciones' => Carrera::select('id_carrera', 'carrera')->get()->map(function($c) {
+                        'opciones' => $carreras->map(function($c) {
                             return ['value' => $c->id_carrera, 'label' => $c->carrera];
                         })
                     ],
                     'unidad_curricular' => [
                         'tipo' => 'select',
                         'label' => 'Unidad Curricular',
-                        'opciones' => UnidadCurricular::select('id_uc', 'Unidad_Curricular')->get()->map(function($uc) {
-                            return ['value' => $uc->id_uc, 'label' => $uc->Unidad_Curricular];
+                        'opciones' => $materias->map(function($uc) {
+                            return ['value' => $uc->id_uc, 'label' => $uc->unidad_curricular];
                         })
                     ]
                 ];
@@ -130,22 +150,23 @@ class InformeController extends Controller
                     'carrera' => [
                         'tipo' => 'select',
                         'label' => 'Carrera',
-                        'opciones' => Carrera::select('id_carrera', 'carrera')->get()->map(function($c) {
+                        'opciones' => $carreras->map(function($c) {
                             return ['value' => $c->id_carrera, 'label' => $c->carrera];
                         })
                     ],
                     'unidad_curricular' => [
                         'tipo' => 'select',
                         'label' => 'Unidad Curricular',
-                        'opciones' => UnidadCurricular::select('id_uc', 'Unidad_Curricular')->get()->map(function($uc) {
-                            return ['value' => $uc->id_uc, 'label' => $uc->Unidad_Curricular];
+                        'opciones' => $materias->map(function($uc) {
+                            return ['value' => $uc->id_uc, 'label' => $uc->unidad_curricular];
                         })
                     ],
                     'promedio_minimo' => [
                         'tipo' => 'number',
                         'label' => 'Promedio Mínimo',
-                        'min' => 1,
-                        'max' => 10
+                        'min' => 0,
+                        'max' => 10,
+                        'step' => 0.1
                     ]
                 ];
                 break;
@@ -155,22 +176,23 @@ class InformeController extends Controller
                     'carrera' => [
                         'tipo' => 'select',
                         'label' => 'Carrera',
-                        'opciones' => Carrera::select('id_carrera', 'carrera')->get()->map(function($c) {
+                        'opciones' => $carreras->map(function($c) {
                             return ['value' => $c->id_carrera, 'label' => $c->carrera];
                         })
                     ],
                     'unidad_curricular' => [
                         'tipo' => 'select',
                         'label' => 'Unidad Curricular',
-                        'opciones' => UnidadCurricular::select('id_uc', 'Unidad_Curricular')->get()->map(function($uc) {
-                            return ['value' => $uc->id_uc, 'label' => $uc->Unidad_Curricular];
+                        'opciones' => $materias->map(function($uc) {
+                            return ['value' => $uc->id_uc, 'label' => $uc->unidad_curricular];
                         })
                     ],
                     'porcentaje_asistencia' => [
                         'tipo' => 'number',
                         'label' => 'Porcentaje Mínimo de Asistencia',
                         'min' => 0,
-                        'max' => 100
+                        'max' => 100,
+                        'step' => 1
                     ]
                 ];
                 break;
@@ -657,6 +679,115 @@ class InformeController extends Controller
                 $solicitud->fecha_respuesta ? Carbon::parse($solicitud->fecha_respuesta)->format('d/m/Y H:i') : '-',
                 $tiempoRespuesta
             ]);
+        }
+    }
+
+    /**
+     * Obtener plantillas personalizadas del usuario
+     */
+    public function getMisPlantillas()
+    {
+        try {
+            $plantillas = \App\Models\PlantillaInforme::where('admin_id', auth()->id())->get();
+            
+            return response()->json([
+                'success' => true,
+                'plantillas' => $plantillas
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener plantillas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Crear nueva plantilla personalizada
+     */
+    public function storePlantilla(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'campos' => 'required|array',
+                'descripcion' => 'nullable|string'
+            ]);
+
+            $plantilla = \App\Models\PlantillaInforme::create([
+                'nombre' => $validated['nombre'],
+                'campos_configurables' => $validated['campos'],
+                'descripcion' => $validated['descripcion'] ?? '',
+                'admin_id' => auth()->id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'plantilla' => $plantilla
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al crear plantilla: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar plantilla personalizada
+     */
+    public function updatePlantilla(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'campos' => 'required|array',
+                'descripcion' => 'nullable|string'
+            ]);
+
+            $plantilla = \App\Models\PlantillaInforme::where('id', $id)
+                ->where('admin_id', auth()->id())
+                ->firstOrFail();
+
+            $plantilla->update([
+                'nombre' => $validated['nombre'],
+                'campos_configurables' => $validated['campos'],
+                'descripcion' => $validated['descripcion'] ?? ''
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'plantilla' => $plantilla
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al actualizar plantilla: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar plantilla personalizada
+     */
+    public function destroyPlantilla($id)
+    {
+        try {
+            $plantilla = \App\Models\PlantillaInforme::where('id', $id)
+                ->where('admin_id', auth()->id())
+                ->firstOrFail();
+
+            $plantilla->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Plantilla eliminada correctamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al eliminar plantilla: ' . $e->getMessage()
+            ], 500);
         }
     }
 } 

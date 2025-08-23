@@ -34,7 +34,8 @@ const Sidebar = () => {
   const [activeButton, setActiveButton] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { user, setUser, setTokenAndRole, carrera, resetAlumnoState } = useStateContext();
+  const { user, setUser, setTokenAndRole, carrera, resetAlumnoState, clearAllSession } =
+    useStateContext();
   const { openModal } = useModalContext();
   const theme = getTheme(user, carrera);
 
@@ -75,7 +76,7 @@ const Sidebar = () => {
       setUser(null);
       resetAlumnoState();
       setTokenAndRole(null, null);
-      sessionStorage.removeItem('hasShownNotificationModal');
+      clearAllSession();
 
       // Navegar inmediatamente
       navigate('/');

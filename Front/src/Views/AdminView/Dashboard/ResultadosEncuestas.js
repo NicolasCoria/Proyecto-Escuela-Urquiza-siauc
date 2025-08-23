@@ -35,7 +35,7 @@ const ResultadosEncuestas = () => {
         params.fecha_actual = new Date().toISOString().split('T')[0];
       }
 
-      const response = await axiosClient.get('/dashboard-data', { params });
+      const response = await axiosClient.get('/admin/dashboard-data', { params });
 
       if (response.data.success) {
         const data = response.data.data;

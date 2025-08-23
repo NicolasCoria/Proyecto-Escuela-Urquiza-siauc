@@ -30,9 +30,12 @@ class DashboardController extends Controller
                     $query->whereNull('fecha_fin')
                           ->orWhere('fecha_fin', '>=', $fechaActual);
                 });
+                // Solo filtrar por activas cuando se proporciona fecha_actual
+                $encuestasQuery->where('activa', true);
             }
+            // Si no hay fecha_actual, obtener todas las encuestas (activas e inactivas)
             
-            $encuestas = $encuestasQuery->where('activa', true)->get();
+            $encuestas = $encuestasQuery->get();
             
             // Cargar datos estáticos optimizados
             $carreras = Carrera::select(['id_carrera', 'carrera'])
@@ -49,8 +52,8 @@ class DashboardController extends Controller
                     return $grado;
                 });
                 
-            $materias = UnidadCurricular::select(['id_uc', 'unidad_curricular'])
-                ->orderBy('unidad_curricular')
+            $materias = UnidadCurricular::select(['id_uc', 'Unidad_Curricular'])
+                ->orderBy('Unidad_Curricular')
                 ->get();
             
             return response()->json([
