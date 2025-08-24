@@ -83,7 +83,7 @@ class AlumnoController extends Controller
                 ->join('unidad_curricular', 'carrera_uc.id_uc', '=', 'unidad_curricular.id_uc')
                 ->select('unidad_curricular.*', 'carrera_uc.ano')
                 ->orderBy('carrera_uc.ano')
-                ->orderBy('unidad_curricular.unidad_curricular')
+                ->orderBy('unidad_curricular.Unidad_Curricular')
                 ->get()
             : collect();
 
@@ -105,7 +105,7 @@ class AlumnoController extends Controller
                 ->join('unidad_curricular', 'carrera_uc.id_uc', '=', 'unidad_curricular.id_uc')
                 ->select('unidad_curricular.*', 'carrera_uc.ano')
                 ->orderBy('carrera_uc.ano')
-                ->orderBy('unidad_curricular.unidad_curricular')
+                ->orderBy('unidad_curricular.Unidad_Curricular')
                 ->get()
             : collect();
 
@@ -126,7 +126,7 @@ class AlumnoController extends Controller
                     'inscripcion.id_inscripcion'
                 )
                 ->orderBy('carrera_uc.ano')
-                ->orderBy('unidad_curricular.unidad_curricular')
+                ->orderBy('unidad_curricular.Unidad_Curricular')
                 ->get()
             : collect();
 

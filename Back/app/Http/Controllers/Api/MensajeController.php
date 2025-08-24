@@ -296,9 +296,14 @@ class MensajeController extends Controller
             });
 
             $materias = \Cache::remember('materias_list', 3600, function () {
-                return UnidadCurricular::select(['id_uc', 'unidad_curricular'])
-                    ->orderBy('unidad_curricular')
-                    ->get();
+                return UnidadCurricular::select(['id_uc', 'Unidad_Curricular'])
+                    ->orderBy('Unidad_Curricular')
+                    ->get()
+                    ->map(function($materia) {
+                        // Agregar el campo unidad_curricular para compatibilidad con el frontend
+                        $materia->unidad_curricular = $materia->Unidad_Curricular;
+                        return $materia;
+                    });
             });
 
             return response()->json([

@@ -41,6 +41,11 @@ const Comunicaciones = () => {
     grados: [],
     materias: []
   });
+
+  // Debug: Log cuando cambian los datos de creación
+  useEffect(() => {
+    console.log('datosCreacion actualizado:', datosCreacion);
+  }, [datosCreacion]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -65,6 +70,7 @@ const Comunicaciones = () => {
       // Cargar datos para filtros
       const responseDatos = await axiosClient.get('/admin/mensajes/datos/creacion');
       if (responseDatos.data.success) {
+        console.log('Datos de creación cargados:', responseDatos.data.datos);
         setDatosCreacion(responseDatos.data.datos);
       }
     } catch (error) {
@@ -431,11 +437,15 @@ const Comunicaciones = () => {
                       }
                       className={styles.select}
                     >
-                      {datosCreacion.materias.map((materia) => (
-                        <option key={materia.id_uc} value={materia.id_uc}>
-                          {materia.unidad_curricular}
-                        </option>
-                      ))}
+                      {datosCreacion.materias && datosCreacion.materias.length > 0 ? (
+                        datosCreacion.materias.map((materia) => (
+                          <option key={materia.id_uc} value={materia.id_uc}>
+                            {materia.unidad_curricular}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">Cargando materias...</option>
+                      )}
                     </select>
                   </div>
                 </div>
