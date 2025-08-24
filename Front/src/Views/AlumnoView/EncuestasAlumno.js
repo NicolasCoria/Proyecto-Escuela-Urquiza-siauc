@@ -9,6 +9,7 @@ const EncuestasAlumno = () => {
   const [encuestas, setEncuestas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Función helper para formatear fechas en zona horaria de Argentina
   const formatearFecha = (fechaString) => {
@@ -28,27 +29,35 @@ const EncuestasAlumno = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchEncuestas = async () => {
-      try {
+  const fetchEncuestas = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
         setLoading(true);
-        setError(null);
+      }
+      setError(null);
 
-        const response = await axiosClient.get('/alumno/encuestas');
+      const response = await axiosClient.get('/alumno/encuestas');
 
-        if (response.data.success) {
-          setEncuestas(response.data.encuestas || []);
-        } else {
-          setError('Error al cargar las encuestas');
-        }
-      } catch (err) {
-        console.error('Error fetching encuestas:', err);
-        setError(err.response?.data?.error || 'Error al cargar las encuestas');
-      } finally {
+      if (response.data.success) {
+        setEncuestas(response.data.encuestas || []);
+      } else {
+        setError('Error al cargar las encuestas');
+      }
+    } catch (err) {
+      console.error('Error fetching encuestas:', err);
+      setError(err.response?.data?.error || 'Error al cargar las encuestas');
+    } finally {
+      if (isRefresh) {
+        setRefreshing(false);
+      } else {
         setLoading(false);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchEncuestas();
   }, []);
 
@@ -162,7 +171,64 @@ const EncuestasAlumno = () => {
     }
   };
 
+  const handleRefresh = () => {
+    fetchEncuestas(true);
+  };
+
   if (loading) return <Spinner />;
+
+  // Mostrar spinner de refrescar si está actualizando
+  if (refreshing) {
+    return (
+      <div className={styles.encuestasContainer || 'encuestas-container'}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px'
+          }}
+        >
+          <h2 className={styles.encuestasTitle || 'encuestas-title'}>Encuestas Académicas</h2>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'not-allowed',
+              fontSize: '14px',
+              fontWeight: '500',
+              opacity: 0.7,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <span
+              style={{
+                display: 'inline-block',
+                transform: 'rotate(360deg)',
+                transition: 'transform 0.5s ease',
+                fontSize: '16px'
+              }}
+            >
+              🔄
+            </span>
+            Actualizando...
+          </button>
+        </div>
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <Spinner />
+          <p style={{ marginTop: '10px', color: '#666' }}>Actualizando encuestas...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -204,7 +270,57 @@ const EncuestasAlumno = () => {
 
   return (
     <div className={styles.encuestasContainer || 'encuestas-container'}>
-      <h2 className={styles.encuestasTitle || 'encuestas-title'}>Encuestas Académicas</h2>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px'
+        }}
+      >
+        <h2 className={styles.encuestasTitle || 'encuestas-title'}>Encuestas Académicas</h2>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 16px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: refreshing ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            fontWeight: '500',
+            opacity: refreshing ? 0.7 : 1,
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            if (!refreshing) {
+              e.target.style.backgroundColor = '#0056b3';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!refreshing) {
+              e.target.style.backgroundColor = '#007bff';
+            }
+          }}
+        >
+          <span
+            style={{
+              display: 'inline-block',
+              transform: refreshing ? 'rotate(360deg)' : 'rotate(0deg)',
+              transition: 'transform 0.5s ease',
+              fontSize: '16px'
+            }}
+          >
+            🔄
+          </span>
+          {refreshing ? 'Actualizando...' : 'Actualizar'}
+        </button>
+      </div>
 
       <div className={styles.encuestasGrid || 'encuestas-grid'}>
         {ordenarEncuestas([...encuestas]).map((encuesta) => {

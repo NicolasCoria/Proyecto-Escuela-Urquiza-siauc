@@ -16,6 +16,26 @@ use Illuminate\Support\Facades\Cache;
 
 class EncuestaController extends Controller
 {
+    /**
+     * Limpiar caché de encuestas para un alumno específico
+     */
+    private function limpiarCacheEncuestas($idAlumno)
+    {
+        $cacheKey = "alumno:{$idAlumno}:encuestas_asignadas";
+        Cache::forget($cacheKey);
+        \Log::info("Caché limpiado para alumno {$idAlumno}");
+    }
+
+    /**
+     * Limpiar caché de encuestas para múltiples alumnos
+     */
+    private function limpiarCacheEncuestasMultiples($alumnosIds)
+    {
+        foreach ($alumnosIds as $idAlumno) {
+            $this->limpiarCacheEncuestas($idAlumno);
+        }
+    }
+
     // Obtener una encuesta específica con sus preguntas y opciones
     public function show($id_encuesta)
     {
@@ -386,6 +406,9 @@ class EncuestaController extends Controller
 
         AlumnoEncuesta::insertOrIgnore($asignaciones);
 
+        // Limpiar caché de encuestas para los alumnos afectados
+        $this->limpiarCacheEncuestasMultiples($validated['alumnos']);
+
         return response()->json([
             'success' => true,
             'message' => 'Encuesta asignada a ' . count($validated['alumnos']) . ' alumnos'
@@ -424,6 +447,9 @@ class EncuestaController extends Controller
         }
 
         AlumnoEncuesta::insertOrIgnore($asignaciones);
+
+        // Limpiar caché de encuestas para los alumnos afectados
+        $this->limpiarCacheEncuestasMultiples($alumnos);
 
         return response()->json([
             'success' => true,
@@ -474,6 +500,10 @@ class EncuestaController extends Controller
             ];
         }
         \App\Models\AlumnoEncuesta::insertOrIgnore($asignaciones);
+        
+        // Limpiar caché de encuestas para los alumnos afectados
+        $this->limpiarCacheEncuestasMultiples($alumnosFiltrados);
+        
         return response()->json([
             'success' => true,
             'message' => 'Encuesta asignada a ' . count($alumnosFiltrados) . ' alumnos filtrados.'
@@ -607,6 +637,9 @@ class EncuestaController extends Controller
             }
 
             DB::commit();
+
+            // Limpiar caché de encuestas para los alumnos afectados
+            $this->limpiarCacheEncuestasMultiples(array_unique($alumnosAsignados));
 
             return response()->json([
                 'success' => true,
