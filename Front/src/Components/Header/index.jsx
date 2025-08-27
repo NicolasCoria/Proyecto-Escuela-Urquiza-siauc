@@ -15,8 +15,9 @@ const Header = () => {
           <div className={styles.photoContainer}>
             <img
               src={
-                user.profile_photo || `${process.env.PUBLIC_URL}/assets/images/defaultProfile.png`
+                user.profile_photo || `/assets/images/defaultProfile.png`
               }
+              alt="Foto de perfil"
               className={styles.profilePhoto}
             />
           </div>
@@ -35,8 +36,9 @@ const Header = () => {
           <div className={styles.photoContainer}>
             <img
               src={
-                user.profile_photo || `${process.env.PUBLIC_URL}/assets/images/defaultProfile.png`
+                user.profile_photo || `/assets/images/defaultProfile.png`
               }
+              alt="Foto de perfil"
               className={styles.profilePhoto}
             />
           </div>
@@ -55,8 +57,9 @@ const Header = () => {
           <div className={styles.photoContainer}>
             <img
               src={
-                user.profile_photo || `${process.env.PUBLIC_URL}/assets/images/defaultProfile.png`
+                user.profile_photo || `/assets/images/defaultProfile.png`
               }
+              alt="Foto de perfil"
               className={styles.profilePhoto}
             />
           </div>

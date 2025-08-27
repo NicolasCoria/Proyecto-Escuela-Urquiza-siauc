@@ -11,8 +11,8 @@ class UnidadCurricularController extends Controller
     public function getAllUnidadesCurriculares()
     {
         // ✅ Optimizado: Solo campos necesarios y ordenado
-        $ucs = UnidadCurricular::select(['id_uc', 'unidad_curricular'])
-            ->orderBy('unidad_curricular')
+        $ucs = UnidadCurricular::select(['id_uc', 'Unidad_Curricular'])
+            ->orderBy('Unidad_Curricular')
             ->get();
         return response()->json($ucs);
     }
@@ -27,7 +27,7 @@ class UnidadCurricularController extends Controller
         }
         
         // ✅ Optimizado: Consulta más eficiente con índices
-        $materias = UnidadCurricular::select(['id_uc', 'unidad_curricular'])
+        $materias = UnidadCurricular::select(['id_uc', 'Unidad_Curricular'])
             ->whereExists(function ($query) use ($idCarrera, $idGrado) {
                 $query->select(\DB::raw(1))
                     ->from('grado_uc')
@@ -40,7 +40,7 @@ class UnidadCurricularController extends Controller
                             ->where('carrera_uc.id_carrera', $idCarrera);
                     });
             })
-            ->orderBy('unidad_curricular')
+            ->orderBy('Unidad_Curricular')
             ->get();
             
         return response()->json(['success' => true, 'materias' => $materias]);

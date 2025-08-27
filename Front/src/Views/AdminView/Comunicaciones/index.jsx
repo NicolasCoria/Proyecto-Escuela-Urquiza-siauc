@@ -25,6 +25,8 @@ const Comunicaciones = () => {
   const [selectedGrupos, setSelectedGrupos] = useState([]);
   const [selectedAlumnos, setSelectedAlumnos] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingMensaje, setEditingMensaje] = useState(null);
+  const [viewingMensaje, setViewingMensaje] = useState(null);
   const [formData, setFormData] = useState({
     titulo: '',
     contenido: '',
@@ -76,6 +78,7 @@ const Comunicaciones = () => {
   };
 
   const handleNuevoMensaje = () => {
+    setEditingMensaje(null);
     setFormData({
       titulo: '',
       contenido: '',
@@ -106,31 +109,56 @@ const Comunicaciones = () => {
     setIsLoading(true);
     try {
       let response;
-      if (formData.tipoDestinatario === 'grupos') {
-        response = await axiosClient.post('/admin/mensajes/enviar-grupos', {
+      if (editingMensaje) {
+        // Actualizar mensaje existente
+        response = await axiosClient.put(`/admin/mensajes/${editingMensaje.id_mensaje}`, {
           titulo: formData.titulo,
           contenido: formData.contenido,
-          prioridad: formData.prioridad,
-          grupos: selectedGrupos
+          prioridad: formData.prioridad
         });
       } else {
-        response = await axiosClient.post('/admin/mensajes', {
-          titulo: formData.titulo,
-          contenido: formData.contenido,
-          prioridad: formData.prioridad,
-          destinatarios: selectedAlumnos
-        });
+        // Crear nuevo mensaje
+        if (formData.tipoDestinatario === 'grupos') {
+          response = await axiosClient.post('/admin/mensajes/enviar-grupos', {
+            titulo: formData.titulo,
+            contenido: formData.contenido,
+            prioridad: formData.prioridad,
+            grupos: selectedGrupos
+          });
+        } else {
+          response = await axiosClient.post('/admin/mensajes', {
+            titulo: formData.titulo,
+            contenido: formData.contenido,
+            prioridad: formData.prioridad,
+            destinatarios: selectedAlumnos
+          });
+        }
       }
 
       if (response.data.success) {
+        // Cerrar el formulario y limpiar el estado
+        setShowForm(false);
+        setEditingMensaje(null);
+        setFormData({
+          titulo: '',
+          contenido: '',
+          prioridad: 'media',
+          tipoDestinatario: 'grupos'
+        });
+        setSelectedGrupos([]);
+        setSelectedAlumnos([]);
+        setAlumnos([]);
+
+        // Recargar los mensajes inmediatamente para mostrar el nuevo
+        cargarDatos();
+
+        // Mostrar mensaje de éxito
         openModal({
           title: 'Éxito',
-          description: response.data.message,
+          description: editingMensaje ? 'Mensaje actualizado correctamente' : response.data.message,
           confirmBtn: 'Aceptar',
           onClick: () => {
             closeModal();
-            setShowForm(false);
-            cargarDatos();
           }
         });
       }
@@ -194,19 +222,21 @@ const Comunicaciones = () => {
         '¿Está seguro que desea eliminar este mensaje? Esta acción no se puede deshacer.',
       confirmBtn: 'Eliminar',
       denyBtn: 'Cancelar',
-      confirmModal: true,
+      chooseModal: true,
       onClick: async () => {
         setIsLoading(true);
         try {
           const response = await axiosClient.delete(`/admin/mensajes/${idMensaje}`);
           if (response.data.success) {
+            // Eliminar el mensaje del estado local inmediatamente
+            setMensajes(mensajes.filter((mensaje) => mensaje.id_mensaje !== idMensaje));
+
             openModal({
               title: 'Éxito',
               description: 'Mensaje eliminado correctamente',
               confirmBtn: 'Aceptar',
               onClick: () => {
                 closeModal();
-                cargarDatos();
               }
             });
           }
@@ -218,6 +248,22 @@ const Comunicaciones = () => {
         }
       }
     });
+  };
+
+  const handleVerMensaje = (mensaje) => {
+    setViewingMensaje(mensaje);
+  };
+
+  const handleEditarMensaje = (mensaje) => {
+    setEditingMensaje(mensaje);
+    setFormData({
+      titulo: mensaje.titulo,
+      contenido: mensaje.contenido,
+      prioridad: mensaje.prioridad,
+      tipoDestinatario: 'grupos' // Por defecto, ya que no podemos cambiar destinatarios
+    });
+    setShowForm(true);
+    // Aquí podrías agregar lógica para cargar los destinatarios originales si es necesario
   };
 
   const getPrioridadColor = (prioridad) => {
@@ -255,6 +301,61 @@ const Comunicaciones = () => {
       {isLoading && <Spinner />}
       <Modal />
 
+      {viewingMensaje && (
+        <div className={styles.viewModalOverlay}>
+          <div className={styles.viewModal}>
+            <div className={styles.viewModalHeader}>
+              <h2>{viewingMensaje.titulo}</h2>
+              <button className={styles.viewModalClose} onClick={() => setViewingMensaje(null)}>
+                ×
+              </button>
+            </div>
+            <div className={styles.viewModalContent}>
+              <div className={styles.viewModalSection}>
+                <h3>Contenido</h3>
+                <p>{viewingMensaje.contenido}</p>
+              </div>
+              <div className={styles.viewModalInfo}>
+                <div className={styles.viewModalInfoItem}>
+                  <span className={styles.viewModalLabel}>Prioridad:</span>
+                  <span
+                    className={styles.viewModalValue}
+                    style={{ color: getPrioridadColor(viewingMensaje.prioridad) }}
+                  >
+                    {viewingMensaje.prioridad.toUpperCase()}
+                  </span>
+                </div>
+                <div className={styles.viewModalInfoItem}>
+                  <span className={styles.viewModalLabel}>Destinatarios:</span>
+                  <span className={styles.viewModalValue}>
+                    {viewingMensaje.cantidad_destinatarios}
+                  </span>
+                </div>
+                <div className={styles.viewModalInfoItem}>
+                  <span className={styles.viewModalLabel}>Leídos:</span>
+                  <span className={styles.viewModalValue}>{viewingMensaje.leido_por}</span>
+                </div>
+                <div className={styles.viewModalInfoItem}>
+                  <span className={styles.viewModalLabel}>Creado por:</span>
+                  <span className={styles.viewModalValue}>{viewingMensaje.admin_creador}</span>
+                </div>
+                <div className={styles.viewModalInfoItem}>
+                  <span className={styles.viewModalLabel}>Fecha:</span>
+                  <span className={styles.viewModalValue}>{viewingMensaje.fecha_envio}</span>
+                </div>
+              </div>
+            </div>
+            <div className={styles.viewModalFooter}>
+              <Button
+                text="Cerrar"
+                onClick={() => setViewingMensaje(null)}
+                classBtn={styles.secondaryButton}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.title}>
@@ -275,7 +376,7 @@ const Comunicaciones = () => {
 
         {showForm && (
           <div className={styles.formContainer}>
-            <h2>Enviar Nuevo Mensaje</h2>
+            <h2>{editingMensaje ? 'Editar Mensaje' : 'Enviar Nuevo Mensaje'}</h2>
 
             <div className={styles.formGroup}>
               <label>Título del mensaje *</label>
@@ -452,6 +553,18 @@ const Comunicaciones = () => {
                 <label>
                   Alumnos seleccionados ({selectedAlumnos.length} de {alumnos.length})
                 </label>
+                <div className={styles.alumnosActions}>
+                  <Button
+                    text="Seleccionar todos"
+                    onClick={() => setSelectedAlumnos(alumnos.map((a) => a.id_alumno))}
+                    classBtn={styles.secondaryButton}
+                  />
+                  <Button
+                    text="Deseleccionar todos"
+                    onClick={() => setSelectedAlumnos([])}
+                    classBtn={styles.secondaryButton}
+                  />
+                </div>
                 <div className={styles.alumnosContainer}>
                   {alumnos.map((alumno) => (
                     <label key={alumno.id_alumno} className={styles.alumnoItem}>
@@ -477,13 +590,16 @@ const Comunicaciones = () => {
 
             <div className={styles.formActions}>
               <Button
-                text="Enviar Mensaje"
+                text={editingMensaje ? 'Actualizar Mensaje' : 'Enviar Mensaje'}
                 onClick={handleEnviarMensaje}
                 classBtn={styles.primaryButton}
               />
               <Button
                 text="Cancelar"
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingMensaje(null);
+                }}
                 classBtn={styles.cancelButton}
               />
             </div>
@@ -513,10 +629,16 @@ const Comunicaciones = () => {
                       </div>
                     </div>
                     <div className={styles.mensajeActions}>
-                      <button className={styles.actionButton}>
+                      <button
+                        className={styles.actionButton}
+                        onClick={() => handleVerMensaje(mensaje)}
+                      >
                         <FaEye />
                       </button>
-                      <button className={styles.actionButton}>
+                      <button
+                        className={styles.actionButton}
+                        onClick={() => handleEditarMensaje(mensaje)}
+                      >
                         <FaEdit />
                       </button>
                       <button

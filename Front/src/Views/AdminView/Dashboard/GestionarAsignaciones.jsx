@@ -17,6 +17,7 @@ const GestionarAsignaciones = () => {
   const [loading, setLoading] = useState(false);
   const [loadingDatos, setLoadingDatos] = useState(false);
   const [loadingFiltros, setLoadingFiltros] = useState(false);
+  const [loadingMaterias, setLoadingMaterias] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [mostrarTodasEncuestas, setMostrarTodasEncuestas] = useState(false);
@@ -124,38 +125,57 @@ const GestionarAsignaciones = () => {
   // Filtrar materias por carrera y grado
   useEffect(() => {
     const fetchMaterias = async () => {
-      if (selectedCarrera) {
-        // Traer todas las materias de la carrera
-        let todasMaterias = [];
-        try {
-          const resAll = await axiosClient.get('/unidades-curriculares', {
-            params: { id_carrera: selectedCarrera }
-          });
-          todasMaterias = resAll.data || [];
-        } catch (err) {
-          todasMaterias = [];
-        }
-        if (selectedGrado) {
-          // Traer materias del año
+      setLoadingMaterias(true);
+      try {
+        if (selectedCarrera && selectedCarrera !== 'todas') {
+          // Traer todas las materias de la carrera específica
+          let todasMaterias = [];
           try {
-            const res = await axiosClient.get('/unidades-curriculares/por-carrera-grado', {
-              params: { id_carrera: selectedCarrera, id_grado: selectedGrado }
+            const resAll = await axiosClient.get('/unidades-curriculares', {
+              params: { id_carrera: selectedCarrera }
             });
-            const idsVerdes = (res.data.materias || []).map((m) => m.id_uc);
-            setMaterias(
-              todasMaterias.map((m) => ({
-                ...m,
-                esDelAnio: idsVerdes.includes(m.id_uc)
-              }))
-            );
+            todasMaterias = resAll.data || [];
+            console.log('Materias cargadas:', todasMaterias); // Debug temporal
           } catch (err) {
+            console.error('Error cargando materias de la carrera:', err);
+            todasMaterias = [];
+          }
+
+          if (selectedGrado) {
+            // Traer materias del año específico
+            try {
+              const res = await axiosClient.get('/unidades-curriculares/por-carrera-grado', {
+                params: { id_carrera: selectedCarrera, id_grado: selectedGrado }
+              });
+              const idsVerdes = (res.data.materias || []).map((m) => m.id_uc);
+              setMaterias(
+                todasMaterias.map((m) => ({
+                  ...m,
+                  esDelAnio: idsVerdes.includes(m.id_uc)
+                }))
+              );
+            } catch (err) {
+              console.error('Error cargando materias del año:', err);
+              setMaterias(todasMaterias.map((m) => ({ ...m, esDelAnio: false })));
+            }
+          } else {
             setMaterias(todasMaterias.map((m) => ({ ...m, esDelAnio: false })));
           }
+        } else if (selectedCarrera === 'todas') {
+          // Para "todas las carreras", traer todas las materias disponibles
+          try {
+            const resAll = await axiosClient.get('/unidades-curriculares');
+            const todasMaterias = resAll.data || [];
+            setMaterias(todasMaterias.map((m) => ({ ...m, esDelAnio: false })));
+          } catch (err) {
+            console.error('Error cargando todas las materias:', err);
+            setMaterias([]);
+          }
         } else {
-          setMaterias(todasMaterias.map((m) => ({ ...m, esDelAnio: false })));
+          setMaterias([]);
         }
-      } else {
-        setMaterias([]);
+      } finally {
+        setLoadingMaterias(false);
       }
     };
     fetchMaterias();
@@ -365,8 +385,9 @@ const GestionarAsignaciones = () => {
   // Validar si se puede asignar según el modo
   const puedeAsignar =
     selectedEncuesta &&
-    alumnos.length > 0 &&
-    (usarGrupos ? selectedGrupos.length > 0 : selectedCarrera);
+    (usarGrupos
+      ? selectedGrupos.length > 0 && alumnos.length > 0
+      : selectedCarrera && alumnos.length > 0);
 
   // Determinar si mostrar el mensaje de error de carrera
   const mostrarErrorCarrera = !usarGrupos && !selectedCarrera && selectedEncuesta;
@@ -582,37 +603,86 @@ const GestionarAsignaciones = () => {
             </label>
             <select value={selectedMateria} onChange={(e) => setSelectedMateria(e.target.value)}>
               <option value="">Todas las materias</option>
-              {materias.map((uc) => (
-                <option
-                  key={uc.id_uc}
-                  value={uc.id_uc}
-                  style={{
-                    backgroundColor: uc.esDelAnio ? '#d4edda' : '#f8f9fa',
-                    color: uc.esDelAnio ? '#155724' : '#888'
-                  }}
-                  disabled={selectedGrado && !uc.esDelAnio}
-                >
-                  {uc.unidad_curricular || uc.Unidad_Curricular}
-                  {uc.esDelAnio ? ' (Año seleccionado)' : ''}
+              {loadingMaterias ? (
+                <option value="" disabled>
+                  🔄 Cargando materias...
                 </option>
-              ))}
+              ) : materias.length > 0 ? (
+                materias.map((uc) => (
+                  <option
+                    key={uc.id_uc}
+                    value={uc.id_uc}
+                    style={{
+                      backgroundColor: uc.esDelAnio ? '#d4edda' : '#f8f9fa',
+                      color: uc.esDelAnio ? '#155724' : '#888'
+                    }}
+                    disabled={selectedGrado && !uc.esDelAnio}
+                  >
+                    {uc.Unidad_Curricular ||
+                      uc.unidad_curricular ||
+                      uc.nombre ||
+                      uc.materia ||
+                      'Sin nombre'}
+                    {uc.esDelAnio ? ' (Año seleccionado)' : ''}
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>
+                  {selectedCarrera === 'todas'
+                    ? 'No hay materias disponibles'
+                    : selectedCarrera
+                      ? 'No hay materias en esta carrera'
+                      : 'Selecciona una carrera primero'}
+                </option>
+              )}
             </select>
+            {selectedCarrera && (
+              <div className={styles.info} style={{ marginTop: '5px', fontSize: '13px' }}>
+                ℹ️{' '}
+                {loadingMaterias
+                  ? 'Cargando materias...'
+                  : materias.length > 0
+                    ? `${materias.length} materia(s) encontrada(s)${
+                        selectedGrado ? ' para el año seleccionado' : ''
+                      }`
+                    : 'No se encontraron materias con los filtros seleccionados'}
+              </div>
+            )}
           </div>
-          <button
-            onClick={handleFiltrarAlumnos}
-            disabled={!selectedCarrera || loading}
-            style={{
-              marginBottom: 20,
-              backgroundColor: '#007bff',
-              color: 'white',
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer'
-            }}
-          >
-            Filtrar Alumnos
-          </button>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: 20 }}>
+            <button
+              onClick={handleFiltrarAlumnos}
+              disabled={!selectedCarrera || loading}
+              style={{
+                backgroundColor: '#007bff',
+                color: 'white',
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                flex: 1
+              }}
+            >
+              🔍 Filtrar Alumnos
+            </button>
+            <button
+              onClick={handleAsignar}
+              disabled={!puedeAsignar || loading}
+              style={{
+                backgroundColor: '#28a745',
+                color: 'white',
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                flex: 1
+              }}
+            >
+              {selectedAlumnos.length > 0
+                ? `📤 Asignar a ${selectedAlumnos.length} alumno(s) seleccionado(s)`
+                : '📤 Asignar a todos los alumnos filtrados'}
+            </button>
+          </div>
           {loadingFiltros ? (
             <div
               style={{
@@ -627,6 +697,20 @@ const GestionarAsignaciones = () => {
           ) : (
             alumnos.length > 0 && (
               <div style={{ marginBottom: 20 }}>
+                <div
+                  style={{
+                    backgroundColor: '#e3f2fd',
+                    border: '1px solid #2196f3',
+                    borderRadius: '4px',
+                    padding: '10px',
+                    marginBottom: '10px',
+                    fontSize: '14px'
+                  }}
+                >
+                  ℹ️ <strong>Información:</strong> Se encontraron {alumnos.length} alumno(s) con los
+                  filtros seleccionados. Puedes asignar la encuesta a todos ellos o seleccionar solo
+                  algunos.
+                </div>
                 <strong>Alumnos filtrados:</strong>
                 <div
                   style={{
@@ -851,6 +935,12 @@ const GestionarAsignaciones = () => {
       {mostrarErrorCarrera && (
         <div style={{ color: 'red', marginTop: 10, fontWeight: 'bold' }}>
           ⚠️ Debes seleccionar una carrera para asignar esta encuesta usando filtros.
+        </div>
+      )}
+      {!usarGrupos && selectedEncuesta && (
+        <div style={{ color: '#17a2b8', marginTop: 10, fontWeight: 'bold' }}>
+          ℹ️ Modo Filtros: Selecciona los filtros deseados, filtra los alumnos y luego asigna la
+          encuesta.
         </div>
       )}
       {usarGrupos && selectedEncuesta && (

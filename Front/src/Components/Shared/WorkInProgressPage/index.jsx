@@ -8,7 +8,7 @@ const WorkInProgressPage = () => {
         <section className={styles.container}>
           <div className={styles.subContainer}>
             <img
-              src={`${process.env.PUBLIC_URL}/assets/images/error404.png`}
+              src={`/assets/images/error404.png`}
               alt="error404"
               className={styles.img}
             />

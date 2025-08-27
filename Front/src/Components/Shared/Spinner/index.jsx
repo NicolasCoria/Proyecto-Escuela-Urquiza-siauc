@@ -8,7 +8,7 @@ const Spinner = () => {
         <div className={styles.circle}></div>
       </div>
       <div className={styles.logo}>
-        <img src={`${process.env.PUBLIC_URL}/assets/images/logoSpinner.png`} alt="logo-spinner" />
+        <img src={`/assets/images/logoSpinner.png`} alt="logo-spinner" />
       </div>
     </div>
   );

@@ -169,7 +169,7 @@ const SignUp = () => {
         }
       });
       if (imgElement) {
-        imgElement.src = `${process.env.PUBLIC_URL}/assets/images/defaultProfile.png`;
+        imgElement.src = `/assets/images/defaultProfile.png`;
       }
     }
   };
@@ -199,7 +199,7 @@ const SignUp = () => {
                       id="profilePhoto"
                       src={
                         photoRef?.profile_photo ||
-                        `${process.env.PUBLIC_URL}/assets/images/defaultProfile.png`
+                        `/assets/images/defaultProfile.png`
                       }
                       className={styles.profilePhoto}
                     />
